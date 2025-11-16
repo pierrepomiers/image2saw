@@ -1,0 +1,15 @@
+python3 image2saw.py manekineko.png\
+  --size 64 \
+  --sr 48000 \
+  --fmin 10 --fmax 250 \
+  --step-ms 50 \
+  --voices 20 \
+  --waveform sine \
+  --sustain-s 0 \
+  --video \
+  --fps 30 \
+  --vis-fmin 0 --vis-fmax 10 \
+  --vis-amp-pct 1 \
+  --gauss-size-pct 300 \
+  --video \
+  --video-size 200

@@ -1,5 +1,6 @@
 python3 image2saw.py manekineko.png\
   --size 64 \
+  --duration-s 22 \
   --sr 48000 \
   --fmin 10 --fmax 250 \
   --step-ms 50 \

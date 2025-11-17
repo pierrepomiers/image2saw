@@ -10,6 +10,7 @@ mais en s'appuyant sur les modules audio, image_proc et video.
 
 import argparse
 import os
+import math
 
 from .audio import (
     map_gray_to_freq,
@@ -45,6 +46,17 @@ def build_parser() -> argparse.ArgumentParser:
         help="Forme d'onde utilisée pour le son (et la vibration visuelle).",
     )
     parser.add_argument("--voices", type=int, default=20, help="Nombre maximal d'oscillateurs actifs simultanément.")
+    parser.add_argument(
+        "--duration-s",
+        type=float,
+        default=None,
+        help=(
+            "Durée cible du son (en secondes). "
+            "Si définie, la taille de l'image (size x size) est ajustée pour "
+            "que la durée totale soit proche de cette valeur, "
+            "sans modifier step-ms."
+        ),
+    )
 
     g = parser.add_mutually_exclusive_group()
     g.add_argument("--stereo", action="store_true", help="Active la spatialisation stéréo.")
@@ -109,6 +121,49 @@ def main():
     base, _ = os.path.splitext(args.image)
     out_wav = base + ".wav"
     default_video_out = base + ".mp4"
+
+    # ------------------------------------------------------------------
+    # Si une durée cible est demandée, on ajuste la taille de l'image
+    # (size x size) en fonction de step_ms, sustain_s, voices.
+    # ------------------------------------------------------------------
+    if args.duration_s is not None:
+        step_s = args.step_ms / 1000.0
+        voices = args.voices
+        sustain_s = args.sustain_s
+        T_target = max(args.duration_s, 0.0)
+
+        # Durée disponible pour le balayage des oscillateurs
+        sweep_T = T_target - sustain_s
+
+        if sweep_T <= 0.0 or step_s <= 0.0:
+            print(
+                "[warn] Durée cible trop courte pour le sustain ou step-ms nul. "
+                "Impossible d'ajuster la taille. On garde --size tel quel."
+            )
+        else:
+            # N ≈ (T - sustain_s) / step_s - voices + 1
+            N_target = (sweep_T / step_s) - voices + 1
+            N_target = max(1, int(round(N_target)))
+
+            # image carrée → size x size = N_target → size ≈ sqrt(N_target)
+            size_target = int(math.sqrt(N_target))
+            size_target = max(1, size_target)
+
+            # Ici tu as deux philosophies possibles :
+            # 1) duration-s override complètement --size
+            # 2) --size reste une limite max → on clamp
+            #
+            # Option 1 (simple) : override complet
+            old_size = args.size
+            args.size = size_target
+
+            print(
+                "[info] Durée cible: "
+                f"{T_target:.3f} s | step-ms: {args.step_ms:.3f} | "
+                f"voices: {voices} | sustain: {sustain_s:.3f} s\n"
+                f"[info] Taille image recalculée: size={args.size} "
+                f"(ancien --size={old_size}) → ~{args.size * args.size} pixels."
+            )
 
     # Audio : image grisée logique (size x size, LANCZOS)
     gray = load_image_to_gray_square(args.image, args.size)

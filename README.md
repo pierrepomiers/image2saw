@@ -1,339 +1,185 @@
-# 🖼️🎵 Image2Saw v3.1  
-Transformez n'importe quelle image en une texture sonore et une vidéo synchronisée.
+# ✅ **README.md (V3.2)**
 
----
+*(Complet, clair, et conforme à ton architecture actuelle)*
 
-## ✨ Nouveautés de la V3.1
+````markdown
+# Image2Saw — V3.2
+Transformez n’importe quelle image en **texture sonore** et **vidéo synchronisée**, où chaque pixel devient un oscillateur audio et un point de vibration visuelle.
 
-- **Nouvelle option `--duration-s`** : permet de définir directement la durée finale du son *sans changer* la texture rythmique.
-- **Recalcul automatique de la taille d’image** en fonction de la durée demandée.
-- `--step-ms` reste une signature du rendu : **il n'est jamais modifié automatiquement**.
-- Pipeline audio/vidéo synchronisé automatiquement.
-- Documentation enrichie et pédagogie améliorée pour artistes & dev.
+> **Nouveautés V3.2 :**  
+> - Formats non-carrés gérés (audio & vidéo)  
+> - Pixel-art couleur  
+> - Vidéo stretch ou ratio préservé (`--video-width / --video-height`)  
+> - Centre de gaussienne aligné sur les pixels (fix artefact)  
+> - Fade-out du balayage (fin plus douce)  
+> - Compatibilité QuickTime améliorée  
 
 ---
 
 # 📦 Installation
 
-### 1. Cloner le dépôt
+### 1. Installer les dépendances Python
 ```bash
-git clone https://github.com/pierrepomiers/image2saw
-cd image2saw
+python3 -m pip install -r requirements.txt
 ````
 
-### 2. (Optionnel) Créer un environnement virtuel
+### Contenu du `requirements.txt`
 
-```bash
-python3 -m venv venv
-source venv/bin/activate   # macOS / Linux
-venv\Scripts\activate      # Windows
+```
+numpy
+Pillow
+tqdm
+moviepy
+imageio-ffmpeg
 ```
 
-### 3. Installer les dépendances
+Optionnel : MoviePy n’est importé que si `--video` est utilisé.
+
+---
+
+# 🚀 Usage rapide
+
+### Audio seul
 
 ```bash
-pip install -r requirements.txt
+python3 image2saw.py monimage.png --duration-s 8
+```
+
+### Audio + vidéo couleur
+
+```bash
+python3 image2saw.py monimage.jpg --duration-s 10 --video
+```
+
+### Vidéo en taille spécifique (ratio conservé)
+
+```bash
+python3 image2saw.py photo.png --duration-s 10 \
+  --video --video-width 800
+```
+
+### Vidéo stretch (force largeur+hauteur exactes)
+
+```bash
+python3 image2saw.py artwork.png --duration-s 10 \
+  --video --video-width 800 --video-height 600
 ```
 
 ---
 
-# 🚀 Utilisation simple
+# ⚙️ Paramètres principaux
 
-### Commande minimale
+### Image → Audio
 
-```bash
-python3 image2saw.py mon_image.jpg
+| Option            | Description                                                                                                      |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `--duration-s`    | Durée cible du son. Ne modifie pas `step-ms`. Recalcule la taille de l’image audio (non-carrée, ratio préservé). |
+| `--step-ms`       | Décalage entre oscillateurs.                                                                                     |
+| `--fmin / --fmax` | Plage de fréquences des oscillateurs.                                                                            |
+| `--waveform`      | saw, sine, square, triangle.                                                                                     |
+| `--voices`        | Nombre de voix superposées en même temps.                                                                        |
+| `--fade-ms`       | Fade-in/out audio par oscillateur.                                                                               |
+
+---
+
+# 🎬 Paramètres vidéo
+
+| Option                    | Description                                                      |
+| ------------------------- | ---------------------------------------------------------------- |
+| `--video`                 | Active le rendu vidéo.                                           |
+| `--fps`                   | Images/seconde.                                                  |
+| `--video-width`           | Largeur finale (px). Préserve le ratio si seule.                 |
+| `--video-height`          | Hauteur finale (px). Préserve le ratio si seule.                 |
+| `--vis-fmin / --vis-fmax` | Plage de fréquences visuelles (oscillation de la gaussienne).    |
+| `--vis-amp-pct`           | Amplitude max de la déformation (% de la largeur vidéo).         |
+| `--gauss-size-pct`        | Diamètre de la zone de déformation gaussienne (% largeur vidéo). |
+| `--video-out`             | Nom du fichier mp4 final.                                        |
+
+---
+
+# 🖼️ Fonctionnement du rendu vidéo (V3.2)
+
+1. L'image source est :
+
+   * convertie en **pixel-art couleur**
+     (reduce → grille audio → upscale NEAREST).
+2. Une **fenêtre glissante zigzag** parcourt l’image (même ordre que l’audio).
+3. Une **déformation locale gaussienne** est appliquée autour du pixel actif.
+4. La fréquence visuelle `f_vis` est dérivée du pixel audio correspondant.
+5. Le centre de la gaussienne est **snapé** aux centres de pixels →
+   ➜ supprime l’effet “œil” observé en V3.1.
+6. Les derniers 15% du balayage ont un **fade-out progressif**.
+7. Sortie vidéo : H.264 `yuv420p`, compatible QuickTime.
+
+---
+
+# 📂 Architecture du projet
+
+```
+image2saw/
+│
+├── image2saw.py              # Entrée principale (module -m)
+├── image2saw_pkg/
+│   ├── cli.py                # Gestion arguments + orchestrateur
+│   ├── audio.py              # Rendu audio vectorisé
+│   ├── video.py              # Rendu vidéo couleur
+│   ├── image_proc.py         # Resize logique audio/vidéo, zigzag
+│   └── __init__.py
+│
+└── README.md
 ```
 
-Génère un fichier WAV basé sur l’image avec les paramètres par défaut.
-
 ---
 
-# 🎛️ Options principales
-
-| Option             | Rôle                                                                                              |
-| ------------------ | ------------------------------------------------------------------------------------------------- |
-| `--size N`         | Taille **initiale** de l’image carrée (`N × N`). Peut être remplacée si `--duration-s` est donné. |
-| `--duration-s T`   | Durée cible finale du rendu (audio + vidéo). Recalcule automatiquement la taille de l’image.      |
-| `--step-ms MS`     | Délai entre oscillateurs (texture temporelle).                                                    |
-| `--voices N`       | Polyphonie interne.                                                                               |
-| `--sustain-s S`    | Durée finale de maintien des oscillateurs.                                                        |
-| `--sr SR`          | Fréquence échantillonnage audio.                                                                  |
-| `--fmin`, `--fmax` | Bande de fréquences.                                                                              |
-| `--waveform`       | onde : `sine`, `saw`, `tri`, `square`.                                                            |
-| `--video`          | Génère une vidéo synchronisée.                                                                    |
-| `--video-size N`   | Dimension de la vidéo finale.                                                                     |
-| `--fps N`          | Framerate vidéo.                                                                                  |
-
----
-
-# 📘 Exemple complet (commande + explication)
-
-### 🎯 Objectif artistique
-
-Créer une pièce audiovisuelle de **22 secondes** avec une texture rythmique définie par `--step-ms 12`, 16 voix et une vidéo en 500 px.
-
-### 🔧 Commande
+# 🧪 Exemple complet
 
 ```bash
-python3 image2saw.py mon_image.jpg \
-  --step-ms 12 \
-  --duration-s 22 \
-  --voices 16 \
-  --sustain-s 1.0 \
-  --waveform saw \
+python3 image2saw.py monimage.png \
+  --duration-s 12 \
   --video \
-  --video-size 500 \
-  --fps 30
-```
-
-### 🧩 Explication
-
-* `--duration-s 22` fixe la durée finale souhaitée.
-* L’image est automatiquement redimensionnée pour approximer 22 secondes.
-* `--step-ms` reste intact → la “vitesse interne” du mouvement sonore ne change pas.
-* La durée audio réelle est utilisée pour la vidéo → synchronisation parfaite.
-
----
-
-# 🧠 Relation entre durée (`--duration-s`), step (`--step-ms`) et taille d’image (`--size`)
-
-Chaque pixel ↦ un oscillateur.
-Pour une image carrée :
-
-```
-N = size × size
-step_s = step_ms / 1000
-```
-
-Durée approximative du son :
-
-```
-T ≈ (N - 1 + voices) * step_s + sustain_s
-```
-
-## 🔄 Nouveauté V3.1 : contrôle *direct* de la durée
-
-Lorsque `--duration-s` est fourni, Image2Saw **recalcule uniquement la taille de l’image**, pas `step-ms`.
-
-Formule inversée :
-
-```
-N_target ≈ (duration_s - sustain_s) / step_s - voices + 1
-size ≈ sqrt(N_target)
-```
-
-→ La durée finale devient cohérente avec la valeur demandée,
-→ tout en conservant la texture temporelle (`step-ms`).
-
----
-
-# 📐 Diagramme ASCII explicatif
-
-```
-                        ┌───────────────────────────┐
-                        │     image d'entrée        │
-                        │      (originale)          │
-                        └───────────┬───────────────┘
-                                    │
-                                    ▼
-                    ┌──────────────────────────────────────┐
-                    │  resize automatique basé sur          │
-                    │  --duration-s et --step-ms            │
-                    │                                       
-                    │  size = sqrt(N_target)                │
-                    │  N_target ≈ (T - sustain)/step - v    │
-                    └──────────────────┬────────────────────┘
-                                       │
-                                       ▼
-                            ┌─────────────────┐
-                            │  image finale   │
-                            │ size x size px  │
-                            └───────┬─────────┘
-                                    │
-                                    ▼
-           ┌──────────────────────────────────────────────────────────┐
-           │  Chaque pixel → un oscillateur → une fréquence           │
-           │  définie par la luminance                               │
-           └──────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-                  ┌───────────────────────────────────────────┐
-                  │  Déclenchement des oscillateurs :         │
-                  │  time(i) = i × step_s                     │
-                  │  T ≈ (N - 1 + voices) × step_s + sustain │
-                  └─────────────────┬─────────────────────────┘
-                                    │
-                                    ▼
-                ┌────────────────────────────────────────┐
-                │       Audio (WAV)                      │
-                │     durée ≈ --duration-s               │
-                └────────────────┬───────────────────────┘
-                                 │
-                                 ▼
-                   ┌────────────────────────────────────────┐
-                   │       Vidéo (MP4)                       │
-                   │  durée = durée audio (exacte)           │
-                   └────────────────────────────────────────┘
+  --video-width 900 \
+  --fps 25 \
+  --vis-fmin 0.5 --vis-fmax 8 \
+  --vis-amp-pct 2 \
+  --gauss-size-pct 30
 ```
 
 ---
 
-# 🎥 Génération vidéo
+# 📝 Notes développeurs
 
-Activer la vidéo :
+### 💡 Pourquoi le centre est aligné sur les pixels ?
 
-```bash
---video
+Le rendu NEAREST génère des artefacts très visibles si la gaussienne tombe
+**pile sur une frontière entre deux macro-pixels**.
+En centrant toujours sur `(n + 0.5)`, on stabilise le warp → plus d’effet “œil”.
+
+### 🧠 Formats non carrés
+
+`--duration-s` ne touche jamais `step-ms`.
+Il calcule simplement la taille logique `(W,H)` → nombre d’oscillateurs exact, ratio préservé.
+
+### 🎞️ Encodage QuickTime
+
+`libx264` + `yuv420p` + `+faststart` + largeur/hauteur paires = compat totale macOS.
+
+---
+
+# 🆘 Support
+
+Pour toute question ou idée d’évolution :
+👉 GitHub Issues ou me contacter sur X / LinkedIn.
+
 ```
 
-Options utiles :
+---
 
-```bash
---video-size 500
---fps 30
+Si tu veux, je peux aussi te générer :
+
+✔ un message de release GitHub  
+✔ un tag v3.2 propre  
+✔ un jeu d’exemples (images + vidéos demo)  
+
+Dis-moi juste ! 🚀
 ```
-
-La vidéo se cale automatiquement sur la durée exacte du WAV.
-
----
-
-# 🎨 Conseils artistiques
-
-* Pour une texture “fine” : `--step-ms 3` à `--step-ms 8`
-* Pour une progression lente : `--step-ms 20` à `--step-ms 30`
-* Pour un rendu massif : augmenter `--voices`
-* Pour générer plusieurs durées à partir d’une même œuvre : jouer uniquement sur `--duration-s`
-
----
-
-# 🛠 Notes techniques (développeurs)
-
-### Recalcul automatique de la taille d’image
-
-```python
-if duration_s is not None:
-    step_s = step_ms / 1000
-    sweep_T = duration_s - sustain_s
-
-    N = (sweep_T / step_s) - voices + 1
-    N = max(1, round(N))
-
-    size = max(1, int(math.sqrt(N)))
-```
-
-### Pipeline interne
-
-1. Analyse → resize dynamique
-2. Mapping pixels → fréquences
-3. Planification temporelle (`plan_schedule`)
-4. Synthèse WAV (`render_audio`)
-5. Génération vidéo (`render_video_with_audio`)
-
-### Vidéo
-
-```
-VideoClip(..., duration=T_audio)
-```
-
-→ La durée audio pilote automatiquement la durée vidéo.
-
----
-
-# 🧾 Licence
-
-MIT — libre pour artistes, VJs, installations, performances, IA créatives.
-
----
-
-# ❤️ Auteurs
-
-* **Pierre Pomiers** — conception
-* **ChatGPT (GPT-5)** — implémentation & documentation
-
-````
-
----
-
-# ✅ **2) Release notes GitHub pour la V3.1 (prêtes à publier)**
-
-Voici une **release note GitHub parfaitement formatée**.  
-Tu peux la coller dans **Releases → Draft a new release**.
-
----
-
-## 🎉 Image2Saw v3.1 — Release Notes
-
-### ✨ Nouveautés principales
-
-#### 🆕 1. Nouvel argument : `--duration-s`
-Vous pouvez désormais demander directement une **durée finale en secondes** pour vos pièces sonores et audiovisuelles.
-
-- **Sans modifier `--step-ms` !**  
-- La texture rythmique reste 100% identique.  
-- C’est la **taille de l’image** qui est recalculée automatiquement.
-
-> Objectif : donner un contrôle artistique immédiat  
-> ("je veux une œuvre de 20 secondes")  
-> sans changer la dynamique interne.
-
----
-
-#### 🔄 2. Recalcul automatique de l’image
-Si `--duration-s` est défini :
-
-- On calcule `N_target` (nombre d’oscillateurs)
-- On en déduit la taille d’image `size = sqrt(N_target)`
-- L’image est redimensionnée en conséquence
-
-Cela permet :
-
-- un contrôle précis de la durée  
-- une cohérence totale entre audio et vidéo  
-- une simplicité maximale pour les artistes
-
----
-
-#### 🎥 3. Vidéo automatiquement synchronisée
-La vidéo prend la **durée réelle du WAV** et s’y cale exactement.
-
-Aucune option spécifique : juste `--video`.
-
----
-
-#### 📘 4. Documentation entièrement réécrite
-- Section complète sur la relation durée ↔ pixels ↔ oscillateurs
-- Exemple complet prêt à l’emploi
-- Diagramme ASCII explicatif
-- Notes développeurs enrichies
-
----
-
-### 🛠 Améliorations internes
-
-- Code restructuré autour du recalcul de durée  
-- Clarification de la logique `step-ms` → densité  
-- Nettoyage du CLI  
-- Préparation de la future V3.2 (formats non carrés)
-
----
-
-### 📦 Commande emblématique de la v3.1
-
-```bash
-python3 image2saw.py mon_image.jpg \
-  --step-ms 12 \
-  --duration-s 22 \
-  --voices 16 \
-  --sustain-s 1.0 \
-  --video \
-  --video-size 500
-````
-
----
-
-### ❤️ Remerciements
-
-Merci à Pierre pour son travail artistique et la vision du projet.
-Cette version apporte un réel saut d’usage pour les créateurs visuels, VJ, performers, artistes IA et explorateurs sonores.
 

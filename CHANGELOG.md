@@ -5,6 +5,40 @@ Format inspiré de *Keep a Changelog*.
 
 ---
 
+## [3.2] — 2025-11-18
+### Nouveautés majeures
+- **Support complet des formats non carrés** pour la génération audio  
+  - Lorsque `--duration-s` est utilisé, la taille logique de l’image audio est recalculée automatiquement en respectant **le ratio original** de l’image d’entrée.
+- **Nouveaux paramètres vidéo :**
+  - `--video-width`
+  - `--video-height`
+  - Si un seul est fourni → ratio préservé.  
+  - Si les deux sont fournis → mode “stretch” (remplissage exact sans bandes noires/crop).
+- **Pixel art couleur** :  
+  La vidéo utilise désormais l’image source **en couleur**, réduite à la grille audio puis upscalée en NEAREST pour un rendu net/stylisé.
+- **Centre de gaussienne aligné sur les centres de pixels vidéo**  
+  - Correction d’un artefact visuel (“effet œil”) observé en V3.1/V3.2 préliminaire.  
+  - Le centre du warp est désormais forcé sur des coordonnées `(n + 0.5)`, supprimant les artefacts dus au NEAREST sur macro-pixels.
+- **Fade-out progressif de la déformation**  
+  - Les derniers 10% du balayage zigzag diminuent progressivement en amplitude → fin beaucoup moins brutale.
+- **Compatibilité QuickTime**  
+  - Encodage vidéo avec `libx264` + `yuv420p` + `+faststart`.  
+  - Largeur/hauteur automatiquement ajustées pour être paires.
+- **MoviePy importé tardivement**  
+  - Évite les erreurs si `--video` n’est pas utilisé.
+  - Message d’aide propre en cas de MoviePy manquant.
+- **Refactoring :**  
+  - Nettoyage des modules : `cli.py`, `audio.py`, `image_proc.py`, `video.py`
+  - Séparation claire des responsabilités (mapping audio, resize vidéo, warp, etc.)
+
+### Corrections
+- Correction du mapping `f_audio → f_vis` (utilisé pour l’oscillation visuelle).  
+- Correction du calcul de l’image audio dans les cas non-carrés.  
+- Correction de la taille vidéo dans certains ratios atypiques.  
+- Suppression des warnings QuickTime/FFmpeg.
+
+---
+
 ## [3.1.0] - 2025-11-17  
 ### ✨ Ajouté
 - Nouvelle option `--duration-s` permettant de définir directement la **durée cible** du son (et donc de la vidéo).

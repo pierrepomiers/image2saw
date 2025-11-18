@@ -1,6 +1,5 @@
-python3 image2saw.py manekineko.png\
-  --size 64 \
-  --duration-s 22 \
+python3 image2saw.py damier.png\
+  --duration-s 60 \
   --sr 48000 \
   --fmin 10 --fmax 250 \
   --step-ms 50 \
@@ -8,9 +7,9 @@ python3 image2saw.py manekineko.png\
   --waveform sine \
   --sustain-s 0 \
   --video \
-  --fps 30 \
+  --fps 60 \
   --vis-fmin 0 --vis-fmax 10 \
-  --vis-amp-pct 1 \
-  --gauss-size-pct 300 \
+  --vis-amp-pct 4 \
+  --gauss-size-pct 400 \
   --video \
-  --video-size 200
+  --video-width 200

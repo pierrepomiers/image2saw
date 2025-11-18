@@ -1,23 +1,20 @@
 # -*- coding: utf-8 -*-
 """
-video.py (V3.2 final, centre gaussienne sur centres de pixels)
-─────────────────────────────────────
+video.py (V3.2.1, profil cosinus + déplacement horizontal)
+───────────────────────────────────────────────────────────
 Rendu vidéo avec :
 
 - pixel art COULEUR basé sur l'image source,
 - ratio issu de la grille audio (freqs),
 - support de --video-width / --video-height,
 - balayage zigzag synchronisé avec l'audio,
-- déformation locale (vibration) gaussienne,
+- déformation locale (vibration) radiale EN AMPLITUDE, mais
+  déplacement UNIQUEMENT HORIZONTAL (pas radial),
 - fréquence visuelle mappée depuis la fréquence AUDIO locale :
     f_audio in [fmin, fmax] → f_vis in [vis-fmin, vis-fmax]
 
 MoviePy est importé tardivement (optionnel) et l'encodage
 est compatible QuickTime (H.264 + yuv420p, width/height pairs).
-
-⚠️ Modif par rapport à la version précédente :
-    - le centre de la gaussienne est forcé sur le CENTRE D'UN PIXEL vidéo
-      → réduit fortement l'effet "œil" dû aux jointures de gros pixels.
 """
 
 import math
@@ -29,10 +26,10 @@ from PIL import Image
 from .image_proc import compute_video_output_shape, zigzag_indices
 
 
-def _compute_gaussian_sigma(video_width: int, gauss_size_pct: float) -> float:
+def _compute_sigma_from_gauss_size(video_width: int, gauss_size_pct: float) -> float:
     """
-    Calcule sigma de la gaussienne à partir d'un diamètre exprimé
-    en % de la largeur vidéo.
+    Calcule un sigma de référence à partir d'un diamètre exprimé
+    en % de la largeur vidéo. Servira à fixer un rayon R pour le profil cosinus.
     """
     diameter_px = (gauss_size_pct / 100.0) * float(video_width)
     if diameter_px <= 0:
@@ -145,7 +142,7 @@ def generate_video_from_args(
         indexing="xy",
     )
 
-    sigma = _compute_gaussian_sigma(video_width=w, gauss_size_pct=args.gauss_size_pct)
+    sigma = _compute_sigma_from_gauss_size(video_width=w, gauss_size_pct=args.gauss_size_pct)
 
     # Paramètres de la vibration
     amp_pixels = (args.vis_amp_pct / 100.0) * float(w)
@@ -174,17 +171,6 @@ def generate_video_from_args(
         else:
             phase = 1.0
 
-        # Enveloppe de BALAYAGE (fade-out)
-        # On utilise 15% pour s'arrêter en douceur.
-        edge = 0.15  # 15% de la durée de balayage
-        if phase <= 0.0:
-            sweep_env = 0.0
-        elif phase > 1.0 - edge:
-            sweep_env = (1.0 - phase) / edge
-        else:
-            sweep_env = 1.0
-        sweep_env = max(0.0, min(sweep_env, 1.0))
-        
         # Index flottant dans l'ordre zigzag
         idx_float = phase * float(N - 1)
         idx = int(round(idx_float))
@@ -192,15 +178,9 @@ def generate_video_from_args(
 
         r, c = order[idx]
 
-        # Position de base du centre dans les coordonnées vidéo (continu)
+        # Position de base du centre dans les coordonnées vidéo
         cx_base = (c + 0.5) / float(Wf) * w
         cy_base = (r + 0.5) / float(Hf) * h
-
-        # 🧩 Ajustement clé :
-        # on aligne le centre de la gaussienne sur le centre D'UN PIXEL vidéo :
-        # → coordonnée = n + 0.5
-        cx_base = math.floor(cx_base) + 0.5
-        cy_base = math.floor(cy_base) + 0.5
 
         # 🔥 Fréquence audio locale → fréquence visuelle
         f_audio = float(freqs[r, c])
@@ -220,26 +200,26 @@ def generate_video_from_args(
         # Amplitude temporelle (sinus global) à la fréquence visuelle locale
         osc = math.sin(2.0 * math.pi * f_vis * t_clamped)
 
-        # Vecteurs de déplacement : déformation radiale
+        # Distance radiale au centre (pour le poids), mais déplacement HORIZONTAL
         dx = xs - cx_base
         dy = ys - cy_base
         d2 = dx * dx + dy * dy
-        d = np.sqrt(d2 + 1e-9)
+        r_dist = np.sqrt(d2 + 1e-9)
 
-        # Vecteurs unitaires radiaux
-        ux = dx / d
-        uy = dy / d
+        # Profil radial en cosinus (raised cosine)
+        # R ~ 2 * sigma pour avoir un diamètre proche de ce qui était visé
+        R = 2.0 * sigma
+        t_norm = np.clip(r_dist / R, 0.0, 1.0)
+        w_cos = 0.5 * (1.0 + np.cos(np.pi * t_norm))  # 1 au centre, 0 au bord
+        w_cos[r_dist >= R] = 0.0
 
-        # Poids gaussien (0 loin, 1 au centre)
-        g = np.exp(-d2 / (2.0 * sigma * sigma))
+        # Amplitude de déformation EN X uniquement
+        # 0.5 pour garder un rendu plutôt doux par défaut
+        deform = w_cos * (0.5 * amp_pixels) * osc
 
-        # Amplitude de déformation radiale (en pixels)
-        # Version plus douce : gaussienne plus progressive + amplitude réduite
-        deform = sweep_env * (g ** 2) * (0.5 * amp_pixels) * osc
-
-        # Nouvelles coordonnées sources
-        src_x = xs + ux * deform
-        src_y = ys + uy * deform
+        # Nouvelles coordonnées sources : déplacement horizontal seulement
+        src_x = xs + deform
+        src_y = ys
 
         # Clamp dans l'image
         src_x = np.clip(src_x, 0.0, float(w - 1))

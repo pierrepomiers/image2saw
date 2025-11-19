@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-audio.py (V3.2, optimisé, vectorisé + LUT)
+audio.py (V3.3, optimisé, vectorisé + LUT)
 ───────────────────────────────────────────
 Planification temporelle + synthèse audio + écriture WAV.
 
@@ -9,7 +9,7 @@ Optimisations CPU :
 - Rendu bloc par bloc (batch de frames).
 - Pour chaque bloc :
     * on ne parcourt que les oscillateurs ACTIFS
-    * les formes d’onde sont lues dans une LUT pré-calculée
+    * les formes d'onde sont lues dans une LUT pré-calculée
       (aucun sin/cos dans la boucle principale).
 """
 
@@ -28,6 +28,9 @@ from .image_proc import zigzag_indices
 
 # Taille de la LUT pour les formes d'onde (phase dans [0,1))
 WAVE_LUT_SIZE = 4096
+
+# Cache pour LUTs afin d'éviter de les recalculer si la même forme d'onde est demandée plusieurs fois
+_LUT_CACHE = {}
 
 
 # ───────────────────────────────
@@ -94,7 +97,7 @@ def plan_schedule(
     - temps de début/fin calculés à partir du décalage (step)
     - durée de vie dépendant du nombre de voix simultanées (voices)
 
-    Notes V3.2 :
+    Notes V3.x :
     - L'argument `size` est conservé pour compatibilité,
       mais les dimensions réelles proviennent de `freqs.shape` (support non-carré).
     - Le panning stéréo utilise la position horizontale réelle (w).
@@ -163,21 +166,34 @@ def _make_waveform_lut(waveform: str) -> np.ndarray:
     return y.astype(np.float64)
 
 
+def _get_lut(waveform: str) -> np.ndarray:
+    """
+    Retourne la LUT pour `waveform`, en la mettant en cache.
+    """
+    lut = _LUT_CACHE.get(waveform)
+    if lut is None:
+        lut = _make_waveform_lut(waveform)
+        _LUT_CACHE[waveform] = lut
+    return lut
+
+
 def _waveform_from_lut(phase: np.ndarray, lut: np.ndarray) -> np.ndarray:
     """
     Retourne la forme d'onde en utilisant une LUT pré-calculée.
 
-    phase : tableau de phases fractionnaires dans [0,1)
+    phase : tableau de phases fractionnaires dans [0,1) (any shape)
     lut   : tableau 1D de taille WAVE_LUT_SIZE
+
+    Retourne un ndarray de même shape que `phase`.
     """
     size = lut.shape[0]
-    idx = np.floor(phase * size).astype(np.int64)
+    idx = np.floor(phase * float(size)).astype(np.int64)
     idx %= size
     return lut[idx]
 
 
 # ───────────────────────────────
-#  Rendu audio
+#  Rendu audio (vectorisé par bloc)
 # ───────────────────────────────
 
 def render_audio(
@@ -189,7 +205,7 @@ def render_audio(
     tqdm_desc: str = "Rendu audio",
 ) -> np.ndarray:
     """
-    Rendu audio bloc par bloc, en utilisant une LUT pour la forme d'onde.
+    Rendu audio bloc par bloc, vectorisé par bloc + LUT.
 
     Args:
         oscs: liste d'oscillateurs planifiés (Osc).
@@ -223,8 +239,8 @@ def render_audio(
     end_idx = (end_s * sr).astype(np.int64)
     end_idx = np.clip(end_idx, 0, n_samples)
 
-    # LUT de forme d'onde
-    lut = _make_waveform_lut(waveform)
+    # LUT (cached)
+    lut = _get_lut(waveform)
 
     # Nombre d'échantillons par bloc
     block_size = max(1, int(sr * block_ms / 1000.0))
@@ -241,51 +257,60 @@ def render_audio(
         if n0 >= n1:
             continue
 
-        # Oscillateurs actifs sur ce bloc (indices d'échantillons)
+        # Temps du bloc (échantillons)
+        n_global = np.arange(n0, n1, dtype=np.int64)  # shape (L,)
+        t_block = (n_global / float(sr)).astype(np.float64)  # shape (L,)
+
+        # Oscillateurs actifs sur ce bloc (indices)
         active = (start_idx < n1) & (end_idx > n0)
         active_idx = np.nonzero(active)[0]
         if active_idx.size == 0:
             continue
 
-        for k in active_idx:
-            s0 = start_idx[k]
-            s1 = end_idx[k]
-            if s1 <= s0:
-                continue
+        # Sous-ensembles vectorisés
+        f_k = f[active_idx]                     # (M,)
+        start_s_k = start_s[active_idx]         # (M,)
+        s0_k = start_idx[active_idx].astype(np.int64)  # (M,)
+        s1_k = end_idx[active_idx].astype(np.int64)    # (M,)
+        pan_l_k = pan_l[active_idx]
+        pan_r_k = pan_r[active_idx]
 
-            # Recoupe avec le bloc courant
-            ls = max(n0, s0)
-            le = min(n1, s1)
-            if le <= ls:
-                continue
+        # Construire matrices (M, L) via broadcasting
+        # t_rel (s) = t_block[None, :] - start_s_k[:, None]
+        t_rel = t_block[None, :] - start_s_k[:, None]  # (M, L)
+        phase = np.mod(f_k[:, None] * t_rel, 1.0)      # (M, L), valeurs dans [0,1)
 
-            n_global = np.arange(ls, le, dtype=np.float64)
+        # Lecture LUT (vectorisée)
+        wave_mat = _waveform_from_lut(phase, lut)      # (M, L)
 
-            # Phase fractionnaire dans [0,1)
-            phase = (f[k] * (n_global / sr - start_s[k])) % 1.0
+        # Enveloppe (M, L)
+        pos = (n_global[None, :].astype(np.int64) - s0_k[:, None]).astype(np.int64)  # samples relative (M,L)
+        total_len = (s1_k - s0_k)[:, None]  # (M,1)
 
-            # Forme d'onde via LUT
-            wave_seg = _waveform_from_lut(phase, lut)
+        env = np.ones_like(wave_mat, dtype=np.float64)
 
-            # Enveloppe de fade in/out par oscillateur
-            total_len = s1 - s0
-            pos = n_global - s0  # position relative dans la vie de l'oscillateur
+        # Avant le début et après la fin -> env = 0
+        env[pos < 0] = 0.0
+        env[pos >= total_len] = 0.0
 
-            env = np.ones_like(wave_seg)
-            # Fade-in
-            m_in = pos < fade_samples
-            env[m_in] *= pos[m_in] / fade_samples
+        # fade-in
+        if fade_samples > 0:
+            m_in = (pos >= 0) & (pos < fade_samples)
+            if np.any(m_in):
+                env[m_in] *= (pos[m_in].astype(np.float64) / float(fade_samples))
 
-            # Fade-out
-            remaining = total_len - pos
+            # fade-out
+            remaining = (total_len - pos).astype(np.int64)
             m_out = remaining < fade_samples
-            env[m_out] *= remaining[m_out] / fade_samples
+            if np.any(m_out):
+                env[m_out] *= (remaining[m_out].astype(np.float64) / float(fade_samples))
 
-            wave_seg *= env
+        # Appliquer enveloppe
+        wave_mat *= env
 
-            # Accumulation dans les canaux
-            audio_l[ls:le] += wave_seg * pan_l[k]
-            audio_r[ls:le] += wave_seg * pan_r[k]
+        # Mixer vers canaux (somme sur l'axe oscillateurs)
+        audio_l[n0:n1] += np.sum(wave_mat * pan_l_k[:, None], axis=0)
+        audio_r[n0:n1] += np.sum(wave_mat * pan_r_k[:, None], axis=0)
 
     return np.stack([audio_l, audio_r], axis=-1)
 
@@ -308,4 +333,3 @@ def write_wav_int16_stereo(path: str, sr: int, data_lr: np.ndarray):
         wf.setsampwidth(2)
         wf.setframerate(sr)
         wf.writeframes(data_i16.tobytes())
-

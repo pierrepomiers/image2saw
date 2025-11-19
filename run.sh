@@ -1,4 +1,4 @@
-python3 image2saw.py damier.png\
+python3 image2saw.py manekineko.png\
   --duration-s 60 \
   --sr 48000 \
   --fmin 10 --fmax 250 \
@@ -10,6 +10,6 @@ python3 image2saw.py damier.png\
   --fps 60 \
   --vis-fmin 0 --vis-fmax 10 \
   --vis-amp-pct 4 \
-  --gauss-size-pct 400 \
+  --gauss-size-pct 300 \
   --video \
   --video-width 200

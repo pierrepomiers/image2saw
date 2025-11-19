@@ -287,7 +287,7 @@ def main() -> None:
         f"step={args.step_ms}ms | sustain={args.sustain_s}s"
     )
     if args.duration_s is not None:
-        print(f"→ Durée cible demandée : {args.duration_s:.2f}s")
+        print(f"→ Durée cible demandée : {args.duration_s:.2f}s\n")
 
     # Vidéo (optionnelle)
     if args.video:

@@ -15,10 +15,17 @@ Rendu vidéo avec :
 MoviePy est importé tardivement (optionnel) et l'encodage
 est compatible QuickTime (H.264 + yuv420p, width/height pairs).
 
-⚠️ Modif par rapport à la version précédente :
-    - le centre de la gaussienne est forcé sur le CENTRE D'UN PIXEL vidéo
-      → réduit fortement l'effet "œil" dû aux jointures de gros pixels.
+Optimisations ajoutées (refactor v3.3):
+- base image stockée en uint8 pour éviter conversions par frame,
+- pré-calculs scalaires hors de la closure make_frame,
+- allocation et réutilisation de buffers pour src_x/src_y/xi/yi,
+- usages in-place numpy pour limiter allocations temporaires,
+- barre de progression globale (tqdm) mise à jour depuis make_frame.
 """
+import io
+import sys
+import os
+import contextlib
 
 import math
 from typing import Any, Tuple
@@ -27,6 +34,12 @@ import numpy as np
 from PIL import Image
 
 from .image_proc import compute_video_output_shape, zigzag_indices
+
+# tentative d'import de tqdm ; fallback sur un simple compteur si absent
+try:
+    from tqdm import tqdm
+except Exception:  # pragma: no cover - fallback
+    tqdm = None
 
 
 def _compute_gaussian_sigma(video_width: int, gauss_size_pct: float) -> float:
@@ -51,12 +64,12 @@ def _make_pixel_art_base_from_color(
 ) -> np.ndarray:
     """
     Construit l'image de base "pixel art COULEUR" :
-
     - on charge l'image source en RGB
     - on la redimensionne à la taille de la grille audio (Hf, Wf = freqs.shape)
       → chaque "pixel audio" correspond à un bloc de couleur.
     - on upscale en NEAREST vers (video_width, video_height)
       → gros pixels bien nets (pixel art).
+    Retourne dtype=np.uint8 pour éviter conversions répétées en sortie.
     """
     Hf, Wf = freqs_shape
 
@@ -64,8 +77,65 @@ def _make_pixel_art_base_from_color(
     img_small = img_src.resize((Wf, Hf), Image.LANCZOS)   # grille logique couleur
     img_video = img_small.resize((video_width, video_height), Image.NEAREST)
 
-    base = np.array(img_video, dtype=np.float32)
+    base = np.asarray(img_video, dtype=np.uint8)
     return base
+
+
+def _allocate_frame_buffers(h: int, w: int):
+    """
+    Alloue buffers réutilisables pour la génération de frames :
+    - src_x, src_y : float32 (coordonnées sources)
+    - xi, yi : int32 (indices nearest)
+    Retourne un dict de buffers.
+    """
+    buffers = {
+        "src_x": np.empty((h, w), dtype=np.float32),
+        "src_y": np.empty((h, w), dtype=np.float32),
+        "xi": np.empty((h, w), dtype=np.int32),
+        "yi": np.empty((h, w), dtype=np.int32),
+    }
+    return buffers
+
+
+def _precompute_centers_and_fvis(args: Any, freqs: np.ndarray, w: int, h: int):
+    """
+    Pré-calcul des coordonnées centres (alignées sur le centre d'un pixel vidéo)
+    et des fréquences visuelles par cellule (r,c).
+
+    Retourne deux dicts : centers[(r,c)] = (cx_base, cy_base),
+    fvis[(r,c)] = f_vis (float).
+    """
+    Hf, Wf = freqs.shape
+    centers = {}
+    fvis = {}
+
+    vis_fmin = float(args.vis_fmin)
+    vis_fmax = float(args.vis_fmax)
+    fmin = float(args.fmin)
+    fmax = float(args.fmax)
+
+    for r in range(Hf):
+        for c in range(Wf):
+            cx_base = (c + 0.5) / float(Wf) * w
+            cy_base = (r + 0.5) / float(Hf) * h
+            # alignement sur le centre d'un pixel (n + 0.5)
+            cx_base = math.floor(cx_base) + 0.5
+            cy_base = math.floor(cy_base) + 0.5
+            centers[(r, c)] = (cx_base, cy_base)
+
+            f_audio = float(freqs[r, c])
+            if fmax <= fmin:
+                fv = vis_fmin
+            else:
+                rel = (f_audio - fmin) / (fmax - fmin)
+                if rel < 0.0:
+                    rel = 0.0
+                elif rel > 1.0:
+                    rel = 1.0
+                fv = vis_fmin + (vis_fmax - vis_fmin) * rel
+            fvis[(r, c)] = fv
+
+    return centers, fvis
 
 
 def generate_video_from_args(
@@ -129,42 +199,66 @@ def generate_video_from_args(
 
     duration_s = float(audio_clip.duration)
 
-    # Image de base pixel art COULEUR (grille audio upscalée)
+    # Image de base pixel art COULEUR (grille audio upscalée) -> dtype uint8
     base = _make_pixel_art_base_from_color(
         image_path=args.image,
         freqs_shape=freqs.shape,
         video_width=video_w,
         video_height=video_h,
-    )  # (h, w, 3)
+    )  # (h, w, 3) uint8
     h, w, _ = base.shape
 
-    # Grilles de coordonnées
+    # Grilles de coordonnées (float32)
     xs, ys = np.meshgrid(
         np.arange(w, dtype=np.float32),
         np.arange(h, dtype=np.float32),
         indexing="xy",
     )
 
+    # Sigma & paramètres scalaires
     sigma = _compute_gaussian_sigma(video_width=w, gauss_size_pct=args.gauss_size_pct)
+    inv_2sigma2 = 1.0 / (2.0 * sigma * sigma)
+    half_amp_pixels = (args.vis_amp_pct / 100.0) * float(w) * 0.5
 
-    # Paramètres de la vibration
-    amp_pixels = (args.vis_amp_pct / 100.0) * float(w)
-    vis_fmin = float(args.vis_fmin)
-    vis_fmax = float(args.vis_fmax)
+    # Pré-calcul centres alignés et fréquences visuelles par cellule (r,c)
+    centers_map, fvis_map = _precompute_centers_and_fvis(args, freqs, w, h)
 
     # Infos liées aux oscillateurs / ordre zigzag
-    N = freqs.size
     order = zigzag_indices(Hf, Wf)
-
+    N = len(order)
     if N <= 1:
         # Cas dégénéré : on reste centré
         order = [(Hf // 2, Wf // 2)]
         N = 1
 
+    # Buffers réutilisables pour réduire allocations par frame
+    buffers = _allocate_frame_buffers(h, w)
+    src_x = buffers["src_x"]
+    src_y = buffers["src_y"]
+    xi = buffers["xi"]
+    yi = buffers["yi"]
+
     # Durée active (sans le sustain final) pour la progression de la fenêtre
     sweep_T = max(duration_s - float(getattr(args, "sustain_s", 0.0)), 0.001)
 
+    # Extraire quelques valeurs dans des locaux pour accès rapides
+    fps = args.fps
+
+    # --- setup barre de progression globale ---
+    total_frames = max(1, int(math.ceil(duration_s * float(fps))))
+    if tqdm is not None:
+        pbar = tqdm(total=total_frames, desc="Rendu vidéo", unit="frame")
+        use_tqdm = True
+    else:
+        # fallback minimal : simple compteur + print périodique
+        pbar = {"count": 0}
+        use_tqdm = False
+
+    last_idx = -1  # dernier index de frame comptabilisé dans la barre
+
     def make_frame(t: float) -> np.ndarray:
+        nonlocal last_idx, pbar
+
         # On borne le temps dans [0, duration_s]
         t_clamped = max(0.0, min(float(t), duration_s))
 
@@ -175,7 +269,6 @@ def generate_video_from_args(
             phase = 1.0
 
         # Enveloppe de BALAYAGE (fade-out)
-        # On utilise 15% pour s'arrêter en douceur.
         edge = 0.15  # 15% de la durée de balayage
         if phase <= 0.0:
             sweep_env = 0.0
@@ -184,7 +277,7 @@ def generate_video_from_args(
         else:
             sweep_env = 1.0
         sweep_env = max(0.0, min(sweep_env, 1.0))
-        
+
         # Index flottant dans l'ordre zigzag
         idx_float = phase * float(N - 1)
         idx = int(round(idx_float))
@@ -192,93 +285,156 @@ def generate_video_from_args(
 
         r, c = order[idx]
 
-        # Position de base du centre dans les coordonnées vidéo (continu)
-        cx_base = (c + 0.5) / float(Wf) * w
-        cy_base = (r + 0.5) / float(Hf) * h
+        # Récupère centre pré-calculé et fréquence visuelle
+        cx_base, cy_base = centers_map[(r, c)]
+        f_vis = fvis_map[(r, c)]
 
-        # 🧩 Ajustement clé :
-        # on aligne le centre de la gaussienne sur le centre D'UN PIXEL vidéo :
-        # → coordonnée = n + 0.5
-        cx_base = math.floor(cx_base) + 0.5
-        cy_base = math.floor(cy_base) + 0.5
-
-        # 🔥 Fréquence audio locale → fréquence visuelle
-        f_audio = float(freqs[r, c])
-
-        if args.fmax <= args.fmin:
-            # cas dégénéré : fréquence visuelle constante
-            f_vis = vis_fmin
-        else:
-            rel = (f_audio - args.fmin) / (args.fmax - args.fmin)
-            # on borne dans [0,1] par sécurité
-            if rel < 0.0:
-                rel = 0.0
-            elif rel > 1.0:
-                rel = 1.0
-            f_vis = vis_fmin + (vis_fmax - vis_fmin) * rel
+        # Mise à jour de la barre globale : calcul de l'indice de frame courant
+        # (on arrondit pour correspondre au frame demandé)
+        try:
+            frame_idx = int(round(t_clamped * float(fps)))
+        except Exception:
+            frame_idx = int(t_clamped * float(fps))
+        if frame_idx >= total_frames:
+            frame_idx = total_frames - 1
+        delta = frame_idx - last_idx
+        if delta > 0:
+            if use_tqdm:
+                pbar.update(delta)
+            else:
+                pbar["count"] += delta
+                # print un pourcentage simple toutes les 5%
+                if total_frames > 0:
+                    perc = int(100 * pbar["count"] / total_frames)
+                    if pbar["count"] % max(1, total_frames // 20) == 0:
+                        print(f"Rendu vidéo: {perc}%")
+            last_idx = frame_idx
 
         # Amplitude temporelle (sinus global) à la fréquence visuelle locale
         osc = math.sin(2.0 * math.pi * f_vis * t_clamped)
 
-        # Vecteurs de déplacement : déformation radiale
+        # Calcul des déformations (vectorisé). On vise à minimiser allocations temporaires :
         dx = xs - cx_base
         dy = ys - cy_base
+
+        # d2 = dx^2 + dy^2
         d2 = dx * dx + dy * dy
+
+        # poids gaussien : g = exp(-d2 / (2*sigma^2))
+        g = np.exp(-d2 * inv_2sigma2)
+
+        # distance d
         d = np.sqrt(d2 + 1e-9)
 
-        # Vecteurs unitaires radiaux
+        # vecteurs unitaires radiaux
         ux = dx / d
         uy = dy / d
 
-        # Poids gaussien (0 loin, 1 au centre)
-        g = np.exp(-d2 / (2.0 * sigma * sigma))
+        # amplitude de déformation radiale (en pixels)
+        deform = sweep_env * (g ** 2) * half_amp_pixels * osc
 
-        # Amplitude de déformation radiale (en pixels)
-        # Version plus douce : gaussienne plus progressive + amplitude réduite
-        deform = sweep_env * (g ** 2) * (0.5 * amp_pixels) * osc
+        # nouvelles coordonnées sources (in-place into src_x/src_y where possible)
+        # src_x = xs + ux * deform
+        np.multiply(ux, deform, out=src_x)  # src_x = ux * deform
+        np.add(src_x, xs, out=src_x)        # src_x = xs + ux*deform (in-place)
 
-        # Nouvelles coordonnées sources
-        src_x = xs + ux * deform
-        src_y = ys + uy * deform
+        np.multiply(uy, deform, out=src_y)
+        np.add(src_y, ys, out=src_y)        # src_y = ys + uy*deform (in-place)
 
-        # Clamp dans l'image
-        src_x = np.clip(src_x, 0.0, float(w - 1))
-        src_y = np.clip(src_y, 0.0, float(h - 1))
+        # Clamp dans l'image puis nearest-neighbor (rint)
+        np.clip(src_x, 0.0, float(w - 1), out=src_x)
+        np.clip(src_y, 0.0, float(h - 1), out=src_y)
+        np.rint(src_x, out=src_x)
+        np.rint(src_y, out=src_y)
+
+        # Cast in-place into integer index buffers
+        try:
+            src_x.astype(np.int32, copy=False, out=xi)
+            src_y.astype(np.int32, copy=False, out=yi)
+        except TypeError:
+            np.copyto(xi, np.rint(src_x).astype(np.int32))
+            np.copyto(yi, np.rint(src_y).astype(np.int32))
 
         # Échantillonnage nearest-neighbor (OK pour du pixel art)
-        xi = np.rint(src_x).astype(np.int32)
-        yi = np.rint(src_y).astype(np.int32)
-
         frame = base[yi, xi]
-        frame = np.clip(frame, 0.0, 255.0).astype(np.uint8)
+        # base is uint8; returned frame is uint8 -> no extra astype/clip needed
+
         return frame
 
     # Création du clip vidéo
+        # Création du clip vidéo
     clip = VideoClip(make_frame, duration=duration_s).set_audio(audio_clip)
 
-    # Encodage avec barre de progression MoviePy + paramètres compatibles QuickTime
+    # Encodage : on capture stdout/stderr temporairement pour empêcher les barres
+    # internes (moviepy / imageio / ffmpeg) d'afficher leur propre progression.
+    out_buf = io.StringIO()
+    err_buf = io.StringIO()
     try:
-        clip.write_videofile(
-            video_out_path,
-            fps=args.fps,
-            codec="libx264",
-            audio_codec="aac",
-            audio_bitrate="192k",
-            verbose=True,  # affiche la barre de progression
-            ffmpeg_params=[
-                "-pix_fmt",
-                "yuv420p",      # format de pixels standard QuickTime
-                "-movflags",
-                "+faststart",   # lecture progressive optimisée
-            ],
-        )
-        print(f"✅ Vidéo générée : {video_out_path}")
-        print(f"→ fps={args.fps} | vis-fmin={vis_fmin}Hz | vis-fmax={vis_fmax}Hz")
+        with contextlib.redirect_stdout(out_buf), contextlib.redirect_stderr(err_buf):
+            try:
+                # Essayer avec logger=None si la version de moviepy le supporte
+                clip.write_videofile(
+                    video_out_path,
+                    fps=fps,
+                    codec="libx264",
+                    audio_codec="aac",
+                    audio_bitrate="192k",
+                    verbose=False,
+                    logger=None,
+                    ffmpeg_params=[
+                        "-pix_fmt",
+                        "yuv420p",
+                        "-movflags",
+                        "+faststart",
+                    ],
+                )
+            except TypeError:
+                # Fallback pour versions anciennes de moviepy sans logger param
+                clip.write_videofile(
+                    video_out_path,
+                    fps=fps,
+                    codec="libx264",
+                    audio_codec="aac",
+                    audio_bitrate="192k",
+                    verbose=False,
+                    ffmpeg_params=[
+                        "-pix_fmt",
+                        "yuv420p",
+                        "-movflags",
+                        "+faststart",
+                    ],
+                )
+    except Exception:
+        # Si une erreur survient, on flush les sorties capturées pour débogage,
+        # puis on ré-élève l'exception.
+        sys.stdout.write(out_buf.getvalue())
+        sys.stderr.write(err_buf.getvalue())
+        raise
+    else:
+        # Succès : on ferme la barre proprement avant d'afficher le message final.
+        if tqdm is not None:
+            try:
+                pbar.close()
+            except Exception:
+                pass
+        else:
+            print("Rendu vidéo: 100%")
+
+        # Message final unique, format identique à l'audio
+        print(f"\n✅ Vidéo générée : {video_out_path}")
+        print(f"→ fps={fps} | vis-fmin={args.vis_fmin}Hz | vis-fmax={args.vis_fmax}Hz")
         print(
-            f"→ amp={args.vis_amp_pct}% (~{amp_pixels:.2f}px) | "
-            f"gauss_size={args.gauss_size_pct}% de la largeur (video {video_w}×{video_h})"
+            f"→ amp={args.vis_amp_pct}% (~{half_amp_pixels*2:.2f}px) | "
+            f"gauss_size={args.gauss_size_pct}% de la largeur (video {video_w}×{video_h})\n"
         )
     finally:
-        clip.close()
-        audio_clip.close()
+        # fermeture ressources (clip/audio)
+        try:
+            clip.close()
+        except Exception:
+            pass
+        try:
+            audio_clip.close()
+        except Exception:
+            pass
 

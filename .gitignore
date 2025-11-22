@@ -1,0 +1,25 @@
+# --- RENDUS AUDIO / VIDEO ----------------------------------------------------
+*.wav
+*.mp4
+
+# Optionnel : ignorer aussi les images ou rendus intermédiaires
+renders/
+output/
+outputs/
+generated/
+tmp/
+temp/
+
+# --- ENVIRONNEMENT PYTHON ----------------------------------------------------
+__pycache__/
+*.pyc
+
+# --- FICHIERS TEMPORAIRES ----------------------------------------------------
+*.tmp
+*.log
+
+# --- ENVIRONNEMENT VIRTUALENV ------------------------------------------------
+venv/
+.env/
+.env*/ 
+

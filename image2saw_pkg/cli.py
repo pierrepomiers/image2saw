@@ -14,11 +14,14 @@ V3.2 :
 V3.3 :
 - ajout d'un "mode artiste" basé sur des presets expressifs (style / movement / density),
   qui se contentent de mapper vers les paramètres techniques existants
+
+V3.4 :
+- remplacement du "mode artiste" par jeux de presets basés directement sur les paramètres techniques 
 """
 
 import argparse
 import os
-from typing import Tuple
+from typing import Any, Dict, Tuple
 
 import numpy as np
 from PIL import Image
@@ -36,66 +39,164 @@ from .video import generate_video_from_args
 
 
 # ─────────────────────────────────────────────
-#  Mode artiste : presets et mapping expressif
+#  Presets "artist-preset" : combos clés en main
 # ─────────────────────────────────────────────
 
-ARTIST_STYLES = {
-    "ambient": {
+ARTIST_PRESETS: Dict[str, Dict[str, Any]] = {
+    # 1) Nappes lentes, graves, sombres
+    "ambient_slow_dark": {
+        "color_mode": "grayscale",
         "waveform": "sine",
+        "fmin": 40.0,
+        "fmax": 1500.0,
+        "hsv_detune_pct": 0.0,
+        "hsv_blend_gray": 0.20,
+        "hsv_max_octave": 5,
+        "step_ms": 110.0,
+        "voices": 64,
     },
-    "cinematic": {
+
+    # 2) Nappes lentes, lumineuses, style "accordéon pastel"
+    "ambient_slow_shimmer": {
+        "color_mode": "grayscale",
+        "waveform": "sine",
+        "fmin": 80.0,
+        "fmax": 5000.0,
+        "hsv_detune_pct": 1.0,
+        "hsv_blend_gray": 0.15,
+        "hsv_max_octave": 5,
+        "step_ms": 90.0,
+        "voices": 56,
+    },
+
+    # 3) Texture filmique lente, large, basée sur HSV
+    "cinematic_slow": {
+        "color_mode": "hsv-notes",
         "waveform": "triangle",
+        "fmin": 40.0,      # ignoré en hsv-notes, laissé pour cohérence
+        "fmax": 8000.0,    # idem
+        "hsv_detune_pct": 0.5,
+        "hsv_blend_gray": 0.10,
+        "hsv_max_octave": 5,
+        "step_ms": 80.0,
+        "voices": 48,
     },
-    "glitch": {
-        "waveform": "square",
+
+    # 4) Cinématique plus lumineuse, presque générique
+    "cinematic_glow": {
+        "color_mode": "hsv-notes",
+        "waveform": "triangle",
+        "fmin": 40.0,
+        "fmax": 8000.0,
+        "hsv_detune_pct": 1.0,
+        "hsv_blend_gray": 0.05,
+        "hsv_max_octave": 5,
+        "step_ms": 60.0,
+        "voices": 40,
     },
-    "raw": {
+
+    # 5) "Photo organ" : l’image devient un orgue
+    "photo_organ": {
+        "color_mode": "grayscale",
+        "waveform": "triangle",
+        "fmin": 80.0,
+        "fmax": 4000.0,
+        "hsv_detune_pct": 0.0,
+        "hsv_blend_gray": 0.0,
+        "hsv_max_octave": 5,
+        "step_ms": 60.0,
+        "voices": 40,
+    },
+
+    # 6) Balayage rapide, lumineux, "scanner"
+    "scan_fast_bright": {
+        "color_mode": "grayscale",
         "waveform": "saw",
+        "fmin": 150.0,
+        "fmax": 8000.0,
+        "hsv_detune_pct": 0.0,
+        "hsv_blend_gray": 0.0,
+        "hsv_max_octave": 5,
+        "step_ms": 35.0,
+        "voices": 24,
+    },
+
+    # 7) Glitch très coloré, agressif
+    "glitch_color_burst": {
+        "color_mode": "hsv-notes",
+        "waveform": "square",
+        "fmin": 40.0,
+        "fmax": 8000.0,
+        "hsv_detune_pct": 3.0,
+        "hsv_blend_gray": 0.0,
+        "hsv_max_octave": 4,
+        "step_ms": 25.0,
+        "voices": 40,
+    },
+
+    # 8) Bitcrush / 8-bit style
+    "bitcrush_scan": {
+        "color_mode": "grayscale",
+        "waveform": "square",
+        "fmin": 300.0,
+        "fmax": 4000.0,
+        "hsv_detune_pct": 0.0,
+        "hsv_blend_gray": 0.0,
+        "hsv_max_octave": 5,
+        "step_ms": 30.0,
+        "voices": 20,
+    },
+
+    # 9) Tache d’encre très lente
+    "ink_in_water": {
+        "color_mode": "grayscale",
+        "waveform": "sine",
+        "fmin": 50.0,
+        "fmax": 3000.0,
+        "hsv_detune_pct": 0.0,
+        "hsv_blend_gray": 0.05,
+        "hsv_max_octave": 5,
+        "step_ms": 120.0,
+        "voices": 64,
+    },
+
+    # 10) Pluie de néons : rapide, scintillant, coloré
+    "neon_rain": {
+        "color_mode": "hsv-notes",
+        "waveform": "triangle",
+        "fmin": 40.0,
+        "fmax": 8000.0,
+        "hsv_detune_pct": 1.5,
+        "hsv_blend_gray": 0.05,
+        "hsv_max_octave": 5,
+        "step_ms": 35.0,
+        "voices": 36,
     },
 }
 
-
-def apply_artist_presets(args: argparse.Namespace) -> None:
+def apply_artist_preset(args: argparse.Namespace) -> None:
     """
-    Adapte les paramètres techniques à partir des curseurs "artistiques".
+    Applique un preset expressif (--artist-preset) en écrasant directement
+    quelques paramètres clés (waveform, color_mode, fmin/fmax, hsv_*, step_ms, voices).
 
-    - style    : waveform
-    - movement : step_ms
-    - density  : voices
+    Hypothèse simple : si l'utilisateur choisit un preset, il accepte
+    qu'il prenne vraiment la main. Pour affiner, il pourra ensuite
+    passer aux paramètres techniques bruts.
     """
-    # Style -> waveform
-    style_cfg = ARTIST_STYLES.get(args.style, {})
-    if "waveform" in style_cfg and args.waveform is None:
-        args.waveform = style_cfg["waveform"]
+    preset_name = getattr(args, "artist_preset", None)
+    if not preset_name:
+        return
 
-    # movement -> step_ms
-    if args.step_ms is None:
-        args.step_ms = _map_movement_to_step_ms(args.movement)
+    preset = ARTIST_PRESETS.get(preset_name)
+    if preset is None:
+        return
 
-    # density -> voices
-    if args.voices is None:
-        args.voices = _map_density_to_voices(args.density)
-
-
-def _map_movement_to_step_ms(movement: int) -> float:
-    """Convertit un curseur "movement" (1–10) en step_ms."""
-    """
-    1  → balayage très lent  (~120 ms)
-    10 → balayage très rapide (~20 ms)
-    """
-    movement = max(1, min(10, int(movement)))
-    return 120.0 - (movement - 1) * (100.0 / 9.0)
-
-
-def _map_density_to_voices(density: int) -> int:
-    """Convertit un curseur "density" (1–10) en nombre de voix.
-
-    1  → peu de voix (~8)
-    10 → beaucoup de voix (~64)
-    """
-    density = max(1, min(10, int(density)))
-    return int(np.round(np.interp(density, [1, 10], [8, 64])))
-
+    # On écrase directement les champs connus.
+    # (Si on veut être plus subtil plus tard, on pourra conditionner
+    #  à "valeur par défaut" avant overwrite.)
+    for key, value in preset.items():
+        if hasattr(args, key):
+            setattr(args, key, value)
 
 # ─────────────────────────────────────────────
 #  Mode "hsv-notes" : mapping HSV → (fréquences, amplitudes)
@@ -230,7 +331,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--step-ms",
         type=float,
-        default=40.0,
+        default=None,
         help="Décalage entre oscillateurs (ms).",
     )
     parser.add_argument(
@@ -254,14 +355,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--waveform",
         type=str,
-        default="saw",
+        default=None,
         choices=["saw", "sine", "triangle", "square"],
         help="Forme d'onde utilisée pour le son.",
     )
     parser.add_argument(
         "--voices",
         type=int,
-        default=32,
+        default=None,
         help="Nombre de voix simultanées (contrôle la durée de vie de chaque oscillateur).",
     )
     parser.add_argument(
@@ -292,29 +393,14 @@ def build_parser() -> argparse.ArgumentParser:
 
     # Mode artiste (optionnel)
     parser.add_argument(
-        "--artist",
-        action="store_true",
-        help="Active le mode artiste (style/movement/density) au lieu des paramètres bruts.",
-    )
-    parser.add_argument(
-        "--style",
+        "--artist-preset",
         type=str,
-        default="ambient",
-        choices=list(ARTIST_STYLES.keys()),
-        help="Style artistique pré-configuré (ambient, cinematic, glitch, raw).",
-    )
-    parser.add_argument(
-        "--movement",
-        type=int,
-        default=5,
-        help="Curseur de mouvement (1–10) : vitesse de balayage.",
-    )
-    parser.add_argument(
-        "--density",
-        type=int,
-        default=5,
-        help="Curseur de densité (1–10) : nombre de voix simultanées.",
-    )
+        choices=sorted(ARTIST_PRESETS.keys()),
+        help=(
+            "Preset expressif clé en main (ex: ambient_slow_dark, "
+            "ambient_slow_shimmer, glitch_color_burst, neon_rain, ...)."
+        ),
+    )    
 
     # Vidéo
     parser.add_argument(
@@ -429,9 +515,6 @@ def _compute_audio_image_shape(
     # Comportement historique : image audio carrée
     return args.size, args.size
 
-    return int(audio_w), int(audio_h)
-
-
 # ─────────────────────────────────────────────
 #  Point d'entrée principal
 # ─────────────────────────────────────────────
@@ -440,9 +523,18 @@ def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
 
-    # Mode artiste : adapter les paramètres techniques si demandé
-    if getattr(args, "artist", False):
-        apply_artist_presets(args)
+    has_preset = args.artist_preset is not None
+    if has_preset:
+        apply_artist_preset(args)
+
+    # Mode classique : defaults si rien n'a été mis par l'utilisateur ni par un preset
+    if not has_preset:
+        if args.step_ms is None:
+            args.step_ms = 40.0
+        if args.waveform is None:
+            args.waveform = "saw"
+        if args.voices is None:
+            args.voices = 32
 
     # Détermination des fichiers de sortie
     base, _ = os.path.splitext(args.image)
@@ -584,7 +676,7 @@ def main() -> None:
     if args.mono:
         stereo = False
     else:
-        # par défaut ou avec --stereo explicite → stéréo
+        # mono si --mono, sinon stéréo
         stereo = True
 
     # Planification des oscillateurs

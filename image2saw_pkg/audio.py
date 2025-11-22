@@ -130,6 +130,7 @@ def plan_schedule(
 
     # Parcours zigzag pour l'ordre des oscillateurs
     order = zigzag_indices(h, w)
+    AMP_EPS = 1e-4  # seuil sous lequel on considère l'oscillateur comme "silencieux"
 
     oscs: List[Osc] = []
     for i, (r, c) in enumerate(order):
@@ -140,8 +141,12 @@ def plan_schedule(
         pl, pr = pan_cache[c]
         if amps is not None:
             amp_val = float(amps[r, c])
+            if amp_val <= AMP_EPS:
+                # Oscillateur trop faible : on ne le crée pas du tout
+                continue
         else:
             amp_val = 1.0
+
         oscs.append(Osc(f=f, start=start, end=end, pan_l=pl, pan_r=pr, amp=amp_val))
 
     return oscs, T
@@ -209,6 +214,7 @@ def render_audio(
     fade_ms: float,
     waveform: str,
     tqdm_desc: str = "Rendu audio",
+    use_tqdm: bool = True,
 ) -> np.ndarray:
     """
     Rendu audio bloc par bloc, vectorisé par bloc + LUT.
@@ -257,8 +263,11 @@ def render_audio(
 
     # Boucle principale par blocs
     n_blocks = (n_samples + block_size - 1) // block_size
+    block_iter = range(n_blocks)
+    if use_tqdm:
+        block_iter = tqdm(block_iter, desc=tqdm_desc)
 
-    for b in tqdm(range(n_blocks), desc=tqdm_desc):
+    for b in block_iter:
         n0 = b * block_size
         n1 = min(n_samples, (b + 1) * block_size)
         if n0 >= n1:

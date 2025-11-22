@@ -11,10 +11,11 @@ Chaque pixel devient :
 
 ## Nouveautés V3.3 (par rapport à V3.2)
 
-- Ajout d’un mode "artist" :
-  - `--artist` + triptyque `--style`, `--movement`, `--density`.
-  - Ces curseurs sont pensés comme une couche expressive au-dessus des
-    paramètres techniques.
+- Ajout de **presets artistiques clés en main** :
+  - `--artist-preset` permet de charger des combinaisons cohérentes de
+    paramètres (waveform, color-mode, fmin/fmax, hsv-*, step-ms, voices).
+  - Ces presets servent de “points de départ” expressifs (nappes lentes,
+    glitch coloré, scanner rapide, etc.).
 - Paramètres couleur → son avancés :
   - `--color-mode hsv-notes` (HUE → note, VALUE → octave, SAT → amplitude).
   - `--hsv-detune-pct` : léger détune de fréquence basé sur la teinte
@@ -23,9 +24,13 @@ Chaque pixel devient :
     en niveaux de gris.
 - Clarification et regroupement de toutes les options CLI dans ce README.
 
-Note : le mode *artist* est en construction. Le mapping
-`style / movement / density` → paramètres techniques existe dans
-`apply_artist_presets`, mais la calibration fine reste à stabiliser.
+---
+
+## Nouveautés V3.3.1 (par rapport à V3.3)
+
+> ⚠️ Note : l’ancien mode `--artist` (avec `--style`, `--movement`,
+> `--density`) a été abandonné au profit de `--artist-preset`, jugé plus
+> simple et plus lisible (un preset = un son clairement identifiable).
 
 ---
 
@@ -152,8 +157,7 @@ Produit :
   Défaut  : 64
   Rôle    : taille de base (côté) de l’image audio en pixels, quand
   `--duration-s` n’est pas spécifié.
-  Comportement historique : image audio carrée (`size` x
-  `size`).
+  Comportement historique : image audio carrée (`size` x `size`).
   Si `--duration-s` est utilisé, `size` sert de pivot pour
   la résolution, mais la taille finale peut différer.
 
@@ -181,10 +185,13 @@ ne sont pas utilisées.
 
 * `--step-ms`
   Type    : float
-  Défaut  : 40.0
+  Défaut  : 40.0 (en pratique)
   Rôle    : décalage temporel entre l’activation de chaque voix
   (en millisecondes).
   Plus la valeur est petite, plus le balayage est rapide.
+  *Note : en interne, la valeur par défaut est calculée à partir
+  des presets ou, à défaut, fixée à 40 ms pour rester compatible
+  avec les versions précédentes.*
 
 * `--sustain-s`
   Type    : float
@@ -211,7 +218,7 @@ ne sont pas utilisées.
 
 * `--waveform`
   Type    : str
-  Défaut  : `saw`
+  Défaut  : `saw` (en pratique)
   Valeurs : `saw`, `sine`, `triangle`, `square`
   Rôle    : forme d’onde utilisée pour chaque oscillateur.
 
@@ -222,7 +229,7 @@ ne sont pas utilisées.
 
 * `--voices`
   Type    : int
-  Défaut  : 32
+  Défaut  : 32 (en pratique)
   Rôle    : nombre maximal de voix simultanées.
   Contrôle le chevauchement des notes : plus il y a de
   voix, plus les notes peuvent se superposer.
@@ -238,7 +245,7 @@ ne sont pas utilisées.
 ### 4. Paramètres couleur avancés (HSV)
 
 Ces options n’ont d’effet que lorsque l’information couleur est
-utilisée (grayscale + HSV blend ou `hsv-notes`).
+utilisée (`hsv-notes`, ou `grayscale` + blend/detune HSV).
 
 #### Détune basé sur la teinte
 
@@ -260,9 +267,10 @@ utilisée (grayscale + HSV blend ou `hsv-notes`).
   Rôle    : mélange entre luminance couleur (canal V de HSV) et
   luminance en niveaux de gris.
   Valeur clampée dans [0.0, 1.0].
-  - 0.0 : 100 % couleur (V).
-  - 1.0 : 100 % gris.
-  Exemple : 0.15 → 85 % couleur / 15 % gris.
+
+  * 0.0 : 100 % couleur (V).
+  * 1.0 : 100 % gris.
+    Exemple : 0.15 → 85 % couleur / 15 % gris.
 
 Combo validé à l’oreille pour un effet "accordéon" doux :
 
@@ -274,83 +282,60 @@ Combo validé à l’oreille pour un effet "accordéon" doux :
 
 ---
 
-### 5. Mode "Artist" (style / movement / density)
+### 5. Presets artistiques (`--artist-preset`)
 
-Le mode artist expose des curseurs expressifs plutôt que des
-paramètres techniques bruts.
+Les presets artistiques fournissent des **combinaisons de paramètres
+clé en main**, pour explorer rapidement des ambiances très différentes
+sans régler chaque option à la main.
 
-#### Activation
+Activation :
 
-* `--artist`
-  Type    : flag
-  Défaut  : False
-  Rôle    : active le mode artiste.
-  Les curseurs `--style`, `--movement` et `--density`
-  sont interprétés et traduits en paramètres techniques
-  (`waveform`, `step-ms`, `voices`) via `apply_artist_presets`.
-
-#### Style
-
-* `--style`
+* `--artist-preset`
   Type    : str
-  Défaut  : `ambient`
-  Valeurs : `ambient`, `cinematic`, `glitch`, `raw`
-  Rôle    : style artistique préconfiguré.
-  Implémentation actuelle (indicative) :
-  - `ambient`   → waveform `sine` (textures douces)
-  - `cinematic` → waveform `triangle`
-  - `glitch`    → waveform `square`
-  - `raw`       → waveform `saw`
+  Valeurs : parmi (liste non exhaustive) :
 
-Note : dans la version actuelle, `apply_artist_presets` ne modifie
-`waveform` que si `args.waveform` est None. Tant que la valeur
-par défaut reste `"saw"`, ce mapping doit être traité avec soin
-pour que le style prenne réellement la main.
+  * `ambient_slow_dark`
+  * `ambient_slow_shimmer`
+  * `cinematic_slow`
+  * `cinematic_glow`
+  * `photo_organ`
+  * `scan_fast_bright`
+  * `glitch_color_burst`
+  * `bitcrush_scan`
+  * `ink_in_water`
+  * `neon_rain`
 
-#### Movement → step-ms
+Chaque preset définit au minimum :
 
-* `--movement`
-  Type    : int
-  Défaut  : 5
-  Rôle    : curseur de mouvement (1–10). Contrôle la vitesse de
-  balayage.
-  Mappé vers `step-ms` via `_map_movement_to_step_ms()`.
+* `color_mode` (`grayscale` ou `hsv-notes`),
+* `waveform` (`sine`, `triangle`, `square`, `saw`),
+* une plage de fréquences (`fmin`, `fmax`) ou une plage de notes,
+* des réglages HSV (`hsv_detune_pct`, `hsv_blend_gray`, `hsv_max_octave`),
+* la vitesse de balayage (`step-ms`),
+* la densité (`voices`).
 
-Formule actuelle (approx.) :
+Exemples de caractère (résumé) :
 
-```python
-movement = max(1, min(10, int(movement)))
-step_ms = 120.0 - (movement - 1) * (100.0 / 9.0)
-```
+* `ambient_slow_dark`
+  Nappes graves très lentes, sombres, graves dominants.
 
-* movement = 1  → balayage très lent (~120 ms).
-* movement = 10 → balayage très rapide (~20 ms).
+* `ambient_slow_shimmer`
+  Nappes lentes plus lumineuses, "accordéon pastel", basées sur
+  `sine + hsv_detune_pct=1 + hsv_blend_gray=0.15`.
 
-#### Density → voices
+* `cinematic_slow`
+  Texture filmique lente, large, basée sur `hsv-notes + triangle`.
 
-* `--density`
-  Type    : int
-  Défaut  : 5
-  Rôle    : curseur de densité (1–10). Contrôle le nombre de voix
-  simultanées.
+* `glitch_color_burst`
+  Glitch couleur agressif, rapide, `hsv-notes + square + detune fort`.
 
-Formule actuelle (approx.) :
+* `bitcrush_scan`
+  Balayage rapide, carrés, ressenti 8-bit / bitcrush.
 
-```python
-density = max(1, min(10, int(density)))
-voices = round(interp(density, [1, 10], [8, 64]))
-```
-
-* density = 1  → peu de voix (~8).
-* density = 10 → beaucoup de voix (~64).
-
-Note importante :
-Pour que `--artist` prenne vraiment le contrôle, il faudra décider
-si :
-
-* on laisse `--artist` imposer ses valeurs (sauf override explicite),
-* ou on utilise ces mappings comme suggestions de valeurs par
-  défaut "intelligentes".
+> Remarque : les presets écrasent volontairement certains paramètres
+> (waveform, fmin/fmax, hsv-*, step-ms, voices) pour garantir un
+> rendu sonore cohérent. Il reste possible de les ajuster ensuite
+> en redonnant des options techniques explicites.
 
 ---
 
@@ -445,7 +430,7 @@ Règle de priorité typique :
 
 ## Exemple "combo accordéon"
 
-Exemple complet combinant les paramètres audio et vidéo:
+Exemple complet combinant les paramètres audio et vidéo :
 
 ```bash
 python3 image2saw.py tableau.png \
@@ -462,35 +447,20 @@ python3 image2saw.py tableau.png \
   --gauss-size-pct 200.0
 ```
 
+Variante en utilisant directement un preset :
+
+```bash
+python3 image2saw.py tableau.png \
+  --artist-preset ambient_slow_shimmer \
+  --duration-s 12 \
+  --video \
+  --video-width 1024 --video-height 576
+```
+
 * Son : texture douce type accordéon / orgue, légère instabilité
   liée à la couleur (detune HSV).
 * Image : ratio respecté, balayage régulier, gaussienne large pour
   un rendu organique.
 
----
-
-## À faire autour du mode Artist
-
-Cette documentation sert aussi de base pour stabiliser le mode
-`--artist` :
-
-* Décider si `--artist` doit :
-
-  * imposer ses propres valeurs (en ignorant `--step-ms`, `--voices`,
-    `--waveform` sauf override explicite), ou
-  * simplement proposer des valeurs par défaut intelligentes.
-* Éventuellement : changer les valeurs par défaut du parser pour que
-  certaines soient `None` lorsque `--artist` est actif.
-* Ajouter quelques presets nommés (par ex. `--artist-preset accordion`)
-  basés sur :
-
-  * `waveform = sine`
-  * `hsv-detune-pct = 1.0`
-  * `hsv-blend-gray = 0.15`
-
 ```
-
-Si tu veux, je peux aussi te faire une **version très courte** type
-`--help` compact, ou un **manpage** style `man image2saw`.
 ```
-

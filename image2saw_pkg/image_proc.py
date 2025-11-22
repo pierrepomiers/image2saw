@@ -134,3 +134,26 @@ def zigzag_indices(h: int, w: int) -> List[Tuple[int, int]]:
             idx.append((r, c))
     return idx
 
+def downscale_for_preview(img: Image.Image, max_pixels: int = 64 * 64) -> Image.Image:
+    """
+    Version "preview" de l'image pour le mode live :
+    réduit la résolution tout en conservant le ratio,
+    de façon à ce que width * height <= max_pixels.
+
+    Exemple :
+        - max_pixels = 4096 (64x64)
+        - pour un Bosche 4000x2000, on va descendre en ~90x45, etc.
+    """
+    w, h = img.size
+    if w * h <= max_pixels:
+        return img
+
+    ratio = w / h if h != 0 else 1.0
+    # On cherche width*height ~= max_pixels en respectant le ratio
+    new_h = int(math.sqrt(max_pixels / ratio))
+    new_w = int(new_h * ratio)
+    new_w = max(1, new_w)
+    new_h = max(1, new_h)
+
+    return img.resize((new_w, new_h), Image.LANCZOS)
+

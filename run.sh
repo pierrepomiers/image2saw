@@ -1,0 +1,16 @@
+python3 image2saw.py sichuan.png\
+  --color-mode grayscale \
+  --duration-s 120 \
+  --sr 48000 \
+  --fmin 164 --fmax 432 \
+  --step-ms 100 \
+  --voices 30 \
+  --waveform sine \
+  --sustain-s 0 \
+  --video \
+  --fps 30 \
+  --vis-fmin 0 --vis-fmax 10 \
+  --vis-amp-pct 2 \
+  --gauss-size-pct 200 \
+  --video \
+  --video-width 500

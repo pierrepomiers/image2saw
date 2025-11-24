@@ -325,7 +325,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--fmax",
         type=float,
-        default=8000.0,
+        default=400.0,
         help="Fréquence maximale (Hz) pour le mapping spectral grayscale.",
     )
     parser.add_argument(

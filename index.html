@@ -65,6 +65,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:9px;height
 input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);border:0;border-radius:0}
 .seg{display:flex;flex-wrap:wrap;gap:0 14px;align-items:center}
 .cap{color:var(--dim)}
+#pathname{min-width:12ch;text-align:center}
+.seg #pathprev,.seg #pathnext{color:var(--ink);padding:8px 6px}
 /* Égaliseur : sept curseurs verticaux côte à côte. Le curseur est un curseur horizontal tourné d'un quart de tour. */
 .faders{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px;margin-top:6px}
 .fader{display:grid;justify-items:center;gap:2px;min-width:0}
@@ -110,7 +112,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
   <h2>settings</h2>
   <dl>
     <dt>résolution</dt><dd>Number of pixels on the long side of the area, from 1 to 64. Every pixel is visited, so more pixels means faster travel (see ms/px under the image) and a longer computation.</dd>
-    <dt>parcours</dt><dd>Path of the window. serpentin snakes through every pixel once, by rows (↔) or columns (↕). aller-retour goes there and back. spirale winds to the centre and back out.</dd>
+    <dt>parcours</dt><dd>Path of the window. Step through the five paths with &lt; and &gt;. h-snake and v-snake snake through every pixel once, by rows or by columns. aller-retour goes there and back. spirale winds to the centre and back out. chaos wanders at random from one pixel to a neighbour, still crossing every pixel once before it loops; [ autre ] draws another random path.</dd>
     <dt>largeur</dt><dd>Width of the window, as a share of the area. Around 50 %, nearly every pixel sings at once.</dd>
     <dt>résonance</dt><dd>How long a voice keeps ringing after the window has passed.</dd>
     <dt>influence</dt><dd>How much the image drives width and resonance. Flat areas widen the window, busy areas narrow it, vivid colours ring longer.</dd>
@@ -132,7 +134,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Video is recorded in real time: keep the page visible until it ends.</li>
     <li>On an iPhone, the silent switch mutes the sound.</li>
   </ul>
-  <p class="ver">version A · 372321c</p>
+  <p class="ver">version A · 1bfead1</p>
 </article>
 <main>
   <div class="stage">
@@ -156,7 +158,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
         <button data-demo="damier">damier</button>
       </div>
       <div data-s="grid"></div>
-      <div class="row wide"><span>parcours</span><div class="seg" data-seg="path"></div></div>
+      <div class="row wide"><span>parcours</span><div class="seg"><button id="pathprev" aria-label="parcours précédent">&lt;</button><span id="pathname"></span><button id="pathnext" aria-label="parcours suivant">&gt;</button><button id="reroll" class="cmd" hidden>autre</button></div></div>
     </section>
     <section>
       <h2>gaussienne</h2>
@@ -205,7 +207,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
         <button id="reset" class="cmd">défauts</button>
       </div>
     </section>
-    <p class="ver">pixels to soundscape patterns · A · 372321c</p>
+    <p class="ver">pixels to soundscape patterns · A · 1bfead1</p>
   </div>
 </main>
 
@@ -285,6 +287,38 @@ function buildPath(type, gw, gh) {
   return pts;
 }
 
+/* Parcours « chaos » : un chemin tiré au hasard qui passe une fois par chaque pixel, de voisin en voisin, puis revient
+   à son départ. On part d'un serpentin et on le replie sur lui-même un grand nombre de fois : une extrémité choisit
+   un voisin au hasard, s'y raccorde, et le tronçon entre les deux est retourné. La graine rend le tirage reproductible.
+   Quand aucune boucle n'existe (nombre impair de pixels, grille d'un seul rang), le chemin revient sur ses pas. */
+function chaosPath(gw, gh, seed) {
+  const n = gw * gh, path = new Int32Array(n), pos = new Int32Array(n), nb = [0, 0, 0, 0];
+  let k = 0; for (let r = 0; r < gh; r++) for (let c = 0; c < gw; c++) path[k++] = r * gw + (r % 2 ? gw - 1 - c : c);
+  for (let i = 0; i < n; i++) pos[path[i]] = i;
+  let s = (seed >>> 0) || 1;
+  const rnd = () => { s = (s + 0x6D2B79F5) | 0; let t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  const adj = (a, b) => { const d = Math.abs(a - b); return d === gw || (d === 1 && ((a / gw) | 0) === ((b / gw) | 0)); };
+  const flip = (i, j) => { while (i < j) { const a = path[i], b = path[j]; path[i] = b; path[j] = a; pos[b] = i; pos[a] = j; i++; j--; } };
+  const bite = () => {
+    const tail = rnd() < 0.5, c = path[tail ? n - 1 : 0], prev = path[tail ? n - 2 : 1], x = c % gw, y = (c / gw) | 0; let m = 0;
+    if (x > 0 && c - 1 !== prev) nb[m++] = c - 1;
+    if (x < gw - 1 && c + 1 !== prev) nb[m++] = c + 1;
+    if (y > 0 && c - gw !== prev) nb[m++] = c - gw;
+    if (y < gh - 1 && c + gw !== prev) nb[m++] = c + gw;
+    if (!m) return;
+    const j = pos[nb[(rnd() * m) | 0]];
+    if (tail) flip(j + 1, n - 1); else flip(0, j - 1);
+  };
+  if (n > 2 && Math.min(gw, gh) > 1) {
+    for (let i = 0, m = n * 12; i < m; i++) bite();
+    if (n % 2 === 0) for (let i = 0, m = n * 400; i < m && !adj(path[0], path[n - 1]); i++) bite();   /* jusqu'à ce que les deux bouts se touchent */
+  }
+  const pts = []; for (let i = 0; i < n; i++) pts.push([path[i] % gw + 0.5, ((path[i] / gw) | 0) + 0.5]);
+  if (n > 2 && adj(path[0], path[n - 1])) pts.push(pts[0]);
+  else { for (let i = n - 2; i >= 1; i--) pts.push(pts[i]); pts.push(pts[0]); }
+  return pts;
+}
+
 /* Échantillonne le parcours à vitesse constante en K points. */
 function samplePath(pts, K) {
   const cum = new Float64Array(pts.length);
@@ -358,7 +392,7 @@ function prep(an, p) {
   const { gw, gh } = an;
   const Ls = Math.max(hop * 8, Math.round(p.dur * sr)), D = Ls / sr;
   const K = Math.max(8, Math.round(Ls / hop)), hopSec = D / K;
-  const { hx, hy } = samplePath(buildPath(p.path, gw, gh), K);
+  const { hx, hy } = samplePath(p.pts || buildPath(p.path, gw, gh), K);   /* p.pts : parcours déjà tracé (chaos) */
 
   /* Largeur de la gaussienne le long du trajet : zone unie → large, zone contrastée → étroite. */
   const sg = new Float32Array(K), inv = new Float32Array(K), gn = new Float32Array(K);
@@ -649,7 +683,7 @@ const FIXED = { shape: 2.5, disc: 1, dyn: 0.6 };
 
 const P = { grid: 16, path: "cycleH", sigma: 15, ring: 0.25, infl: 60,
   wave: "sine", fmin: noteHz(0), fmax: noteHz(59), scale: "lin", tune: "libre", stereo: 80,
-  sig: "4/4", bpm: 120, bars: "4", freeDur: 8, wobble: 50,
+  sig: "4/4", bpm: 120, bars: "4", freeDur: 8, wobble: 50, seed: 1,
   eq0: 0, eq1: 0, eq2: 0, eq3: 0, eq4: 0, eq5: 0, eq6: 0 };
 if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) P.wobble = 0;
 
@@ -673,7 +707,7 @@ const SLIDERS = {
   eq6:     { label: ">8k", min: -15, max: 15, step: 1, unit: "dB", fx: true }
 };
 const SEGS = {
-  path:  [["cycleH", "serpentin ↔"], ["cycleV", "serpentin ↕"], ["pong", "aller-retour"], ["spirale", "spirale"]],
+  path:  [["cycleH", "h-snake"], ["cycleV", "v-snake"], ["pong", "aller-retour"], ["spirale", "spirale"], ["chaos", "chaos"]],
   wave:  [["sine", "sinus"], ["triangle", "triangle"], ["saw", "scie"], ["square", "carré"]],
   scale: [["lin", "linéaire"], ["log", "log"]],
   tune:  [["libre", "libre"], ["chromatique", "chromatique"], ["penta", "pentatonique"]],
@@ -755,6 +789,23 @@ function changed(liveOnly) {
   clearTimeout(timer); timer = setTimeout(rerender, 260);
 }
 
+/* ── Parcours : choix par flèches, tracé du chaos gardé en mémoire ── */
+let chaosKey = "", chaosPts = null;
+function pathPoints(w, h) {
+  if (P.path !== "chaos") return buildPath(P.path, w, h);
+  const key = w + "x" + h + "/" + P.seed;
+  if (key !== chaosKey) { chaosPts = chaosPath(w, h, P.seed); chaosKey = key; }
+  return chaosPts;
+}
+function setPath(v, quiet) {
+  const o = SEGS.path.find(x => x[0] === v); if (!o) return;
+  P.path = v; $("pathname").textContent = o[1]; $("reroll").hidden = v !== "chaos";
+  if (!quiet) changed(false);
+}
+function stepPath(d) { const i = SEGS.path.findIndex(x => x[0] === P.path), n = SEGS.path.length; setPath(SEGS.path[(i + d + n) % n][0]); }
+SETTERS.path = v => setPath(String(v), true);
+SETTERS.seed = v => { P.seed = (Number(v) >>> 0) || 1; };
+
 /* ── Image et pixels ── */
 function setImage(image, name, keepSel) {
   const s = Math.min(1, 1024 / Math.max(image.naturalWidth, image.naturalHeight));
@@ -782,7 +833,7 @@ function refreshPixels() {
   const data = o.getImageData(0, 0, gw, gh).data;
   an = analyse(data, gw, gh); an.rgba = data;
   cols = new Array(gw * gh); for (let i = 0; i < gw * gh; i++) cols[i] = "rgb(" + data[4 * i] + "," + data[4 * i + 1] + "," + data[4 * i + 2] + ")";
-  pathPts = buildPath(P.path, gw, gh);
+  pathPts = pathPoints(gw, gh);
   let len = 0; for (let i = 1; i < pathPts.length; i++) len += Math.hypot(pathPts[i][0] - pathPts[i - 1][0], pathPts[i][1] - pathPts[i - 1][1]);
   statTxt = getDur().toFixed(2) + " s · " + gw * gh + " px · " + Math.round(1000 * getDur() / Math.max(1, len)) + " ms/px";
   paintLine();
@@ -872,7 +923,7 @@ async function rerender() {
   if (!an) return;
   killWorkers();
   const my = ++job, a = an;
-  const p = { dur: getDur(), path: P.path, sigma: P.sigma / 100 * Math.max(a.gw, a.gh), autoSigma: P.infl / 100, shape: FIXED.shape, disc: FIXED.disc, ring: P.ring, autoRing: P.infl / 100,
+  const p = { dur: getDur(), path: P.path, pts: P.path === "chaos" ? pathPoints(a.gw, a.gh) : null, sigma: P.sigma / 100 * Math.max(a.gw, a.gh), autoSigma: P.infl / 100, shape: FIXED.shape, disc: FIXED.disc, ring: P.ring, autoRing: P.infl / 100,
     wave: P.wave, fmin: P.fmin, fmax: P.fmax, scale: P.scale, tune: P.tune, dyn: FIXED.dyn, stereo: P.stereo / 100 };
   const show = v => { if (my === job) { prog = v; paintLine(); } };
   busy = true; prog = 0; paintLine();
@@ -1186,6 +1237,10 @@ $("help").addEventListener("click", () => {
 });
 $("video").addEventListener("click", exportVideo);
 $("save").addEventListener("click", saveParams);
+$("pathprev").addEventListener("click", () => stepPath(-1));
+$("pathnext").addEventListener("click", () => stepPath(1));
+$("reroll").addEventListener("click", () => { P.seed = P.seed % 9999 + 1; changed(false); });   /* un autre tirage du chaos */
+setPath(P.path, true);
 $("flat").addEventListener("click", () => { EQ_BANDS.forEach((b, i) => SETTERS["eq" + i](0)); eqChanged(); });
 $("reset").addEventListener("click", () => applyParams({ reglages: DEFAULTS }));
 $("open").addEventListener("change", e => {

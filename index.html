@@ -152,7 +152,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Video is recorded in real time: keep the page visible until it ends.</li>
     <li>On an iPhone, the silent switch mutes the sound.</li>
   </ul>
-  <p class="ver">version A · 5381c8a</p>
+  <p class="ver">version A · 56223eb</p>
 </article>
 <main>
   <div class="stage">
@@ -237,7 +237,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
         <button id="reset" class="cmd">défauts</button>
       </div>
     </section>
-    <p class="ver">pixels to soundscape patterns · A · 5381c8a</p>
+    <p class="ver">pixels to soundscape patterns · A · 56223eb</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>
@@ -847,7 +847,7 @@ function setImage(image, name, keepSel) {
   const s = Math.min(1, 1024 / Math.max(image.naturalWidth, image.naturalHeight));
   src.width = Math.max(1, Math.round(image.naturalWidth * s)); src.height = Math.max(1, Math.round(image.naturalHeight * s));
   if (cam) stopCam(true);   /* choisir une image quitte la caméra, sans passer par [ figer ] */
-  src.getContext("2d").drawImage(image, 0, 0, src.width, src.height);
+  src.getContext("2d").drawImage(image, 0, 0, src.width, src.height); fitFrame();
   imgName = name; sel = keepSel || { x: 0.1, y: 0.1, w: 0.8, h: 0.8 };
   changed(false);
 }
@@ -1352,7 +1352,7 @@ function camTimer() { clearInterval(cam.timer); cam.timer = setInterval(camTick,
 function camTick() {
   const c = cam, v = c && c.video; if (!v || v.readyState < 2 || !v.videoWidth) return;
   const s = Math.min(1, 320 / Math.max(v.videoWidth, v.videoHeight)), w = Math.max(1, Math.round(v.videoWidth * s)), h = Math.max(1, Math.round(v.videoHeight * s));
-  if (src.width !== w || src.height !== h) { src.width = w; src.height = h; }
+  if (src.width !== w || src.height !== h) { src.width = w; src.height = h; fitFrame(); }
   /* Zoom : celui de l'objectif quand l'appareil le permet, complété par un recadrage au centre. */
   let z = Math.max(1, P.zoom), hz = 1;
   if (c.zcap) { hz = Math.min(z, c.zcap.max / c.zcap.min); if (c.hz !== hz) { c.hz = hz; c.track.applyConstraints({ advanced: [{ zoom: c.zcap.min * hz }] }).catch(() => { c.zcap = null; }); } }
@@ -1408,10 +1408,18 @@ function playTime() {
   return tp;
 }
 function geom() {
-  const W = cv.clientWidth, H = cv.clientHeight, s = Math.min(W / src.width, H / src.height) * 0.96;
+  const W = cv.clientWidth, H = cv.clientHeight, s = Math.min((W - 12) / src.width, (H - 12) / src.height);
   const iw = src.width * s, ih = src.height * s;
   return { W, H, ox: (W - iw) / 2, oy: (H - ih) / 2, iw, ih };
 }
+/* En portrait, le cadre prend les proportions de l'image : plus de bandes noires autour. */
+const WIDE = matchMedia("(orientation:landscape) and (min-width:560px), (min-width:900px)");
+function fitFrame() {
+  if (WIDE.matches || !src.width) { cv.style.height = ""; return; }
+  const W = cv.clientWidth, h = Math.round(Math.max(120, Math.min(W, innerHeight * 0.5, W * src.height / src.width)));
+  if (cv.style.height !== h + "px") cv.style.height = h + "px";
+}
+addEventListener("resize", fitFrame);
 function resize() {
   const d = Math.min(2, window.devicePixelRatio || 1);
   cv.width = Math.round(cv.clientWidth * d); cv.height = Math.round(cv.clientHeight * d);

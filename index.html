@@ -54,10 +54,13 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
 .seg button{color:var(--dim)}
 .filebtn{display:inline-block;position:relative;overflow:hidden;white-space:pre}
 .filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
-@media (min-width:900px){
-  main{grid-template-columns:minmax(0,1.2fr) minmax(340px,.8fr);gap:28px;align-items:start}
-  .stage{top:8px}
-  canvas{height:min(56vw,66vh)}
+/* Paysage (téléphone couché, tablette, ordinateur) : image à gauche, réglages à droite. */
+@media (orientation:landscape) and (min-width:560px), (min-width:900px){
+  header{padding:6px 0 4px}
+  main{grid-template-columns:minmax(0,1.15fr) minmax(290px,.85fr);gap:22px;align-items:start}
+  .stage{top:4px}
+  canvas{height:max(130px,calc(100vh - 150px));height:max(130px,calc(100dvh - 150px))}
+  section:first-child h2{margin-top:0}
 }
 </style>
 </head>

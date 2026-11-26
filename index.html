@@ -15,9 +15,21 @@
 html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--mono);font-size:13px;line-height:1.4}
 body{padding:0 16px 40px}
 header,main{max-width:1100px;margin:0 auto}
-header{padding:12px 0 8px;color:var(--ink);white-space:nowrap;overflow:hidden}
+header{padding:4px 0;color:var(--ink);white-space:nowrap;display:flex;justify-content:space-between;align-items:center;gap:12px}
+#doc{max-width:1100px;margin:0 auto;padding-bottom:24px}
+#doc p,#doc li,#doc dd{max-width:68ch}
+#doc h2{margin:18px 0 6px;font-size:13px;font-weight:400;color:var(--dim);white-space:nowrap;overflow:hidden}
+#doc h2::before{content:"── "}
+#doc h2::after{content:" ────────────────────────────────────────────────────────────────────────────────────────"}
+#doc ol,#doc ul{margin:0;padding-left:3ch}
+#doc li{margin:4px 0}
+#doc dl{margin:0;display:grid;grid-template-columns:11ch minmax(0,1fr);gap:8px 2ch}
+#doc dt{color:var(--ink)}
+#doc dd{margin:0;color:var(--dim)}
+.ver{color:var(--dim);margin:18px 0 0}
 header h1{display:inline;font-size:13px;font-weight:400;margin:0;color:var(--ink)}
 main{display:grid;gap:8px}
+main[hidden],#doc[hidden]{display:none}
 .stage{position:sticky;top:0;z-index:5;background:var(--bg);padding-bottom:6px;display:grid;gap:6px;min-width:0}
 canvas{display:block;width:100%;height:min(calc(100vw - 32px),44vh);background:#000;border:1px solid var(--line);touch-action:none;cursor:crosshair}
 .bar{height:1px;background:var(--line)}
@@ -56,7 +68,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
 .filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
 /* Paysage (téléphone couché, tablette, ordinateur) : image à gauche, réglages à droite. */
 @media (orientation:landscape) and (min-width:560px), (min-width:900px){
-  header{padding:6px 0 4px}
+  header{padding:0}
   main{grid-template-columns:minmax(0,1.15fr) minmax(290px,.85fr);gap:22px;align-items:start}
   .stage{top:4px}
   canvas{height:max(130px,calc(100vh - 150px));height:max(130px,calc(100dvh - 150px))}
@@ -65,7 +77,51 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
 </style>
 </head>
 <body>
-<header><h1>image2saw</h1> <span aria-hidden="true">╝║╝║╝║</span> &lt;rev. A 732c130&gt;</header>
+<header><span><h1>image2saw</h1> <span aria-hidden="true">╝║╝║╝║</span></span><button id="help" class="cmd" aria-expanded="false" aria-controls="doc" aria-label="Help">?</button></header>
+<article id="doc" lang="en" hidden>
+  <p>image2saw turns an image into a seamless sound loop. Every pixel of the selected area is a voice. A soft window travels across the area and makes the pixels under it sing.</p>
+  <h2>how to</h2>
+  <ol>
+    <li>Load an image with [ charger ], or pick one of the three examples.</li>
+    <li>Drag on the image to select the area to play. Drag inside the frame to move it, drag a corner to resize it.</li>
+    <li>Press [ lecture ] to listen. The space bar does the same.</li>
+    <li>Change the settings. The sound is recomputed after each change; the thin line under the image shows progress.</li>
+    <li>[ wav ] exports the loop as a 16-bit stereo file. [ vidéo ] records one loop of the moving image with its sound.</li>
+  </ol>
+  <h2>what the image does</h2>
+  <dl>
+    <dt>hue</dt><dd>Sets the pitch: red is low, violet is high. In a black and white image, brightness sets the pitch.</dd>
+    <dt>brightness</dt><dd>Sets the loudness of each voice.</dd>
+    <dt>saturation</dt><dd>Sets how long each voice rings.</dd>
+  </dl>
+  <h2>settings</h2>
+  <dl>
+    <dt>résolution</dt><dd>Number of pixels on the long side of the area, from 1 to 64. Every pixel is visited, so more pixels means faster travel (see ms/px under the image).</dd>
+    <dt>parcours</dt><dd>Path of the window. serpentin snakes through every pixel once, by rows (↔) or columns (↕). aller-retour goes there and back. spirale winds to the centre and back out.</dd>
+    <dt>largeur</dt><dd>Width of the window, as a share of the area. Around 50 %, nearly every pixel sings at once.</dd>
+    <dt>sommet</dt><dd>Shape of the window. 0 % is a bell curve, 100 % is a flat plateau with sharp edges.</dd>
+    <dt>résonance</dt><dd>How long a voice keeps ringing after the window has passed.</dd>
+    <dt>influence</dt><dd>How much the image drives width and resonance. Flat areas widen the window, busy areas narrow it, vivid colours ring longer.</dd>
+    <dt>onde</dt><dd>Waveform of every voice: sine, triangle, sawtooth or square.</dd>
+    <dt>grave, aigu</dt><dd>Lowest and highest frequency. Go below 20 Hz for rumbles and beats.</dd>
+    <dt>échelle</dt><dd>Linear or logarithmic spread of the pitches between those two limits.</dd>
+    <dt>accord</dt><dd>Leaves pitches free, or snaps them to the chromatic or pentatonic scale.</dd>
+    <dt>dynamique</dt><dd>How much brightness affects loudness. At 100 %, black pixels are silent.</dd>
+    <dt>stéréo</dt><dd>Stereo width. The left of the image plays in the left speaker.</dd>
+    <dt>mesure, mesures, tempo</dt><dd>Loop length in bars, so that samples line up on the beat. Choose libre to set a length in seconds with durée.</dd>
+    <dt>wobble</dt><dd>Strength of the ripple on the image while it plays. The ripple follows the real loudness and pitch of the sound.</dd>
+    <dt>sauver, ouvrir, défauts</dt><dd>Save the settings to a .json file, load one back, or return to the starting values.</dd>
+  </dl>
+  <h2>good to know</h2>
+  <ul>
+    <li>Loops are seamless: the end joins the start with no click.</li>
+    <li>Type a value next to a slider to set it exactly. Double-click a name to reset it.</li>
+    <li>Beyond the edges, the image is mirrored, so the window is never half empty.</li>
+    <li>Video is recorded in real time: keep the page visible until it ends.</li>
+    <li>On an iPhone, the silent switch mutes the sound.</li>
+  </ul>
+  <p class="ver">version A · 9e4ce21</p>
+</article>
 <main>
   <div class="stage">
     <canvas id="cv" aria-label="Image et sélection. Glisser pour sélectionner la zone à jouer."></canvas>
@@ -127,6 +183,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
         <button id="reset" class="cmd">défauts</button>
       </div>
     </section>
+    <p class="ver">A · 9e4ce21</p>
   </div>
 </main>
 
@@ -786,6 +843,10 @@ cv.addEventListener("pointerup", endDrag); cv.addEventListener("pointercancel", 
 buildControls();
 $("play").addEventListener("click", togglePlay);
 $("export").addEventListener("click", exportWav);
+$("help").addEventListener("click", () => {
+  const open = $("doc").hidden; $("doc").hidden = !open; document.querySelector("main").hidden = open;
+  $("help").setAttribute("aria-expanded", String(open)); $("help").textContent = open ? "×" : "?"; window.scrollTo(0, 0);
+});
 $("video").addEventListener("click", exportVideo);
 $("save").addEventListener("click", saveParams);
 $("reset").addEventListener("click", () => applyParams({ reglages: DEFAULTS }));

@@ -27,7 +27,9 @@ La version exacte est affichée en bas de la page (`A · numéro de commit`). L'
 ## Réglages
 
 **image**
-- `résolution` : nombre de pixels sur le grand côté de la zone, de 1 à 64. Tous sont parcourus : plus il y en a, plus la fenêtre va vite et plus le calcul est long.
+- `[ caméra ]` : joue en direct l'image de la caméra du téléphone ou de l'ordinateur à la place d'une image fixe. On bouge la caméra, le son suit aussitôt. `[ retourner ]` passe de la caméra arrière à la caméra avant. `[ figer ]` garde l'image du moment et revient au mode normal, où les boucles s'exportent. La caméra ne fonctionne que si la page est ouverte dans un navigateur (Safari, Chrome), pas à l'intérieur de Claude.
+- `images/s` : avec la caméra, nombre de rafraîchissements du son et de l'image par seconde, de 1 à 30. Une valeur basse donne un résultat saccadé, stroboscopique.
+- `résolution` : nombre de pixels sur le grand côté de la zone, de 1 à 64. Tous sont parcourus : plus il y en a, plus la fenêtre va vite et plus le calcul est long. Avec la caméra, elle est plafonnée à 32.
 - `parcours` : trajet de la fenêtre, choisi avec `<` et `>`.
   - `h-snake`, `v-snake` : serpentin qui passe une fois par chaque pixel, par lignes ou par colonnes.
   - `aller-retour` : serpentin à l'aller, même chemin au retour.
@@ -68,7 +70,7 @@ La version exacte est affichée en bas de la page (`A · numéro de commit`). L'
 
 ## Technique
 
-Tout tient dans un seul fichier, `index.html`, sans dépendance ni serveur : le son est calculé dans le navigateur, réparti sur plusieurs fils de calcul. La vidéo est enregistrée en temps réel, il faut garder la page affichée.
+Tout tient dans un seul fichier, `index.html`, sans dépendance ni serveur : le son est calculé dans le navigateur, réparti sur plusieurs fils de calcul. Avec la caméra, un second moteur fabrique le son en direct, voix par voix, sans passer par une boucle calculée. La vidéo est enregistrée en temps réel, il faut garder la page affichée.
 
 ## État du projet
 

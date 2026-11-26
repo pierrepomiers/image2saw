@@ -33,6 +33,7 @@ header small{color:var(--dim);font-size:13px}
 header h1{display:inline;font-size:13px;font-weight:400;margin:0;color:var(--ink)}
 main{display:grid;gap:8px}
 main[hidden],#doc[hidden]{display:none}
+[hidden]{display:none!important}
 .stage{position:sticky;top:0;z-index:5;background:var(--bg);padding-bottom:6px;display:grid;gap:6px;min-width:0}
 canvas{display:block;width:100%;height:min(calc(100vw - 32px),44vh);background:#000;border:1px solid var(--line);touch-action:none;cursor:crosshair}
 #line{min-height:1.4em;white-space:pre;overflow:hidden;color:var(--dim);font-variant-numeric:tabular-nums}
@@ -121,7 +122,9 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
   </dl>
   <h2>settings</h2>
   <dl>
-    <dt>résolution</dt><dd>Number of pixels on the long side of the area, from 1 to 64. Every pixel is visited, so more pixels means faster travel (see ms/px under the image) and a longer computation.</dd>
+    <dt>caméra</dt><dd>Plays the live picture of the phone or computer camera instead of a still image: move the camera and the sound follows at once. [ retourner ] switches between the back and front cameras. [ figer ] keeps the current picture and goes back to the normal mode, where loops can be exported. The camera only works when the page is opened in a browser such as Safari or Chrome, not inside Claude.</dd>
+    <dt>images/s</dt><dd>With the camera, how many times per second the sound and the picture are refreshed, from 1 to 30. Low values give a stepped, stroboscopic result.</dd>
+    <dt>résolution</dt><dd>Number of pixels on the long side of the area, from 1 to 64. Every pixel is visited, so more pixels means faster travel (see ms/px under the image) and a longer computation. With the camera it is capped at 32.</dd>
     <dt>parcours</dt><dd>Path of the window. Step through the five paths with &lt; and &gt;. h-snake and v-snake snake through every pixel once, by rows or by columns. aller-retour goes there and back. spirale winds to the centre and back out. chaos wanders at random from one pixel to a neighbour, still crossing every pixel once before it loops; [ autre ] draws another random path.</dd>
     <dt>largeur</dt><dd>Width of the window, as a share of the area. Around 50 %, nearly every pixel sings at once.</dd>
     <dt>résonance</dt><dd>How long a voice keeps ringing after the window has passed.</dd>
@@ -145,7 +148,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Video is recorded in real time: keep the page visible until it ends.</li>
     <li>On an iPhone, the silent switch mutes the sound.</li>
   </ul>
-  <p class="ver">version A · be3d452</p>
+  <p class="ver">version A · 1153757</p>
 </article>
 <main>
   <div class="stage">
@@ -168,6 +171,8 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
         <button data-demo="sunset">sunset</button>
         <button data-demo="damier">damier</button>
       </div>
+      <div class="seg" id="camrow" hidden><button id="cam" class="cmd">caméra</button><button id="flip" class="cmd" hidden>retourner</button></div>
+      <div data-s="fps"></div>
       <div data-s="grid"></div>
       <div class="row wide"><span>parcours</span><div class="seg"><button id="pathprev" aria-label="parcours précédent">&lt;</button><span id="pathname"></span><button id="pathnext" aria-label="parcours suivant">&gt;</button><button id="reroll" class="cmd" hidden>autre</button></div></div>
     </section>
@@ -224,7 +229,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
         <button id="reset" class="cmd">défauts</button>
       </div>
     </section>
-    <p class="ver">pixels to soundscape patterns · A · be3d452</p>
+    <p class="ver">pixels to soundscape patterns · A · 1153757</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>
@@ -470,6 +475,13 @@ function wakeShape(sg, disc, st, o) {
   o[0] = Math.max(0.3, sg * Math.max(d, 0.08)); o[1] = sg * (TRAIL - (TRAIL - 1) * d); o[2] = Math.max(0.3, sg / (2 - d));
 }
 
+/* Note d'un pixel, en hertz : la teinte en couleur, la luminosité en noir et blanc, placée entre lo et hi puis accordée. */
+function noteOf(an, i, p, lo, hi) {
+  let pp = an.lum[i];
+  if (an.colour) { const cw = smoothstep(0.05, 0.2, an.chr[i]); pp = an.lum[i] * (1 - cw) + hueToPitch(an.hue[i]) * cw; }
+  return tuneFreq(p.scale === "log" ? lo * Math.pow(hi / lo, pp) : lo + (hi - lo) * pp, p.tune);
+}
+
 /* Ajoute dans L et R les voix d'indice start, start + step, … Générateur : émet la progression (0..1).
    Découper par indices permet de répartir le calcul entre plusieurs fils. */
 function* voices(an, p, c, L, R, freq, start, step) {
@@ -478,15 +490,7 @@ function* voices(an, p, c, L, R, freq, start, step) {
   const env = new Float32Array(K), st = new Float64Array(2);
   for (let i = start; i < n; i += step) {
     const col = i % gw, row = (i / gw) | 0, wx = WX[col], wy = WY[row];
-    /* Note du pixel */
-    let pp = an.lum[i];
-    const v = 1 - p.dyn * (1 - an.lum[i] * an.lum[i]);
-    if (an.colour) {
-      const cw = smoothstep(0.05, 0.2, an.chr[i]);
-      pp = an.lum[i] * (1 - cw) + hueToPitch(an.hue[i]) * cw;
-    }
-    let f = p.scale === "log" ? lo * Math.pow(hi / lo, pp) : lo + (hi - lo) * pp;
-    f = tuneFreq(f, p.tune);
+    const v = 1 - p.dyn * (1 - an.lum[i] * an.lum[i]), f = noteOf(an, i, p, lo, hi);
     const mcyc = Math.max(1, Math.round(f * D));   /* nombre entier de cycles : la boucle se referme sans clic */
     freq[i] = mcyc / D;
     if (v < 0.004) { yield i / n; continue; }
@@ -702,11 +706,12 @@ const FIXED = { shape: 2.5, disc: 1, dyn: 0.6 };
 
 const P = { grid: 16, path: "cycleH", sigma: 15, ring: 0.25, infl: 60,
   wave: "sine", fmin: noteHz(0), fmax: noteHz(59), scale: "lin", tune: "libre", stereo: 80,
-  sig: "4/4", bpm: 120, bars: "4", freeDur: 8, wobble: 50, seed: 1, death: 0,
+  sig: "4/4", bpm: 120, bars: "4", freeDur: 8, wobble: 50, seed: 1, death: 0, fps: 12,
   eq0: 0, eq1: 0, eq2: 0, eq3: 0, eq4: 0, eq5: 0, eq6: 0 };
 if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) P.wobble = 0;
 
 const SLIDERS = {
+  fps:     { label: "images/s", min: 1, max: 30, step: 1, unit: "", live: true },
   grid:    { label: "résolution", min: 1, max: 64, step: 1, unit: "px" },
   sigma:   { label: "largeur", min: 2, max: 100, step: 1, unit: "%", log: true },
   ring:    { label: "résonance", min: 0, max: 2, step: 0.01, unit: "s" },
@@ -804,7 +809,9 @@ const DEFAULTS = Object.assign({}, P);
 function changed(liveOnly) {
   const free = P.sig === "libre";
   $("row_bpm").classList.toggle("off", free); $("row_bars").classList.toggle("off", free); $("row_freeDur").classList.toggle("off", !free);
+  if (cam) camTimer();
   if (liveOnly) return;
+  if (cam) { refreshPixels(); camCfg(); return; }   /* en direct, rien à recalculer : le moteur reçoit les nouveaux réglages */
   refreshPixels(); markBusy();
   clearTimeout(timer); timer = setTimeout(rerender, 260);
 }
@@ -845,7 +852,8 @@ function refreshPixels() {
   const aw = sel.w * src.width, ah = sel.h * src.height;
   /* Le petit côté est arrondi au nombre pair le plus proche quand c'est possible : le serpentin peut alors se refermer en passant une seule fois par pixel. */
   const side = v => v < 1.5 ? 1 : Math.max(2, 2 * Math.round(v / 2));
-  if (aw >= ah) { gw = P.grid; gh = Math.min(P.grid, side(P.grid * ah / aw)); } else { gh = P.grid; gw = Math.min(P.grid, side(P.grid * aw / ah)); }
+  const G = cam ? Math.min(P.grid, CAM_GRID) : P.grid;   /* en direct, le nombre de voix est plafonné pour tenir le temps réel */
+  if (aw >= ah) { gw = G; gh = Math.min(G, side(G * ah / aw)); } else { gh = G; gw = Math.min(G, side(G * aw / ah)); }
   off.width = gw; off.height = gh;
   const o = off.getContext("2d", { willReadFrequently: true });
   o.imageSmoothingQuality = "high";
@@ -855,7 +863,7 @@ function refreshPixels() {
   cols = new Array(gw * gh); for (let i = 0; i < gw * gh; i++) cols[i] = "rgb(" + data[4 * i] + "," + data[4 * i + 1] + "," + data[4 * i + 2] + ")";
   pathPts = pathPoints(gw, gh);
   let len = 0; for (let i = 1; i < pathPts.length; i++) len += Math.hypot(pathPts[i][0] - pathPts[i - 1][0], pathPts[i][1] - pathPts[i - 1][1]);
-  statTxt = getDur().toFixed(2) + " s · " + gw * gh + " px · " + Math.round(1000 * getDur() / Math.max(1, len)) + " ms/px";
+  statTxt = (cam ? "caméra " + (cam.facing === "user" ? "avant" : "arrière") + " · " + P.fps + " img/s · " : "") + getDur().toFixed(2) + " s · " + gw * gh + " px · " + Math.round(1000 * getDur() / Math.max(1, len)) + " ms/px";
   paintLine();
 }
 
@@ -940,7 +948,7 @@ function applyResult(res) {
   if (playing && !rec) startSource(u * R.dur);
 }
 async function rerender() {
-  if (!an) return;
+  if (!an || cam) return;
   killWorkers();
   const my = ++job, a = an;
   const p = { dur: getDur(), path: P.path, pts: P.path === "chaos" ? pathPoints(a.gw, a.gh) : null, sigma: P.sigma / 100 * Math.max(a.gw, a.gh), autoSigma: P.infl / 100, shape: FIXED.shape, disc: FIXED.disc, ring: P.ring, autoRing: P.infl / 100,
@@ -1078,6 +1086,12 @@ function deathChanged() {
   clearTimeout(eqTimer); eqTimer = setTimeout(setTrim, 180);
 }
 async function setTrim() {
+  if (cam) {
+    /* En direct, pas de boucle à mesurer : niveau prudent, d'autant plus bas que death ou l'égaliseur poussent. */
+    trim = (P.death > 0 ? 0.5 : 0.85) * Math.pow(10, -Math.max(0, ...eqGains()) / 40);
+    if (trimNode) trimNode.gain.setTargetAtTime(trim, actx.currentTime, 0.03);
+    return;
+  }
   if (!R) return;
   const my = ++fxJob, res = R; let g = 1;
   if (P.death > 0) {
@@ -1104,6 +1118,7 @@ function wakeAudio() {
 function setPlayUI() { $("play").setAttribute("aria-pressed", String(playing)); $("play").textContent = playing ? "stop" : "lecture"; $("video").textContent = rec ? "annuler" : "vidéo"; }
 function togglePlay() {
   if (rec) { rec.cancelled = true; try { rec.mr.stop(); } catch (e) {} return; }
+  if (cam) { cam.on = playing = !cam.on; camCfg(); setPlayUI(); return; }
   if (playing) { playing = false; stopSource(0.05); }
   else {
     if (!wakeAudio()) return;
@@ -1132,6 +1147,7 @@ async function deliver(filename, blob, zipName) {
   }
 }
 async function exportWav() {
+  if (cam) { say("En direct, il n'y a pas de boucle à exporter : fige d'abord l'image avec [ figer ]."); return; }
   if (!R || R.preview || busy) { say("Le calcul complet n'est pas terminé : attends la fin de la barre."); return; }
   const base = baseName();
   let L = R.L, Rr = R.R;
@@ -1155,6 +1171,7 @@ xcan.style.cssText = "position:fixed;left:-9999px;top:0;width:8px;height:8px"; d
 let rec = null;
 function exportVideo() {
   if (rec) { togglePlay(); return; }
+  if (cam) { say("En direct, il n'y a pas de boucle à filmer : fige d'abord l'image avec [ figer ]."); return; }
   if (!R || R.preview || busy || R.gw !== gw || R.gh !== gh) { say("Le calcul complet n'est pas terminé : attends la fin de la barre."); return; }
   /* MP4 H.264 d'abord (lisible partout), sinon WebM, et en dernier le MP4 générique du navigateur. */
   const types = ['video/mp4;codecs="avc1.42E01E,mp4a.40.2"', "video/mp4;codecs=avc1.42E01E,mp4a.40.2", "video/mp4;codecs=avc1,mp4a.40.2", "video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm", "video/mp4"];
@@ -1198,6 +1215,157 @@ function applyParams(data) {
   else changed(false);
 }
 
+/* ── Caméra : le son fabriqué en direct ──
+   Ici pas de boucle calculée d'avance. Un moteur temps réel (dans le fil audio) tient une voix par pixel et les fait
+   chanter sous la fenêtre qui avance ; la page lui envoie, plusieurs fois par seconde, les notes tirées de l'image
+   de la caméra. Mêmes règles que le moteur de boucles : même trajet, même fenêtre, mêmes notes, même résonance. */
+const CAM_GRID = 32;
+const LIVE_SRC = `
+class LiveChoir extends AudioWorkletProcessor {
+  constructor() {
+    super(); this.c = null; this.n = 0; this.t = 0; this.sg = 2; this.g = 0.5; this.lvl = 0.3; this.q = 0; this.wait = true; this.st = new Float64Array(2);
+    this.port.onmessage = e => {
+      const d = e.data;
+      if (d.cfg) {
+        const c = d.cfg, n = c.gw * c.gh;
+        if (!this.c || c.gw !== this.c.gw || c.gh !== this.c.gh) {
+          this.n = n; this.ph = new Float64Array(n); this.sn = new Float64Array(n); this.cs = new Float64Array(n).fill(1);
+          this.f = new Float32Array(n); this.ft = new Float32Array(n); this.a = new Float32Array(n); this.vt = new Float32Array(n); this.tau = new Float32Array(n); this.con = new Float32Array(n);
+          this.wx = new Float32Array(c.gw); this.wy = new Float32Array(c.gh); this.wait = true;
+        }
+        this.gl = new Float32Array(c.gw); this.gr = new Float32Array(c.gw);
+        for (let x = 0; x < c.gw; x++) { const th = (Math.PI / 2) * (0.5 + ((c.gw > 1 ? x / (c.gw - 1) : 0.5) - 0.5) * c.stereo); this.gl[x] = Math.cos(th); this.gr[x] = Math.sin(th); }
+        this.lut = new Float32Array(1026); for (let i = 0; i < 1026; i++) this.lut[i] = flatTop(Math.min(1, i / 1024), c.shape);
+        this.c = c;
+      }
+      if (d.frame && d.frame.freq.length === this.n) {
+        this.ft = d.frame.freq; this.vt = d.frame.vol; this.tau = d.frame.tau; this.con = d.frame.con;
+        if (this.wait) { this.f.set(this.ft); this.wait = false; }
+      }
+    };
+  }
+  process(inputs, outputs) {
+    const c = this.c, o = outputs[0], L = o[0], R = o[1] || o[0], N = L.length;
+    if (!c || this.wait || !c.on) return true;
+    const sr = sampleRate, dt = N / sr, n = this.n, gw = c.gw, gh = c.gh, K = c.hx.length;
+    /* Position de la tête sur le trajet */
+    const fk = (((this.t / sr) % c.dur) / c.dur) * K, k0 = Math.min(K - 1, fk | 0), k1 = (k0 + 1) % K, fr = fk - k0;
+    const hx = c.hx[k0] + (c.hx[k1] - c.hx[k0]) * fr, hy = c.hy[k0] + (c.hy[k1] - c.hy[k0]) * fr;
+    this.t += N;
+    /* Largeur de la fenêtre, pilotée par l'image comme dans le moteur de boucles */
+    const ix = Math.min(gw - 1, Math.max(0, Math.floor(hx))), iy = Math.min(gh - 1, Math.max(0, Math.floor(hy)));
+    this.sg += (Math.max(0.3, c.sigma * Math.pow(4, c.infl * (1 - 2 * this.con[iy * gw + ix]))) - this.sg) * (1 - Math.exp(-dt / 0.06));
+    const sg = this.sg, inv = 1 / (2 * sg * sg), gnm = 1 / Math.sqrt(Math.max(1, Math.PI * sg * sg)), wx = this.wx, wy = this.wy, lut = this.lut, st = this.st;
+    for (let x = 0; x < gw; x++) wx[x] = mirrorW(hx, x + 0.5, gw, inv);
+    for (let y = 0; y < gh; y++) wy[y] = mirrorW(hy, y + 0.5, gh, inv);
+    const glide = 1 - Math.exp(-dt / 0.04), wv = c.wv;
+    for (let i = 0; i < n; i++) {
+      const col = i % gw, w = wx[col] * wy[(i / gw) | 0]; let e = 0;
+      if (w >= 1) e = gnm; else if (w >= EPS) { const u = w * 1024, i0 = u | 0; e = gnm * (lut[i0] + (lut[i0 + 1] - lut[i0]) * (u - i0)); }
+      e *= this.vt[i];
+      /* Résonance : la voix retombe à son rythme une fois la fenêtre passée */
+      const a0 = this.a[i], tau = this.tau[i]; let a1 = tau > 0.002 ? a0 * Math.exp(-dt / tau) : 0; if (e > a1) a1 = e;
+      this.a[i] = a1;
+      const f = this.f[i] += (this.ft[i] - this.f[i]) * glide;   /* la note glisse vers sa nouvelle valeur, sans à-coup */
+      if (a0 < EPS && a1 < EPS) continue;
+      const dph = f / sr, de = (a1 - a0) / N;
+      if (wv === 3) {
+        const w2 = 6.283185307179586 * dph, s = this.sn[i], cc = this.cs[i], m = 1 / Math.sqrt(s * s + cc * cc);
+        st[0] = s * m; st[1] = cc * m; sineSeg(L, R, 0, N, st, Math.cos(w2), Math.sin(w2), a0, de, this.gl[col], this.gr[col]);
+        this.sn[i] = st[0]; this.cs[i] = st[1];
+      } else {
+        let ph = this.ph[i]; voice(L, R, 0, N, ph, dph, a0, de, this.gl[col], this.gr[col], wv);
+        ph += dph * N; this.ph[i] = ph - Math.floor(ph);
+      }
+    }
+    /* Niveau : on ramène doucement le volume vers une cible, et on borne les crêtes */
+    let s2 = 0; for (let j = 0; j < N; j++) s2 += L[j] * L[j] + R[j] * R[j];
+    const rms = Math.sqrt(s2 / (2 * N));
+    this.lvl += (rms - this.lvl) * (rms > this.lvl ? 0.2 : 0.01);
+    const g0 = this.g, gt = Math.min(12, 0.16 / Math.max(this.lvl, 1e-4)); this.g += (gt - g0) * (gt < g0 ? 0.2 : 0.01);   /* baisse vite, remonte lentement */
+    const dg = (this.g - g0) / N; let g = g0;
+    for (let j = 0; j < N; j++) { g += dg; let x = L[j] * g; L[j] = x > 0.98 ? 0.98 : x < -0.98 ? -0.98 : x; x = R[j] * g; R[j] = x > 0.98 ? 0.98 : x < -0.98 ? -0.98 : x; }
+    if (++this.q % 4 === 0) this.port.postMessage({ rms: rms * this.g, t: this.t / sr, now: currentTime });
+    return true;
+  }
+}
+registerProcessor("live-choir", LiveChoir);`;
+let cam = null, liveURL = null, liveLoaded = false;
+const camSupported = () => !(window.claude && window.claude.use) && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.AudioWorkletNode);
+async function startCam(facing) {
+  if (!wakeAudio()) return;
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: facing, width: { ideal: 320 }, height: { ideal: 240 } } }); }
+  catch (e) { say("La caméra n'a pas pu s'ouvrir. Autorise-la pour cette page, ou ouvre la page dans Safari ou Chrome."); return; }
+  try {
+    if (!liveLoaded) {
+      liveURL = URL.createObjectURL(new Blob([$("engine").textContent + LIVE_SRC], { type: "text/javascript" }));
+      await actx.audioWorklet.addModule(liveURL); liveLoaded = true;
+    }
+    const video = document.createElement("video"); video.muted = true; video.playsInline = true; video.setAttribute("playsinline", ""); video.srcObject = stream;
+    await video.play();
+    const keep = cam; if (keep) { keep.stream.getTracks().forEach(tr => tr.stop()); clearInterval(keep.timer); }
+    const node = keep ? keep.node : new AudioWorkletNode(actx, "live-choir", { numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [2] });
+    if (!keep) {
+      /* On quitte le mode boucle : plus de calcul en cours, plus de boucle en lecture. */
+      ++job; killWorkers(); busy = false; if (playing) stopSource(0.05);
+      node.connect(fx.input);
+    }
+    const K = 256, z = () => new Float32Array(K + 1);
+    cam = { stream, video, facing, node, timer: 0, on: keep ? keep.on : true, cfg: null, ref: null, rms: 0, sg: 2, pnS: 0.5, phase: 0, last: performance.now(), note: new Float32Array(0), dims: "",
+      lv: { K, i: 0, env: new Float32Array(K), pn: new Float32Array(K), phs: z(), hopSec: 1 / 60, dir: { ux: z(), uy: z(), st: z() }, disc: 1 } };
+    node.port.onmessage = e => { if (cam) { cam.rms = e.data.rms; cam.ref = e.data; } };
+    playing = cam.on; imgName = "camera"; say("");
+    $("cam").textContent = "figer"; $("flip").hidden = false; $("row_fps").hidden = false; setPlayUI(); setTrim();
+    camTick(); camTimer();
+  } catch (e) { stream.getTracks().forEach(tr => tr.stop()); say("Le moteur en direct n'a pas pu démarrer dans ce navigateur."); }
+}
+function camTimer() { clearInterval(cam.timer); cam.timer = setInterval(camTick, 1000 / P.fps); paintLine(); refreshPixels(); }
+/* Une image de la caméra : elle remplace l'image affichée, et ses notes partent vers le moteur. */
+function camTick() {
+  const c = cam, v = c && c.video; if (!v || v.readyState < 2 || !v.videoWidth) return;
+  const s = Math.min(1, 320 / Math.max(v.videoWidth, v.videoHeight)), w = Math.max(1, Math.round(v.videoWidth * s)), h = Math.max(1, Math.round(v.videoHeight * s));
+  if (src.width !== w || src.height !== h) { src.width = w; src.height = h; }
+  src.getContext("2d").drawImage(v, 0, 0, w, h);
+  refreshPixels();
+  if (c.dims !== gw + "x" + gh) camCfg();
+  const n = gw * gh, lo = Math.max(0.05, Math.min(P.fmin, P.fmax)), hi = Math.max(lo + 0.01, Math.max(P.fmin, P.fmax)), infl = P.infl / 100, p = { scale: P.scale, tune: P.tune };
+  const freq = new Float32Array(n), vol = new Float32Array(n), tau = new Float32Array(n), con = Float32Array.from(an.con), lf0 = Math.log(lo), lf1 = Math.log(hi);
+  c.note = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    freq[i] = noteOf(an, i, p, lo, hi); vol[i] = 1 - FIXED.dyn * (1 - an.lum[i] * an.lum[i]); tau[i] = P.ring * Math.pow(4, infl * (2 * an.sat[i] - 1));
+    c.note[i] = Math.min(1, Math.max(0, (Math.log(Math.max(lo, freq[i])) - lf0) / (lf1 - lf0)));
+  }
+  c.node.port.postMessage({ frame: { freq, vol, tau, con } }, [freq.buffer, vol.buffer, tau.buffer, con.buffer]);
+}
+/* Réglages du moteur en direct : grille, trajet de la tête, fenêtre, forme d'onde. */
+function camCfg() {
+  const c = cam; if (!c || !gw) return;
+  const { hx, hy } = samplePath(pathPts, 2048);
+  c.dims = gw + "x" + gh;
+  c.cfg = { gw, gh, hx, hy, dur: getDur(), sigma: P.sigma / 100 * Math.max(gw, gh), infl: P.infl / 100, shape: FIXED.shape, stereo: P.stereo / 100, wv: { saw: 0, square: 1, triangle: 2, sine: 3 }[P.wave], on: c.on };
+  c.node.port.postMessage({ cfg: c.cfg });
+}
+/* Où est la tête maintenant, et ce que le son vient de faire (pour l'ondulation de l'image). */
+function camHead() {
+  const c = cam, cf = c.cfg; if (!cf || !c.ref || cf.gw !== gw || cf.gh !== gh) return null;
+  const t = c.ref.t + (actx.currentTime - c.ref.now), u = (((t % cf.dur) + cf.dur) % cf.dur) / cf.dur, K = cf.hx.length, f = u * K, k0 = Math.min(K - 1, f | 0), k1 = (k0 + 1) % K, fr = f - k0;
+  const hx = cf.hx[k0] + (cf.hx[k1] - cf.hx[k0]) * fr, hy = cf.hy[k0] + (cf.hy[k1] - cf.hy[k0]) * fr;
+  const i = Math.min(gh - 1, Math.max(0, Math.floor(hy))) * gw + Math.min(gw - 1, Math.max(0, Math.floor(hx)));
+  c.sg += (Math.max(0.3, cf.sigma * Math.pow(4, cf.infl * (1 - 2 * an.con[i]))) - c.sg) * 0.15;
+  const now = performance.now(), dt = Math.min(0.1, Math.max(0.001, (now - c.last) / 1000)), lv = c.lv, j = lv.i = (lv.i + 1) % lv.K; c.last = now;
+  c.pnS += ((c.note.length > i ? c.note[i] : 0.5) - c.pnS) * 0.1; c.phase += (1.2 + 5 * c.pnS) * dt * 6.283185307179586;
+  lv.hopSec = dt; lv.env[j] = c.on ? Math.pow(Math.min(1.5, c.rms / 0.16), 1.7) : 0; lv.pn[j] = c.pnS; lv.phs[j] = lv.phs[j + 1] = c.phase;
+  return { hx, hy, sg: c.sg, fk: j };
+}
+/* Fige l'image du moment et revient au mode boucle. */
+function stopCam() {
+  const c = cam; if (!c) return;
+  clearInterval(c.timer); c.stream.getTracks().forEach(tr => tr.stop()); try { c.node.port.postMessage({ cfg: Object.assign({}, c.cfg, { on: false }) }); c.node.disconnect(); } catch (e) {}
+  cam = null; $("cam").textContent = "caméra"; $("flip").hidden = true; $("row_fps").hidden = true;
+  changed(false);   /* la dernière image devient l'image de travail : la boucle se calcule, et la lecture reprend dessus */
+}
+
 /* ── Dessin ── */
 let cols = [], clkOff = 0, clkInit = false;
 /* Horloge de lecture lissée : l'horloge audio avance par à-coups, celle de l'écran est régulière. */
@@ -1224,15 +1392,20 @@ function draw() {
   const g = geom(); ctx.clearRect(0, 0, g.W, g.H);
   ctx.imageSmoothingEnabled = true; ctx.globalAlpha = 0.22; ctx.drawImage(src, g.ox, g.oy, g.iw, g.ih); ctx.globalAlpha = 1;
   const rx = g.ox + sel.x * g.iw, ry = g.oy + sel.y * g.ih, rw = sel.w * g.iw, rh = sel.h * g.ih, cw = rw / gw, ch = rh / gh;
-  const live = R && R.gw === gw && R.gh === gh, amp = P.wobble / 100;
-  let hx = 0, hy = 0, sg = 1, fkNow = 0;
-  if (live) {
+  const amp = P.wobble / 100;
+  let live = R && R.gw === gw && R.gh === gh, moving = playing, hx = 0, hy = 0, sg = 1, fkNow = 0;
+  RS = R;
+  if (cam) {
+    /* Caméra : la tête et l'onde viennent du moteur en direct. */
+    const h = camHead(); live = !!h; moving = cam.on; RS = cam.lv;
+    if (h) { hx = h.hx; hy = h.hy; sg = h.sg; fkNow = h.fk; }
+  } else if (live) {
     /* Tête de lecture, interpolée entre deux points du parcours pour un mouvement continu. */
     const t = playing && actx ? playTime() : 0;
     const u = playing ? (((t % R.dur) + R.dur) % R.dur) / R.dur : 0, fk = u * R.K, k0 = Math.min(R.K - 1, Math.floor(fk)), k1 = (k0 + 1) % R.K, fr = fk - k0;
     fkNow = fk; hx = R.hx[k0] + (R.hx[k1] - R.hx[k0]) * fr; hy = R.hy[k0] + (R.hy[k1] - R.hy[k0]) * fr; sg = R.sg[k0] + (R.sg[k1] - R.sg[k0]) * fr;
   }
-  const wavy = live && amp > 0 && playing;
+  const wavy = live && amp > 0 && moving;
   if (wavy) {
     ripple(hx, hy, sg, amp, rw, rh, fkNow, rec ? 480 : Math.min(256, Math.round(Math.max(rw, rh) * Math.min(2, window.devicePixelRatio || 1))));
     ctx.imageSmoothingEnabled = true; ctx.drawImage(wcan, rx, ry, rw, rh);
@@ -1249,10 +1422,10 @@ function draw() {
   }
   if (live) {
     ctx.beginPath();
-    if (R.disc < 0.999) {
+    if (RS.disc < 0.999) {
       /* Contour de la fenêtre : petit devant, long derrière, dans le sens de la marche. */
-      const kq = Math.min(R.K - 1, Math.floor(fkNow)), o = [0, 0, 0], ang = Math.atan2(R.dir.uy[kq], R.dir.ux[kq]);
-      wakeShape(sg, R.disc, R.dir.st[kq], o);
+      const kq = Math.min(RS.K - 1, Math.floor(fkNow)), o = [0, 0, 0], ang = Math.atan2(RS.dir.uy[kq], RS.dir.ux[kq]);
+      wakeShape(sg, RS.disc, RS.dir.st[kq], o);
       ctx.ellipse(rx + hx * cw, ry + hy * ch, Math.max(2, o[0] * cw), Math.max(2, o[2] * ch), ang, -1.5708, 1.5708);
       ctx.ellipse(rx + hx * cw, ry + hy * ch, Math.max(2, o[1] * cw), Math.max(2, o[2] * ch), ang, 1.5708, 4.7124); ctx.closePath();
     } else ctx.ellipse(rx + hx * cw, ry + hy * ch, Math.max(3, sg * cw), Math.max(3, sg * ch), 0, 0, 6.2832);
@@ -1270,14 +1443,15 @@ function draw() {
    longueur suivent la hauteur des notes sous la tête. Chaque point de l'écran va chercher
    sa couleur un peu plus loin selon la pente (réfraction). Les couleurs ne sont pas modifiées. */
 const wcan = document.createElement("canvas"); let wimg = null, WXc = new Float32Array(0), WYc = new Float32Array(0);
+let RS = null;   /* ce qui anime l'image : la boucle calculée, ou la mémoire du moteur en direct */
 function ripple(hx, hy, sg, amp, rw, rh, fk, side) {
-  const kd0 = Math.min(R.K - 1, Math.floor(fk)), wkU = R.dir.ux[kd0], wkV = R.dir.uy[kd0], wkOn = R.disc < 0.999, wo = [0, 0, 0];
-  wakeShape(sg, R.disc, R.dir.st[kd0], wo); const wkF = 1 / (2 * wo[0] * wo[0]), wkB = 1 / (2 * wo[1] * wo[1]), wkL = 1 / (2 * wo[2] * wo[2]);
+  const kd0 = Math.min(RS.K - 1, Math.floor(fk)), wkU = RS.dir.ux[kd0], wkV = RS.dir.uy[kd0], wkOn = RS.disc < 0.999, wo = [0, 0, 0];
+  wakeShape(sg, RS.disc, RS.dir.st[kd0], wo); const wkF = 1 / (2 * wo[0] * wo[0]), wkB = 1 / (2 * wo[1] * wo[1]), wkL = 1 / (2 * wo[2] * wo[2]);
   const sc = side / Math.max(rw, rh), ww = Math.max(8, Math.round(rw * sc)), wh = Math.max(8, Math.round(rh * sc));
   if (!wimg || wimg.width !== ww || wimg.height !== wh) { wcan.width = ww; wcan.height = wh; wimg = wcan.getContext("2d").createImageData(ww, wh); WXc = new Float32Array(ww); WYc = new Float32Array(wh); }
   const out = wimg.data, px = an.rgba, inv = 1 / (2 * sg * sg), shp = FIXED.shape;
-  const K = R.K, k0 = Math.min(K - 1, Math.floor(fk)), fr = fk - k0, env = R.env;
-  const lam = Math.max(0.35, sg * 0.35 * (1.4 - 0.8 * R.pn[k0])), ph0 = R.phs[k0] + (R.phs[k0 + 1] - R.phs[k0]) * fr, kd = 0.1 / sg / R.hopSec;
+  const K = RS.K, k0 = Math.min(K - 1, Math.floor(fk)), fr = fk - k0, env = RS.env;
+  const lam = Math.max(0.35, sg * 0.35 * (1.4 - 0.8 * RS.pn[k0])), ph0 = RS.phs[k0] + (RS.phs[k0 + 1] - RS.phs[k0]) * fr, kd = 0.1 / sg / RS.hopSec;
   const A = amp * Math.min(2.5, Math.max(0.7, 0.22 * sg)), c2 = lam * lam, kx = gw / ww, ky = gh / wh;
   for (let x = 0; x < ww; x++) WXc[x] = mirrorW(hx, (x + 0.5) * kx, gw, inv);
   for (let y = 0; y < wh; y++) WYc[y] = mirrorW(hy, (y + 0.5) * ky, gh, inv);
@@ -1334,7 +1508,7 @@ cv.addEventListener("pointermove", e => {
   }
   refreshPixels();
 });
-const endDrag = () => { if (!drag) return; drag = null; markBusy(); clearTimeout(timer); timer = setTimeout(rerender, 120); };
+const endDrag = () => { if (!drag) return; drag = null; if (cam) { camCfg(); return; } markBusy(); clearTimeout(timer); timer = setTimeout(rerender, 120); };
 cv.addEventListener("pointerup", endDrag); cv.addEventListener("pointercancel", endDrag);
 
 /* ── Démarrage ── */
@@ -1351,6 +1525,10 @@ $("pathprev").addEventListener("click", () => stepPath(-1));
 $("pathnext").addEventListener("click", () => stepPath(1));
 $("reroll").addEventListener("click", () => { P.seed = P.seed % 9999 + 1; changed(false); });   /* un autre tirage du chaos */
 setPath(P.path, true); paintDeath();
+$("row_fps").hidden = true;
+if (camSupported()) $("camrow").hidden = false;
+$("cam").addEventListener("click", () => { if (cam) stopCam(); else startCam("environment"); });
+$("flip").addEventListener("click", () => { if (cam) startCam(cam.facing === "user" ? "environment" : "user"); });
 $("flat").addEventListener("click", () => { EQ_BANDS.forEach((b, i) => SETTERS["eq" + i](0)); eqChanged(); });
 $("reset").addEventListener("click", () => applyParams({ reglages: DEFAULTS }));
 $("open").addEventListener("change", e => {

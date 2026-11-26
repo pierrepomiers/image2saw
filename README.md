@@ -1,6 +1,8 @@
-# Image2Saw A — la chorale des pixels
+# image2saw ╝║╝║╝║
 
-Transforme une image en boucle sonore. Chaque pixel de la zone sélectionnée est une voix ; une gaussienne parcourt l'image et fait chanter les pixels qu'elle recouvre.
+**Pixels to soundscape patterns.**
+
+Version A. Transforme une image en boucle sonore. Chaque pixel de la zone sélectionnée est une voix ; une gaussienne parcourt l'image et fait chanter les pixels qu'elle recouvre.
 
 **Essayer en ligne :** https://pierrepomiers.github.io/image2saw/
 

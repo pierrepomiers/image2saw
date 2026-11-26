@@ -27,7 +27,7 @@ La version exacte est affichée en bas de la page (`A · numéro de commit`). L'
 ## Réglages
 
 **image**
-- `[ caméra ]` : joue en direct l'image de la caméra du téléphone ou de l'ordinateur à la place d'une image fixe. On bouge la caméra, le son suit aussitôt. `[ retourner ]` passe de la caméra arrière à la caméra avant. `[ figer ]` garde l'image du moment et revient au mode normal, où les boucles s'exportent. La caméra ne fonctionne que si la page est ouverte dans un navigateur (Safari, Chrome), pas à l'intérieur de Claude.
+- `[ caméra ]` : joue en direct l'image de la caméra du téléphone ou de l'ordinateur à la place d'une image fixe. On bouge la caméra, le son suit aussitôt. `[ retourner ]` passe de la caméra arrière à la caméra avant. `[ figer ]` garde l'image du moment et revient au mode normal, où les boucles s'exportent. Le son en direct est tenu au même niveau que la boucle figée. La caméra ne fonctionne que si la page est ouverte dans un navigateur (Safari, Chrome), pas à l'intérieur de Claude.
 - `images/s` : avec la caméra, nombre de rafraîchissements du son et de l'image par seconde, de 1 à 30. Une valeur basse donne un résultat saccadé, stroboscopique.
 - `résolution` : nombre de pixels sur le grand côté de la zone, de 1 à 64. Tous sont parcourus : plus il y en a, plus la fenêtre va vite et plus le calcul est long. Avec la caméra, elle est plafonnée à 32.
 - `parcours` : trajet de la fenêtre, choisi avec `<` et `>`.

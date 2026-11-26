@@ -64,15 +64,19 @@ input[type=range]::-moz-range-track{height:1px;background:linear-gradient(90deg,
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:9px;height:19px;background:var(--ink);border:0;border-radius:0;margin-top:-9px}
 input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);border:0;border-radius:0}
 .seg{display:flex;flex-wrap:wrap;gap:0 14px;align-items:center}
-.cap{color:var(--dim)}
 #pathname{min-width:12ch;text-align:center}
 .seg #pathprev,.seg #pathnext{color:var(--ink);padding:8px 6px}
 /* Égaliseur : sept curseurs verticaux côte à côte. Le curseur est un curseur horizontal tourné d'un quart de tour. */
-.faders{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px;margin-top:6px}
+.faders{display:grid;grid-template-columns:4ch repeat(7,minmax(0,1fr));gap:2px;margin-top:6px}
 .fader{display:grid;justify-items:center;gap:2px;min-width:0}
 .fader .num input{width:4ch;text-align:center}
 .fader .slot{position:relative;width:100%;height:156px}
-.fader .slot::before{content:"";position:absolute;left:22%;right:22%;top:50%;border-top:1px solid var(--line)}
+/* Graduations tous les 6 dB, de +12 en haut à −12 en bas ; celle du 0 dB est plus claire. La course du curseur fait 141 px. */
+.fader .slot{background-image:linear-gradient(var(--line),var(--line)),linear-gradient(var(--line),var(--line)),linear-gradient(var(--dim),var(--dim)),linear-gradient(var(--line),var(--line)),linear-gradient(var(--line),var(--line));background-size:56% 1px;background-repeat:no-repeat;background-position:center 7px,center 42px,center 78px,center 113px,center 148px}
+.scale .slot{background:none}
+.scale .slot i{position:absolute;right:2px;top:calc(78px - var(--p) * 70.5px);transform:translateY(-50%);font-style:normal;color:var(--dim);white-space:nowrap}
+.scale .u{color:var(--dim);justify-self:end}
+.fader > :first-child{height:28px;display:flex;align-items:center}   /* même hauteur pour les valeurs et pour « dB » : les graduations restent en face des curseurs */
 .fader input[type=range]{position:absolute;left:50%;top:50%;width:150px;margin:-17px 0 0 -75px;transform:rotate(-90deg);touch-action:none;--a:50%;--b:50%}
 .fader input[type=range]::-webkit-slider-runnable-track{background:linear-gradient(90deg,var(--dim) var(--a),var(--ink) var(--a),var(--ink) var(--b),var(--dim) var(--b))}
 .fader input[type=range]::-moz-range-track{background:linear-gradient(90deg,var(--dim) var(--a),var(--ink) var(--a),var(--ink) var(--b),var(--dim) var(--b))}
@@ -120,7 +124,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <dt>grave, aigu</dt><dd>Lowest and highest pitch. The sliders move by semitones from C0 to B6, and the note name is shown next to the value. To set any other frequency, type it in hertz: for example 5 for rumbles and beats.</dd>
     <dt>échelle</dt><dd>Linear or logarithmic spread of the pitches between those two limits.</dd>
     <dt>accord</dt><dd>Leaves pitches free, or snaps them to the chromatic or pentatonic scale.</dd>
-    <dt>égaliseur</dt><dd>Seven output faders, closer together in the bass. The first one sets everything below 30 Hz. The last one sets everything above 2 kHz: no note is played up there, only the harmonics that make the saw and square waves bright. The overall level is kept steady and never clips: cutting the lowest bands trades inaudible rumble for more level in the rest. [ plat ] sets all bands back to 0 dB.</dd>
+    <dt>égaliseur</dt><dd>Seven output faders, one per octave, each from −12 to +12 dB with a mark every 6 dB. The first one sets everything below 30 Hz. The last one sets everything above 2 kHz: no note is played up there, only the harmonics that make the saw and square waves bright. The overall level is kept steady and never clips: cutting the lowest bands trades inaudible rumble for more level in the rest. [ plat ] sets all bands back to 0 dB.</dd>
     <dt>stéréo</dt><dd>Stereo width. The left of the image plays in the left speaker.</dd>
     <dt>mesure, mesures, tempo</dt><dd>Loop length in bars, so that samples line up on the beat: a slower tempo makes a longer loop, shown in seconds under the image. Choose libre to set a length in seconds with durée.</dd>
     <dt>wobble</dt><dd>Strength of the ripple on the image while it plays, up to 200 %. The ripple follows the real loudness and pitch of the sound.</dd>
@@ -134,7 +138,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Video is recorded in real time: keep the page visible until it ends.</li>
     <li>On an iPhone, the silent switch mutes the sound.</li>
   </ul>
-  <p class="ver">version A · 2c86809</p>
+  <p class="ver">version A · 7bf79c3</p>
 </article>
 <main>
   <div class="stage">
@@ -178,6 +182,11 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <section>
       <h2>égaliseur</h2>
       <div class="faders">
+        <div class="fader scale" aria-hidden="true">
+          <span class="u">dB</span>
+          <div class="slot"><i style="--p:1">+12</i><i style="--p:.5">+6</i><i style="--p:0">0</i><i style="--p:-.5">−6</i><i style="--p:-1">−12</i></div>
+          <span class="u">Hz</span>
+        </div>
         <div data-s="eq0"></div>
         <div data-s="eq1"></div>
         <div data-s="eq2"></div>
@@ -186,7 +195,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
         <div data-s="eq5"></div>
         <div data-s="eq6"></div>
       </div>
-      <div class="seg"><button id="flat" class="cmd">plat</button><span class="cap">gains en dB · bandes en Hz</span></div>
+      <div class="seg"><button id="flat" class="cmd">plat</button></div>
     </section>
     <section>
       <h2>temps</h2>
@@ -207,7 +216,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
         <button id="reset" class="cmd">défauts</button>
       </div>
     </section>
-    <p class="ver">pixels to soundscape patterns · A · 2c86809</p>
+    <p class="ver">pixels to soundscape patterns · A · 7bf79c3</p>
   </div>
 </main>
 
@@ -699,13 +708,13 @@ const SLIDERS = {
   bpm:     { label: "tempo", min: 40, max: 240, step: 1, unit: "bpm" },
   freeDur: { label: "durée", min: 0.5, max: 30, step: 0.1, unit: "s" },
   wobble:  { label: "wobble", min: 0, max: 200, step: 1, unit: "%", live: true },
-  eq0:     { label: "<30", min: -15, max: 15, step: 1, unit: "dB", fx: true },
-  eq1:     { label: "60", min: -15, max: 15, step: 1, unit: "dB", fx: true },
-  eq2:     { label: "120", min: -15, max: 15, step: 1, unit: "dB", fx: true },
-  eq3:     { label: "250", min: -15, max: 15, step: 1, unit: "dB", fx: true },
-  eq4:     { label: "500", min: -15, max: 15, step: 1, unit: "dB", fx: true },
-  eq5:     { label: "1k", min: -15, max: 15, step: 1, unit: "dB", fx: true },
-  eq6:     { label: ">2k", min: -15, max: 15, step: 1, unit: "dB", fx: true }
+  eq0:     { label: "<30", min: -12, max: 12, step: 1, unit: "dB", fx: true },
+  eq1:     { label: "60", min: -12, max: 12, step: 1, unit: "dB", fx: true },
+  eq2:     { label: "120", min: -12, max: 12, step: 1, unit: "dB", fx: true },
+  eq3:     { label: "250", min: -12, max: 12, step: 1, unit: "dB", fx: true },
+  eq4:     { label: "500", min: -12, max: 12, step: 1, unit: "dB", fx: true },
+  eq5:     { label: "1k", min: -12, max: 12, step: 1, unit: "dB", fx: true },
+  eq6:     { label: ">2k", min: -12, max: 12, step: 1, unit: "dB", fx: true }
 };
 const SEGS = {
   path:  [["cycleH", "h-snake"], ["cycleV", "v-snake"], ["pong", "aller-retour"], ["spirale", "spirale"], ["chaos", "chaos"]],

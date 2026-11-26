@@ -47,7 +47,7 @@ La version exacte est affichée en bas de la page (`A · numéro de commit`). L'
 - `stéréo` : largeur de la scène. La gauche de l'image sonne à gauche.
 
 **égaliseur**
-- Sept curseurs verticaux de −15 à +15 dB : sous 30 Hz, puis 60, 120, 250, 500 Hz et 1 kHz, enfin tout ce qui est au-dessus de 2 kHz.
+- Sept curseurs verticaux, un par octave, de −12 à +12 dB avec une graduation tous les 6 dB : sous 30 Hz, puis 60, 120, 250, 500 Hz et 1 kHz, enfin tout ce qui est au-dessus de 2 kHz.
 - Les notes jouables s'arrêtent à B6 (un peu moins de 2 kHz). Le dernier curseur ne touche donc que les harmoniques, qui donnent leur brillance à la scie et au carré ; il est sans effet sur le sinus.
 - Le niveau d'ensemble est maintenu et ne sature jamais. `[ plat ]` remet tout à 0 dB.
 - L'export WAV et la vidéo reçoivent les mêmes filtres que l'écoute.

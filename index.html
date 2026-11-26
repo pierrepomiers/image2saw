@@ -102,7 +102,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <dt>parcours</dt><dd>Path of the window. serpentin snakes through every pixel once, by rows (↔) or columns (↕). aller-retour goes there and back. spirale winds to the centre and back out.</dd>
     <dt>largeur</dt><dd>Width of the window, as a share of the area. Around 50 %, nearly every pixel sings at once.</dd>
     <dt>sommet</dt><dd>Shape of the window. 0 % is a bell curve, 100 % is a flat plateau with sharp edges.</dd>
-    <dt>découverte</dt><dd>How much the window hears ahead of itself. At 100 % it is round and hears all around. At 0 % only the pixels behind the moving head sing, like the wake of an object dragged through water.</dd>
+    <dt>découverte</dt><dd>Shape of the window along its path. At 100 % it is round and hears all around. Lower values shrink it ahead of the head and stretch it into a long, narrow trail behind. At 0 % it hears nothing ahead, only the pixels it has just crossed, like the wake of an object dragged through water.</dd>
     <dt>résonance</dt><dd>How long a voice keeps ringing after the window has passed.</dd>
     <dt>influence</dt><dd>How much the image drives width and resonance. Flat areas widen the window, busy areas narrow it, vivid colours ring longer.</dd>
     <dt>onde</dt><dd>Waveform of every voice: sine, triangle, sawtooth or square.</dd>
@@ -123,7 +123,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Video is recorded in real time: keep the page visible until it ends.</li>
     <li>On an iPhone, the silent switch mutes the sound.</li>
   </ul>
-  <p class="ver">version A · 8eec694</p>
+  <p class="ver">version A · 8af0d08</p>
 </article>
 <main>
   <div class="stage">
@@ -186,7 +186,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
         <button id="reset" class="cmd">défauts</button>
       </div>
     </section>
-    <p class="ver">pixels to soundscape patterns · A · 8eec694</p>
+    <p class="ver">pixels to soundscape patterns · A · 8af0d08</p>
   </div>
 </main>
 
@@ -359,12 +359,20 @@ function prep(an, p) {
      La forme du sommet passe par une petite table, bien plus rapide qu'un logarithme et une puissance par point. */
   const WX = [], WY = [], shp = p.shape || 1, lut = new Float32Array(1026), disc = p.disc === undefined ? 1 : p.disc, wake = disc < 0.999;
   for (let i = 0; i < 1026; i++) lut[i] = flatTop(Math.min(1, i / 1024), shp);
-  const dir = heading(hx, hy, sg, K);
-  if (!wake) {
+  const dir = heading(hx, hy, sg, K), iF = new Float32Array(wake ? K : 0), iB = new Float32Array(iF.length), iL = new Float32Array(iF.length), rng = new Float32Array(iF.length);
+  if (wake) {
+    /* Traîne : rayons devant, derrière et sur les côtés à chaque instant ; le niveau suit la surface de la fenêtre. */
+    const o = [0, 0, 0];
+    for (let k = 0; k < K; k++) {
+      wakeShape(sg[k], disc, dir.st[k], o);
+      iF[k] = 1 / (2 * o[0] * o[0]); iB[k] = 1 / (2 * o[1] * o[1]); iL[k] = 1 / (2 * o[2] * o[2]); rng[k] = 4.25 * Math.max(o[0], o[1], o[2]);
+      gn[k] = 1 / Math.sqrt(Math.max(1, Math.PI * o[2] * (o[0] + o[1]) / 2));
+    }
+  } else {
     for (let x = 0; x < gw; x++) { const a = new Float32Array(K), cx = x + 0.5; for (let k = 0; k < K; k++) a[k] = mirrorW(hx[k], cx, gw, inv[k]); WX.push(a); }
     for (let y = 0; y < gh; y++) { const a = new Float32Array(K), cy = y + 0.5; for (let k = 0; k < K; k++) a[k] = mirrorW(hy[k], cy, gh, inv[k]); WY.push(a); }
   }
-  return { sr, Ls, D, K, hopSec, hx, hy, sg, inv, gn, bound, lo, hi, shp, WX, WY, lut, disc, wake, dir, wv: { saw: 0, square: 1, triangle: 2, sine: 3 }[p.wave] || 0 };
+  return { sr, Ls, D, K, hopSec, hx, hy, sg, inv, gn, bound, lo, hi, shp, WX, WY, lut, disc, wake, dir, iF, iB, iL, rng, wv: { saw: 0, square: 1, triangle: 2, sine: 3 }[p.wave] || 0 };
 }
 
 /* Cap de la tête à chaque instant, pour le sillage (réglage « découverte »).
@@ -382,18 +390,20 @@ function heading(hx, hy, sg, K) {
   }
   return { ux, uy, st };
 }
-/* Part du poids gardée pour un point situé à (dx, dy) de la tête : 1 derrière le front du sillage, « disc » devant.
-   Le front est une parabole dont la tête est le sommet, ouverte vers l'arrière, avec un bord adouci. */
-function wakeKeep(dx, dy, ux, uy, st, sg, disc) {
-  const al = dx * ux + dy * uy, x = (al + 0.5 * (dx * dx + dy * dy - al * al) / sg) / Math.max(0.35, 0.2 * sg);
-  return 1 - (1 - disc) * st * (0.5 + 0.5 * x / Math.sqrt(1 + x * x));
+/* Forme de la fenêtre selon la découverte d (1 = ronde, 0 = traîne), pour une largeur sg et un cap de force st.
+   Renvoie dans o les trois rayons : devant la tête, derrière elle, et sur les côtés.
+   Devant, elle se réduit à un petit bourrelet ; derrière, elle s'étire jusqu'à TRAIL rayons ; sur les côtés, elle s'affine. */
+const TRAIL = 3;
+function wakeShape(sg, disc, st, o) {
+  const d = 1 - (1 - disc) * st;
+  o[0] = Math.max(0.3, sg * Math.max(d, 0.08)); o[1] = sg * (TRAIL - (TRAIL - 1) * d); o[2] = Math.max(0.3, sg / (2 - d));
 }
 
 /* Ajoute dans L et R les voix d'indice start, start + step, … Générateur : émet la progression (0..1).
    Découper par indices permet de répartir le calcul entre plusieurs fils. */
 function* voices(an, p, c, L, R, freq, start, step) {
-  const { n, gw, gh } = an, { K, hx, hy, sg, inv, gn, bound, Ls, D, hopSec, lo, hi, shp, wv, WX, WY, lut, disc, wake, dir } = c;
-  const TX = new Float64Array(3), GX = new Float64Array(3), TY = new Float64Array(3), GY = new Float64Array(3);
+  const { n, gw, gh } = an, { K, hx, hy, gn, bound, Ls, D, hopSec, lo, hi, shp, wv, WX, WY, lut, wake, dir, iF, iB, iL, rng } = c;
+  const TX = new Float64Array(3), TY = new Float64Array(3);
   const env = new Float32Array(K), st = new Float64Array(2);
   for (let i = start; i < n; i += step) {
     const col = i % gw, row = (i / gw) | 0, wx = WX[col], wy = WY[row];
@@ -418,30 +428,28 @@ function* voices(an, p, c, L, R, freq, start, step) {
       else if (w >= EPS) { const t = w * 1024, i0 = t | 0; e = gn[k] * (lut[i0] + (lut[i0 + 1] - lut[i0]) * (t - i0)); }
       env[k] = e; if (e > mx) mx = e;
     } else {
-      /* Sillage : le pixel et ses reflets au-delà des bords sont pesés un par un, chacun selon sa place devant ou derrière la tête. */
-      const cx = col + 0.5, cy = row + 0.5, ux = dir.ux, uy = dir.uy, st = dir.st;
+      /* Traîne : la fenêtre n'est plus ronde, donc le pixel et ses reflets au-delà des bords sont pesés un par un,
+         chacun selon sa place devant, derrière ou à côté de la tête. */
+      const cx = col + 0.5, cy = row + 0.5, ux = dir.ux, uy = dir.uy;
       for (let k = 0; k < K; k++) {
-        const iv = inv[k], h = hx[k], g = hy[k]; let nx = 0, ny = 0, d, q, e = 0;
-        d = cx - h; q = d * d * iv; if (q < 9) { TX[nx] = d; GX[nx++] = Math.exp(-q); }
-        d = -cx - h; q = d * d * iv; if (q < 9) { TX[nx] = d; GX[nx++] = Math.exp(-q); }
-        d = 2 * gw - cx - h; q = d * d * iv; if (q < 9) { TX[nx] = d; GX[nx++] = Math.exp(-q); }
+        const rg = rng[k], h = hx[k], g = hy[k]; let nx = 0, ny = 0, d, w = 0, e = 0;
+        d = cx - h; if (d < rg && d > -rg) TX[nx++] = d;
+        d = -cx - h; if (d < rg && d > -rg) TX[nx++] = d;
+        d = 2 * gw - cx - h; if (d < rg && d > -rg) TX[nx++] = d;
         if (nx) {
-          d = cy - g; q = d * d * iv; if (q < 9) { TY[ny] = d; GY[ny++] = Math.exp(-q); }
-          d = -cy - g; q = d * d * iv; if (q < 9) { TY[ny] = d; GY[ny++] = Math.exp(-q); }
-          d = 2 * gh - cy - g; q = d * d * iv; if (q < 9) { TY[ny] = d; GY[ny++] = Math.exp(-q); }
-        }
-        if (nx && ny) {
-          let w = 0, wk = 0; const s = st[k], a = ux[k], b = uy[k], sk = sg[k];
-          for (let ia = 0; ia < nx; ia++) for (let ib = 0; ib < ny; ib++) {
-            const gg = GX[ia] * GY[ib]; if (gg < 1e-5) continue;
-            w += gg; wk += gg * wakeKeep(TX[ia], TY[ib], a, b, s, sk, disc);
-          }
-          if (w >= EPS) {
-            const keep = wk / w;
-            if (w >= 1) e = gn[k] * (shp === 1 ? w : 1) * keep;
-            else { const t = w * 1024, i0 = t | 0; e = gn[k] * (lut[i0] + (lut[i0 + 1] - lut[i0]) * (t - i0)) * keep; }
+          d = cy - g; if (d < rg && d > -rg) TY[ny++] = d;
+          d = -cy - g; if (d < rg && d > -rg) TY[ny++] = d;
+          d = 2 * gh - cy - g; if (d < rg && d > -rg) TY[ny++] = d;
+          if (ny) {
+            const a = ux[k], b = uy[k], f = iF[k], bk = iB[k], l = iL[k];
+            for (let ia = 0; ia < nx; ia++) for (let ib = 0; ib < ny; ib++) {
+              const dx = TX[ia], dy = TY[ib], al = dx * a + dy * b, q = al * al * (al > 0 ? f : bk) + (dx * dx + dy * dy - al * al) * l;
+              if (q < 9) w += Math.exp(-q);
+            }
           }
         }
+        if (w >= 1) e = gn[k] * (shp === 1 ? w : 1);
+        else if (w >= EPS) { const t = w * 1024, i0 = t | 0; e = gn[k] * (lut[i0] + (lut[i0 + 1] - lut[i0]) * (t - i0)); }
         env[k] = e; if (e > mx) mx = e;
       }
     }
@@ -965,7 +973,14 @@ function draw() {
     ctx.strokeStyle = "rgba(255,255,255,.12)"; ctx.lineWidth = 1; ctx.stroke();
   }
   if (live) {
-    ctx.beginPath(); ctx.ellipse(rx + hx * cw, ry + hy * ch, Math.max(3, sg * cw), Math.max(3, sg * ch), 0, 0, 6.2832);
+    ctx.beginPath();
+    if (R.disc < 0.999) {
+      /* Contour de la fenêtre : petit devant, long derrière, dans le sens de la marche. */
+      const kq = Math.min(R.K - 1, Math.floor(fkNow)), o = [0, 0, 0], ang = Math.atan2(R.dir.uy[kq], R.dir.ux[kq]);
+      wakeShape(sg, R.disc, R.dir.st[kq], o);
+      ctx.ellipse(rx + hx * cw, ry + hy * ch, Math.max(2, o[0] * cw), Math.max(2, o[2] * ch), ang, -1.5708, 1.5708);
+      ctx.ellipse(rx + hx * cw, ry + hy * ch, Math.max(2, o[1] * cw), Math.max(2, o[2] * ch), ang, 1.5708, 4.7124); ctx.closePath();
+    } else ctx.ellipse(rx + hx * cw, ry + hy * ch, Math.max(3, sg * cw), Math.max(3, sg * ch), 0, 0, 6.2832);
     ctx.strokeStyle = "rgba(255,255,255,.55)"; ctx.lineWidth = 1; ctx.stroke();
     ctx.beginPath(); ctx.arc(rx + hx * cw, ry + hy * ch, 2, 0, 6.2832); ctx.fillStyle = "#fff"; ctx.fill();
   }
@@ -981,7 +996,8 @@ function draw() {
    sa couleur un peu plus loin selon la pente (réfraction). Les couleurs ne sont pas modifiées. */
 const wcan = document.createElement("canvas"); let wimg = null, WXc = new Float32Array(0), WYc = new Float32Array(0);
 function ripple(hx, hy, sg, amp, rw, rh, fk, side) {
-  const kd0 = Math.min(R.K - 1, Math.floor(fk)), wkU = R.dir.ux[kd0], wkV = R.dir.uy[kd0], wkS = R.dir.st[kd0], wkD = R.disc, wkOn = wkD < 0.999 && wkS > 0.001;
+  const kd0 = Math.min(R.K - 1, Math.floor(fk)), wkU = R.dir.ux[kd0], wkV = R.dir.uy[kd0], wkOn = R.disc < 0.999, wo = [0, 0, 0];
+  wakeShape(sg, R.disc, R.dir.st[kd0], wo); const wkF = 1 / (2 * wo[0] * wo[0]), wkB = 1 / (2 * wo[1] * wo[1]), wkL = 1 / (2 * wo[2] * wo[2]);
   const sc = side / Math.max(rw, rh), ww = Math.max(8, Math.round(rw * sc)), wh = Math.max(8, Math.round(rh * sc));
   if (!wimg || wimg.width !== ww || wimg.height !== wh) { wcan.width = ww; wcan.height = wh; wimg = wcan.getContext("2d").createImageData(ww, wh); WXc = new Float32Array(ww); WYc = new Float32Array(wh); }
   const out = wimg.data, px = an.rgba, inv = 1 / (2 * sg * sg), shp = 1 + 3 * P.flat / 100;
@@ -996,9 +1012,9 @@ function ripple(hx, hy, sg, amp, rw, rh, fk, side) {
     for (let x = 0; x < ww; x++, o += 4) {
       const gx = (x + 0.5) * kx;
       let sx = gx, sy = gy, w = WXc[x] * wy;
+      if (wkOn) { const ddx = gx - hx, al = ddx * wkU + dy * wkV, q = al * al * (al > 0 ? wkF : wkB) + (ddx * ddx + dy * dy - al * al) * wkL; w = q < 9 ? Math.exp(-q) : 0; }   /* l'image ondule dans la même forme que le son */
       if (w > 0.004) {
         w = flatTop(w > 1 ? 1 : w, shp);
-        if (wkOn) w *= wakeKeep(gx - hx, dy, wkU, wkV, wkS, sg, wkD);   /* l'image n'ondule que dans le sillage */
         const dx = gx - hx, d = Math.sqrt(dx * dx + dy * dy), ph = d / lam - ph0, sn = Math.sin(ph), ux = d > 1e-3 ? dx / d : 0, uy = d > 1e-3 ? dy / d : 0;
         let ei = (fk - d * kd) | 0; ei %= K; if (ei < 0) ei += K;
         const E = env[ei], soft = d * d / (d * d + c2), dp = A * w * E * sn * soft; sx += ux * dp; sy += uy * dp;

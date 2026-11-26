@@ -86,6 +86,11 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
 .filebtn{display:inline-block;position:relative;overflow:hidden;white-space:pre}
 .filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
 /* Paysage (téléphone couché, tablette, ordinateur) : image à gauche, réglages à droite. */
+/* Death : la ligne rougit à partir de 7, et son texte tremble de plus en plus fort de 9 à 12. */
+#row_death{color:var(--ink)}
+.shake{animation:shake .09s steps(1) infinite}
+@keyframes shake{0%{transform:translate(calc(var(--amp) * -1),var(--amp))}33%{transform:translate(var(--amp),calc(var(--amp) * -.6))}66%{transform:translate(calc(var(--amp) * -.4),calc(var(--amp) * -1))}}
+@media (prefers-reduced-motion:reduce){.shake{animation:none}}
 @media (orientation:landscape) and (min-width:560px), (min-width:900px){
   header{padding:2px 0}
   main{grid-template-columns:minmax(0,1.15fr) minmax(290px,.85fr);gap:22px;align-items:start}
@@ -125,6 +130,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <dt>grave, aigu</dt><dd>Lowest and highest pitch. The sliders move by semitones from C0 to B6, and the note name is shown next to the value. To set any other frequency, type it in hertz: for example 5 for rumbles and beats.</dd>
     <dt>échelle</dt><dd>Linear or logarithmic spread of the pitches between those two limits.</dd>
     <dt>accord</dt><dd>Leaves pitches free, or snaps them to the chromatic or pentatonic scale.</dd>
+    <dt>death</dt><dd>Output distortion, from 0 (off) to 12. The deep bass stays clean; everything above it is driven through a tube-style saturation, then from 6 upwards through a stage that folds the wave over itself, then a speaker-like filter and a heavy compressor. The higher the value, the thicker and more torn the sound. It comes before the equaliser, and the overall level stays under control. The line turns red and shakes near the top.</dd>
     <dt>égaliseur</dt><dd>Seven output faders, one per octave, each from −12 to +12 dB with a mark every 6 dB. The first one sets everything below 30 Hz. The last one sets everything above 2 kHz. The sliders stop at B6, just below, so it mostly shapes the harmonics that make the saw and square waves bright; only a pitch typed by hand can reach higher. The overall level is kept steady and never clips: cutting the lowest bands trades inaudible rumble for more level in the rest. [ plat ] sets all bands back to 0 dB.</dd>
     <dt>stéréo</dt><dd>Stereo width. The left of the image plays in the left speaker.</dd>
     <dt>mesure, mesures, tempo</dt><dd>Loop length in bars, so that samples line up on the beat: a slower tempo makes a longer loop, shown in seconds under the image. Choose libre to set a length in seconds with durée.</dd>
@@ -139,7 +145,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Video is recorded in real time: keep the page visible until it ends.</li>
     <li>On an iPhone, the silent switch mutes the sound.</li>
   </ul>
-  <p class="ver">version A · a56eb28</p>
+  <p class="ver">version A · 17ac1dd</p>
 </article>
 <main>
   <div class="stage">
@@ -179,6 +185,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
       <div class="row wide"><span>échelle</span><div class="seg" data-seg="scale"></div></div>
       <div class="row wide"><span>accord</span><div class="seg" data-seg="tune"></div></div>
       <div data-s="stereo"></div>
+      <div data-s="death"></div>
     </section>
     <section>
       <h2>égaliseur</h2>
@@ -217,7 +224,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
         <button id="reset" class="cmd">défauts</button>
       </div>
     </section>
-    <p class="ver">pixels to soundscape patterns · A · a56eb28</p>
+    <p class="ver">pixels to soundscape patterns · A · 17ac1dd</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>
@@ -695,7 +702,7 @@ const FIXED = { shape: 2.5, disc: 1, dyn: 0.6 };
 
 const P = { grid: 16, path: "cycleH", sigma: 15, ring: 0.25, infl: 60,
   wave: "sine", fmin: noteHz(0), fmax: noteHz(59), scale: "lin", tune: "libre", stereo: 80,
-  sig: "4/4", bpm: 120, bars: "4", freeDur: 8, wobble: 50, seed: 1,
+  sig: "4/4", bpm: 120, bars: "4", freeDur: 8, wobble: 50, seed: 1, death: 0,
   eq0: 0, eq1: 0, eq2: 0, eq3: 0, eq4: 0, eq5: 0, eq6: 0 };
 if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) P.wobble = 0;
 
@@ -707,6 +714,7 @@ const SLIDERS = {
   fmin:    { label: "grave", min: 0.5, max: 4000, step: 0.01, unit: "Hz", note: true },
   fmax:    { label: "aigu", min: 0.5, max: 4000, step: 0.01, unit: "Hz", note: true },
   stereo:  { label: "stéréo", min: 0, max: 100, step: 1, unit: "%" },
+  death:   { label: "death", min: 0, max: 12, step: 1, unit: "/12", dth: true },
   bpm:     { label: "tempo", min: 40, max: 240, step: 1, unit: "bpm" },
   freeDur: { label: "durée", min: 0.5, max: 30, step: 0.1, unit: "s" },
   wobble:  { label: "wobble", min: 0, max: 200, step: 1, unit: "%", live: true },
@@ -772,7 +780,7 @@ function buildControls() {
       if (from !== "range") ri.value = toPos(v);
       if (from !== "num") ni.value = show(v);
       if (d.note) un.textContent = noteName(v) || "Hz";   /* une valeur tapée à la main hors des notes reste en hertz */
-      paint(); if (!quiet) { if (d.fx) eqChanged(); else changed(d.live); }
+      paint(); if (!quiet) { if (d.dth) deathChanged(); else if (d.fx) eqChanged(); else changed(d.live); }
     };
     SETTERS[id] = v => set(Number(v), "any", true);
     ri.addEventListener("input", () => set(fromPos(ri.value), "range"));
@@ -961,16 +969,21 @@ async function rerender() {
     if (my === job) { busy = false; paintLine(); say("Le calcul n'a pas abouti. Change un réglage pour le relancer."); }
   }
 }
-function startSource(offset, opt) {
-  let buf; const sr = R.sr || SR;
-  try { buf = actx.createBuffer(2, R.L.length, sr); buf.copyToChannel(R.L, 0); buf.copyToChannel(R.R, 1); }
+/* Met une boucle calculée dans un tampon audio, pour l'écoute comme pour le rendu hors ligne. */
+function makeBuffer(ctx, res) {
+  const sr = res.sr || SR; let buf;
+  try { buf = ctx.createBuffer(2, res.L.length, sr); buf.copyToChannel(res.L, 0); buf.copyToChannel(res.R, 1); }
   catch (e) {
     /* Navigateur qui refuse cette fréquence d'échantillonnage : on ramène l'aperçu à la fréquence normale. */
     const m = Math.round(SR / sr), up = x => { const o = new Float32Array(x.length * m); for (let i = 0; i < x.length; i++) { const a = x[i], b = x[(i + 1) % x.length]; for (let j = 0; j < m; j++) o[i * m + j] = a + (b - a) * j / m; } return o; };
-    buf = actx.createBuffer(2, R.L.length * m, SR); buf.copyToChannel(up(R.L), 0); buf.copyToChannel(up(R.R), 1);
+    buf = ctx.createBuffer(2, res.L.length * m, SR); buf.copyToChannel(up(res.L), 0); buf.copyToChannel(up(res.R), 1);
   }
+  return buf;
+}
+function startSource(offset, opt) {
+  const buf = makeBuffer(actx, R);
   const s = actx.createBufferSource(), g = actx.createGain(), now = actx.currentTime;
-  s.buffer = buf; s.loop = !(opt && opt.once); s.connect(g); g.connect(eqNodes[0]);
+  s.buffer = buf; s.loop = !(opt && opt.once); s.connect(g); g.connect(fx.input);
   g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(1, now + 0.04);
   s.start(now, Math.max(0, Math.min(offset, buf.duration - 0.001)));
   stopSource(0.04);
@@ -981,29 +994,108 @@ function stopSource(fade) {
   const { s, g } = cur, now = actx.currentTime; cur = null;
   try { g.gain.cancelScheduledValues(now); g.gain.setValueAtTime(g.gain.value, now); g.gain.linearRampToValueAtTime(0, now + fade); s.stop(now + fade + 0.02); } catch (e) {}
 }
-/* ── Égaliseur de sortie ── */
-let eqNodes = [], trimNode = null, trim = 1, eqTimer = 0;
+/* ── Sortie : death (distorsion), puis égaliseur, puis mise à niveau ── */
+let eqNodes = [], fx = null, trimNode = null, trim = 1, eqTimer = 0, fxJob = 0;
 const eqGains = () => EQ_BANDS.map((b, i) => P["eq" + i]);
 const eqFlat = () => eqGains().every(v => Math.abs(v) < 0.01);
-/* Les filtres réagissent tout de suite ; le niveau d'ensemble est recalculé juste après, sur le son égalisé. */
+function buildEq(ctx) {
+  const nodes = EQ_BANDS.map((b, i) => { const f = ctx.createBiquadFilter(); f.type = b[0]; f.frequency.value = b[1]; if (b[2]) f.Q.value = b[2]; f.gain.value = P["eq" + i]; return f; });
+  nodes.forEach((f, i) => { if (i) nodes[i - 1].connect(f); });
+  return nodes;
+}
+
+/* Death : une distorsion lourde mais charnue, dans l'esprit des basses « tearout » et des guitares deathcore.
+   Le signal est coupé en deux. Le grave profond reste propre, pour garder l'assise. Tout le reste traverse :
+     1. une bosse de médium, qui fait mordre la saturation sur les notes plutôt que sur la boue ;
+     2. un étage « à lampe », saturation douce et dissymétrique, qui épaissit ;
+     3. un repli de l'onde sur elle-même, ajouté à partir de 6, qui donne le grain déchiré ;
+     4. un filtre de « baffle » (corps à 180 Hz, creux à 450 Hz, voyelle à 1,1 kHz, mordant à 2,7 kHz, aigus coupés), qui enlève le côté numérique ;
+     5. un compresseur qui écrase l'ensemble en mur de son.
+   Les deux étages sont suréchantillonnés 4 fois pour éviter le repliement, qui sonnerait métallique et froid.
+   Le même montage sert à l'écoute et au rendu hors ligne de l'export. */
+const curve = fn => { const n = 4097, c = new Float32Array(n); let m = 0; for (let i = 0; i < n; i++) { c[i] = fn(2 * i / (n - 1) - 1); m = Math.max(m, Math.abs(c[i])); } for (let i = 0; i < n; i++) c[i] /= m; return c; };
+const TUBE = curve(u => Math.tanh(2.2 * u + 0.3) - Math.tanh(0.3)), FOLD = curve(u => Math.sin(1.5 * Math.PI * u));
+function buildFx(ctx) {
+  const bq = (type, f, q) => { const b = ctx.createBiquadFilter(); b.type = type; b.frequency.value = f; b.Q.value = q; return b; };
+  const gn = v => { const g = ctx.createGain(); g.gain.value = v; return g; };
+  const sh = c => { const w = ctx.createWaveShaper(); w.curve = c; w.oversample = "4x"; return w; };
+  const chain = (...n) => { for (let i = 1; i < n.length; i++) n[i - 1].connect(n[i]); };
+  const input = gn(1), output = gn(1), bypass = gn(1), wet = gn(0);
+  const lp1 = bq("lowpass", 45, 0.707), lp2 = bq("lowpass", 45, 0.707), sub = gn(1);
+  const hp1 = bq("highpass", 45, 0.707), hp2 = bq("highpass", 45, 0.707), push = bq("peaking", 700, 0.8), pre1 = gn(1), tube = sh(TUBE);
+  const dc = bq("highpass", 40, 0.707), tame = bq("lowpass", 7000, 0.707), straight = gn(1), pre2 = gn(1), fold = sh(FOLD), folded = gn(0), mix = gn(1);
+  const chug = bq("peaking", 180, 0.9), scoop = bq("peaking", 450, 1), growl = bq("peaking", 1100, 2), bite = bq("peaking", 2700, 1.2), cab1 = bq("lowpass", 16000, 0.707), cab2 = bq("lowpass", 16000, 1.1);
+  const comp = ctx.createDynamicsCompressor();
+  chain(input, bypass, output);
+  chain(input, lp1, lp2, sub, comp);
+  chain(input, hp1, hp2, push, pre1, tube, dc, tame, straight, mix);
+  chain(tame, pre2, fold, folded, mix);
+  chain(mix, chug, scoop, growl, bite, cab1, cab2, comp, wet, output);
+  /* v de 0 à 12 ; t : instant à partir duquel glisser vers les nouvelles valeurs (rien = tout de suite). */
+  function set(v, t) {
+    const d = v / 12, to = (p, x) => { if (t === undefined) p.value = x; else p.setTargetAtTime(x, t, 0.03); };
+    to(bypass.gain, v > 0 ? 0 : 1); to(wet.gain, v > 0 ? 1 : 0);
+    const fc = 45 + 75 * d; [lp1, lp2, hp1, hp2].forEach(f => to(f.frequency, fc));     /* le grave propre monte jusqu'à 120 Hz */
+    to(sub.gain, 1 + 1.2 * d);                                                          /* et il prend du poids, pour rester lourd sous la saturation */
+    to(push.gain, 6 * d);
+    to(pre1.gain, Math.pow(10, (-4 + 40 * d) / 20));                                     /* de −4 à +36 dB dans l'étage à lampe */
+    const w = Math.max(0, (d - 0.42) / 0.58), w2 = w * w;
+    to(pre2.gain, 0.5 + 1.7 * w); to(folded.gain, 0.6 * w2); to(straight.gain, 1 - 0.4 * w2);
+    to(chug.gain, 5 * d); to(scoop.gain, -4 * d); to(growl.gain, 4 * d); to(bite.gain, 3 * d);
+    const top = 16000 * Math.pow(3800 / 16000, Math.min(1, 1.4 * d)); to(cab1.frequency, top); to(cab2.frequency, top);
+    to(comp.threshold, -12 - 22 * d); to(comp.ratio, 2 + 10 * d); to(comp.knee, 8); to(comp.attack, 0.004); to(comp.release, 0.14);
+  }
+  return { input, output, set };
+}
+/* Rendu hors ligne de la boucle à travers death et l'égaliseur, avec exactement les mêmes modules qu'à l'écoute.
+   On rend deux tours et on garde le second : filtres et compresseur y sont en régime, donc la boucle se raccorde. */
+async function renderFx(res) {
+  const OC = window.OfflineAudioContext || window.webkitOfflineAudioContext; if (!OC) return null;
+  const n = Math.round(res.dur * SR), oc = new OC(2, 2 * n, SR), s = oc.createBufferSource(), f = buildFx(oc), eq = buildEq(oc);
+  s.buffer = makeBuffer(oc, res); s.loop = true; f.set(P.death);
+  s.connect(f.input); f.output.connect(eq[0]); eq[eq.length - 1].connect(oc.destination); s.start();
+  const out = await new Promise((ok, no) => { oc.oncomplete = e => ok(e.renderedBuffer); const p = oc.startRendering(); if (p && p.then) p.then(ok, no); });
+  return { L: out.getChannelData(0).slice(n, 2 * n), R: out.getChannelData(1).slice(n, 2 * n) };
+}
+/* Les filtres réagissent tout de suite ; le niveau d'ensemble est recalculé juste après, sur le son traité. */
 function eqChanged() {
   if (actx) eqNodes.forEach((f, i) => f.gain.setTargetAtTime(P["eq" + i], actx.currentTime, 0.02));
   clearTimeout(eqTimer); eqTimer = setTimeout(setTrim, 180);
 }
-function setTrim() {
+/* Couleur et tremblement de la ligne death. */
+function paintDeath() {
+  const v = P.death, k = Math.min(1, Math.max(0, (v - 6) / 6)), row = $("row_death"), amp = v >= 9 ? (0.4 * (v - 8)).toFixed(1) + "px" : "0px";
+  row.style.setProperty("--ink", "rgb(" + Math.round(232 + 23 * k) + "," + Math.round(232 - 200 * k) + "," + Math.round(232 - 208 * k) + ")");
+  row.querySelectorAll("label, .num").forEach(el => { el.style.setProperty("--amp", amp); el.classList.toggle("shake", v >= 9); });
+}
+function deathChanged() {
+  paintDeath();
+  if (actx) {
+    fx.set(P.death, actx.currentTime);
+    /* En attendant le niveau exact, on baisse tout de suite : une saturation à plein niveau surprendrait. */
+    if (P.death > 0) trimNode.gain.setTargetAtTime(Math.min(trim, 0.45), actx.currentTime, 0.02);
+  }
+  clearTimeout(eqTimer); eqTimer = setTimeout(setTrim, 180);
+}
+async function setTrim() {
   if (!R) return;
-  if (eqFlat()) trim = 1;
-  else { const e = eqApply(R.L, R.R, R.sr || SR, eqGains()); trim = levelGain(e.L, e.R, R.sr || SR).g; }
+  const my = ++fxJob, res = R; let g = 1;
+  if (P.death > 0) {
+    const e = await renderFx(res).catch(() => null);
+    if (my !== fxJob || res !== R) return;
+    g = e ? levelGain(e.L, e.R, SR).g : 0.45;
+  } else if (!eqFlat()) { const e = eqApply(res.L, res.R, res.sr || SR, eqGains()); g = levelGain(e.L, e.R, res.sr || SR).g; }
+  trim = g;
   if (trimNode) trimNode.gain.setTargetAtTime(trim, actx.currentTime, 0.03);
 }
 function wakeAudio() {
   try {
     if (!actx) {
       actx = new (window.AudioContext || window.webkitAudioContext)(); master = actx.createGain(); master.gain.value = 0.9; master.connect(actx.destination);
-      /* Sortie : source → 7 filtres de l'égaliseur → gain de mise à niveau → écoute (et enregistrement vidéo). */
+      /* Sortie : source → death → 7 filtres de l'égaliseur → gain de mise à niveau → écoute (et enregistrement vidéo). */
       trimNode = actx.createGain(); trimNode.gain.value = trim; trimNode.connect(master);
-      eqNodes = EQ_BANDS.map((b, i) => { const f = actx.createBiquadFilter(); f.type = b[0]; f.frequency.value = b[1]; if (b[2]) f.Q.value = b[2]; f.gain.value = P["eq" + i]; return f; });
-      eqNodes.forEach((f, i) => f.connect(i + 1 < eqNodes.length ? eqNodes[i + 1] : trimNode));
+      eqNodes = buildEq(actx); eqNodes[eqNodes.length - 1].connect(trimNode);
+      fx = buildFx(actx); fx.set(P.death); fx.output.connect(eqNodes[0]);
     }
     if (actx.state !== "running") actx.resume();
     return true;
@@ -1043,7 +1135,13 @@ async function exportWav() {
   if (!R || R.preview || busy) { say("Le calcul complet n'est pas terminé : attends la fin de la barre."); return; }
   const base = baseName();
   let L = R.L, Rr = R.R;
-  if (!eqFlat()) {
+  if (P.death > 0) {
+    /* Même distorsion, même égaliseur et même mise à niveau qu'à l'écoute. */
+    const e = await renderFx(R).catch(() => null);
+    if (!e) { say("Ce navigateur ne sait pas appliquer death à l'export. Remets death à 0 pour exporter."); return; }
+    const g = levelGain(e.L, e.R, SR).g; L = e.L; Rr = e.R;
+    for (let j = 0; j < L.length; j++) { L[j] *= g; Rr[j] *= g; }
+  } else if (!eqFlat()) {
     /* Même égaliseur et même mise à niveau qu'à l'écoute. */
     const e = eqApply(L, Rr, SR, eqGains()), g = levelGain(e.L, e.R, SR).g; L = e.L; Rr = e.R;
     for (let j = 0; j < L.length; j++) { L[j] *= g; Rr[j] *= g; }
@@ -1095,7 +1193,7 @@ function applyParams(data) {
   for (const k in SETTERS) if (k in p && (typeof p[k] === "number" || typeof p[k] === "string")) SETTERS[k](p[k]);
   const s = data.selection;
   if (s && [s.x, s.y, s.w, s.h].every(v => typeof v === "number" && v >= 0 && v <= 1) && s.w >= 0.04 && s.h >= 0.04) sel = { x: Math.min(s.x, 1 - s.w), y: Math.min(s.y, 1 - s.h), w: s.w, h: s.h };
-  say("Réglages chargés."); eqChanged();
+  say("Réglages chargés."); eqChanged(); deathChanged();
   if (typeof data.image === "string" && DEMOS[data.image] && data.image !== imgName) { const keep = sel; loadURL("data:image/jpeg;base64," + DEMOS[data.image], data.image, keep); }
   else changed(false);
 }
@@ -1252,7 +1350,7 @@ $("save").addEventListener("click", saveParams);
 $("pathprev").addEventListener("click", () => stepPath(-1));
 $("pathnext").addEventListener("click", () => stepPath(1));
 $("reroll").addEventListener("click", () => { P.seed = P.seed % 9999 + 1; changed(false); });   /* un autre tirage du chaos */
-setPath(P.path, true);
+setPath(P.path, true); paintDeath();
 $("flat").addEventListener("click", () => { EQ_BANDS.forEach((b, i) => SETTERS["eq" + i](0)); eqChanged(); });
 $("reset").addEventListener("click", () => applyParams({ reglages: DEFAULTS }));
 $("open").addEventListener("change", e => {

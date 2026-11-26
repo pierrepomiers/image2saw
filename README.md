@@ -46,6 +46,10 @@ La version exacte est affichée en bas de la page (`A · numéro de commit`). L'
 - `accord` : notes libres, ou ramenées sur la gamme chromatique ou pentatonique.
 - `stéréo` : largeur de la scène. La gauche de l'image sonne à gauche.
 
+**death**
+- `death` : distorsion de sortie, de 0 (coupée) à 12. Le grave profond reste propre ; tout le reste passe par une saturation « à lampe », puis à partir de 6 par un étage qui replie l'onde sur elle-même, puis par un filtre de baffle et un compresseur lourd. Plus la valeur monte, plus le son est épais et déchiré.
+- Elle agit avant l'égaliseur, et le niveau d'ensemble reste maîtrisé. La ligne rougit et tremble en approchant de 12.
+
 **égaliseur**
 - Sept curseurs verticaux, un par octave, de −12 à +12 dB avec une graduation tous les 6 dB : sous 30 Hz, puis 60, 120, 250, 500 Hz et 1 kHz, enfin tout ce qui est au-dessus de 2 kHz.
 - Avec les curseurs, les notes s'arrêtent à B6, un peu moins de 2 kHz ; seule une valeur tapée à la main peut monter plus haut. Le dernier curseur règle donc surtout les harmoniques, qui donnent leur brillance à la scie et au carré ; il est presque sans effet sur le sinus.

@@ -39,7 +39,7 @@ main[hidden],#doc[hidden]{display:none}
 .stage > *{position:relative}
 #bg{position:absolute;left:-12%;top:-12%;width:124%;height:124%;border:0;filter:blur(26px) saturate(1.3) brightness(.5);pointer-events:none;background:#000}
 .stage #line{color:#b4b4b4}
-canvas{display:block;width:100%;height:min(calc(100vw - 32px),44vh);background:#000;border:1px solid var(--line);touch-action:none;cursor:crosshair}
+canvas{display:block;width:100%;justify-self:center;height:min(calc(100vw - 32px),44vh);background:#000;border:1px solid var(--line);touch-action:none;cursor:crosshair}
 #line{min-height:1.4em;white-space:pre;overflow:hidden;color:var(--dim);font-variant-numeric:tabular-nums}
 #line.busy{color:var(--ink)}
 .transport{display:flex;gap:4px 16px;flex-wrap:wrap;align-items:center}
@@ -154,7 +154,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Video is recorded in real time: keep the page visible until it ends.</li>
     <li>On an iPhone, the silent switch mutes the sound.</li>
   </ul>
-  <p class="ver">version A · 2ae5187</p>
+  <p class="ver">version A · 6e49c1c</p>
 </article>
 <main>
   <div class="stage">
@@ -239,7 +239,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
         <button id="reset" class="cmd">défauts</button>
       </div>
     </section>
-    <p class="ver">pixels to soundscape patterns · A · 2ae5187</p>
+    <p class="ver">pixels to soundscape patterns · A · 6e49c1c</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>
@@ -1417,9 +1417,11 @@ function geom() {
 /* En portrait, le cadre prend les proportions de l'image : plus de bandes noires autour. */
 const WIDE = matchMedia("(orientation:landscape) and (min-width:560px), (min-width:900px)");
 function fitFrame() {
-  if (WIDE.matches || !src.width) { cv.style.height = ""; return; }
-  const W = cv.clientWidth, h = Math.round(Math.max(120, Math.min(W, innerHeight * 0.5, W * src.height / src.width)));
+  if (WIDE.matches || !src.width) { cv.style.height = cv.style.width = ""; return; }
+  const full = $("line").clientWidth, r = src.height / src.width, h = Math.round(Math.max(120, Math.min(innerHeight * 0.52, full * r)));
+  const w = Math.round(Math.min(full, Math.max(120, (h - 12) / r + 12)));   /* image haute : le cadre se resserre autour d'elle */
   if (cv.style.height !== h + "px") cv.style.height = h + "px";
+  if (cv.style.width !== w + "px") cv.style.width = w + "px";
 }
 addEventListener("resize", fitFrame);
 function resize() {

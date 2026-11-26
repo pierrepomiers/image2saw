@@ -4,101 +4,88 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Image2Saw A</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-/* Layout : scène (image + transport) collante, panneau de réglages qui défile. Un seul monde visuel, sombre. */
+/* Layout : scène collante (image, transport), puis réglages en lignes « nom · curseur · valeur ». Monochrome, sans ornement. */
 :root{
   color-scheme:dark;
-  --bg:#0d1117; --panel:#141a23; --line:#232c3a; --ink:#d9e1ec; --dim:#7f8c9f;
-  --amber:#ffb454; --mint:#7fe3c4; --rose:#f284b6; --violet:#b7a1ff;
-  --mono:"Fira Code",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --bg:#000; --ink:#e8e8e8; --dim:#7c7c7c; --line:#2c2c2c;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
 }
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--mono);font-size:14px;line-height:1.45}
-body{padding:0 16px 48px}
-header{display:flex;align-items:baseline;gap:10px;padding:14px 0 10px}
-header h1{font-size:16px;font-weight:600;margin:0;letter-spacing:.02em}
-header h1 b{color:var(--amber);font-weight:600}
-header span{color:var(--dim);font-size:12px}
-main{display:grid;gap:16px;max-width:1180px;margin:0 auto}
-header{max-width:1180px;margin:0 auto}
-.stage{position:sticky;top:0;z-index:5;background:var(--bg);padding-bottom:8px;display:grid;gap:8px;min-width:0}
-canvas{display:block;width:100%;height:min(calc(100vw - 32px),44vh);background:#090c11;border:1px solid var(--line);border-radius:6px;touch-action:none;cursor:crosshair}
-.bar{height:2px;background:var(--line);border-radius:2px;overflow:hidden}
-.bar i{display:block;height:100%;width:0;background:var(--amber);transition:width .12s linear}
-.transport{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-button,.filebtn{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:9px 12px;cursor:pointer;min-height:40px}
-button:hover,.filebtn:hover{border-color:var(--dim)}
-button:focus-visible,.filebtn:focus-within,input:focus-visible{outline:2px solid var(--mint);outline-offset:2px}
-#play{background:var(--amber);color:#1a1206;border-color:var(--amber);font-weight:600;min-width:118px}
-#play[aria-pressed="true"]{background:transparent;color:var(--amber)}
-.chips{display:flex;gap:6px;flex-wrap:wrap;color:var(--dim);font-size:12px;margin-left:auto}
-.chips span{border:1px solid var(--line);border-radius:99px;padding:3px 9px;white-space:nowrap}
-.chips b{color:var(--mint);font-weight:500}
-#msg{color:var(--rose);font-size:12px;min-height:1.2em;margin:0}
-.code{margin:0;padding:10px 12px;background:var(--panel);border:1px solid var(--line);border-radius:6px;font-size:12px;overflow-x:auto;white-space:nowrap;color:var(--dim)}
-.code .f{color:var(--violet)} .code .s{color:var(--rose)} .code .n{color:var(--mint)}
-.panel{display:grid;gap:12px;min-width:0;align-content:start}
-section{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;display:grid;gap:12px}
-section h2{margin:0;font-size:12px;font-weight:500;color:var(--violet);letter-spacing:.08em;text-transform:lowercase}
-section h2::before{content:"// ";color:var(--dim)}
-.row{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center}
-.row label{color:var(--ink)}
-.row small{grid-column:1/-1;color:var(--dim);font-size:11.5px}
-.row.off{opacity:.35;pointer-events:none}
-.num{display:flex;align-items:center;gap:6px;color:var(--dim);font-size:12px}
-.num input{font:inherit;font-size:14px;width:8ch;text-align:right;background:#0b0f15;color:var(--mint);border:1px solid var(--line);border-radius:5px;padding:6px 7px;font-variant-numeric:tabular-nums;-moz-appearance:textfield}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--mono);font-size:13px;line-height:1.4}
+body{padding:0 16px 40px}
+header,main{max-width:1100px;margin:0 auto}
+header{padding:12px 0 8px;color:var(--dim);white-space:nowrap;overflow:hidden}
+header h1{display:inline;font-size:13px;font-weight:400;margin:0;color:var(--ink)}
+main{display:grid;gap:8px}
+.stage{position:sticky;top:0;z-index:5;background:var(--bg);padding-bottom:6px;display:grid;gap:6px;min-width:0}
+canvas{display:block;width:100%;height:min(calc(100vw - 32px),44vh);background:#000;border:1px solid var(--line);touch-action:none;cursor:crosshair}
+.bar{height:1px;background:var(--line)}
+.bar i{display:block;height:100%;width:0;background:var(--ink)}
+.transport{display:flex;gap:4px 16px;flex-wrap:wrap;align-items:center}
+button,.filebtn{font:inherit;color:var(--ink);background:none;border:0;border-radius:0;padding:8px 0;min-height:36px;cursor:pointer;white-space:nowrap}
+.cmd::before{content:"[ ";color:var(--dim)} .cmd::after{content:" ]";color:var(--dim)}
+button:hover,.filebtn:hover{text-decoration:underline}
+button:focus-visible,.filebtn:focus-within,input:focus-visible{outline:1px solid var(--ink);outline-offset:2px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:#000;padding:2px 6px;min-height:0}
+#play[aria-pressed="true"]{color:var(--ink);text-decoration:underline}
+#stat{color:var(--dim);margin-left:auto;font-variant-numeric:tabular-nums}
+#msg{color:var(--ink);margin:0}
+#msg:empty{display:none}
+.panel{display:grid;min-width:0;align-content:start}
+section{display:grid}
+section h2{margin:14px 0 2px;font-size:13px;font-weight:400;color:var(--dim);white-space:nowrap;overflow:hidden}
+section h2::before{content:"── "}
+section h2::after{content:" ────────────────────────────────────────────────────────────────────────────────────────"}
+.row{display:grid;grid-template-columns:10ch minmax(0,1fr) 9ch;gap:10px;align-items:center;min-height:36px}
+.row.wide{grid-template-columns:10ch minmax(0,1fr)}
+.row > label,.row > span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row.off{opacity:.3;pointer-events:none}
+.num{display:flex;justify-content:flex-end;align-items:baseline;gap:5px;color:var(--dim)}
+.num input{font:inherit;width:5ch;text-align:right;background:none;color:var(--ink);border:0;border-bottom:1px solid var(--line);border-radius:0;padding:4px 0;font-variant-numeric:tabular-nums;-moz-appearance:textfield}
 .num input::-webkit-outer-spin-button,.num input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-.num i{font-style:normal;min-width:3ch}
-input[type=range]{grid-column:1/-1;-webkit-appearance:none;appearance:none;width:100%;height:30px;margin:0;background:transparent;--f:50%}
-input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:4px;background:linear-gradient(90deg,var(--amber) var(--f),var(--line) var(--f))}
-input[type=range]::-moz-range-track{height:4px;border-radius:4px;background:linear-gradient(90deg,var(--amber) var(--f),var(--line) var(--f))}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--ink);border:3px solid var(--bg);box-shadow:0 0 0 1px var(--amber);margin-top:-9px}
-input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--ink);border:3px solid var(--bg);box-shadow:0 0 0 1px var(--amber)}
-.seg{display:flex;flex-wrap:wrap;gap:6px}
-.seg button{padding:7px 10px;min-height:36px;font-size:13px;color:var(--dim)}
-.seg button[aria-pressed="true"]{color:var(--bg);background:var(--mint);border-color:var(--mint);font-weight:600}
-.seglabel{color:var(--ink);margin-bottom:-6px}
-.filebtn{display:inline-flex;align-items:center;position:relative;overflow:hidden}
+.num i{font-style:normal;width:3ch}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:34px;margin:0;background:transparent;--f:50%}
+input[type=range]::-webkit-slider-runnable-track{height:1px;background:linear-gradient(90deg,var(--ink) var(--f),var(--dim) var(--f))}
+input[type=range]::-moz-range-track{height:1px;background:linear-gradient(90deg,var(--ink) var(--f),var(--dim) var(--f))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:9px;height:19px;background:var(--ink);border:0;border-radius:0;margin-top:-9px}
+input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);border:0;border-radius:0}
+.seg{display:flex;flex-wrap:wrap;gap:0 14px;align-items:center}
+.seg button{color:var(--dim)}
+.filebtn{display:inline-block;position:relative;overflow:hidden;white-space:pre}
 .filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
-#durout{color:var(--mint)}
 @media (min-width:900px){
-  main{grid-template-columns:minmax(0,1.15fr) minmax(340px,.85fr);align-items:start}
-  .stage{top:12px}
-  canvas{height:min(56vw,62vh)}
+  main{grid-template-columns:minmax(0,1.2fr) minmax(340px,.8fr);gap:28px;align-items:start}
+  .stage{top:8px}
+  canvas{height:min(56vw,66vh)}
 }
 </style>
 </head>
 <body>
-<header><h1>image<b>2</b>saw</h1><span>version A · prototype · la chorale des pixels</span></header>
+<header><h1>image2saw A</h1> ░▒▓ la chorale des pixels</header>
 <main>
   <div class="stage">
     <canvas id="cv" aria-label="Image et sélection. Glisser pour sélectionner la zone à jouer."></canvas>
     <div class="bar"><i id="prog"></i></div>
     <div class="transport">
-      <button id="play" aria-pressed="false">▶ Lecture</button>
-      <button id="export">Exporter le WAV</button>
-      <div class="chips"><span>durée <b id="c_dur">–</b></span><span>mode <b id="c_mode">–</b></span><span><b id="c_vox">–</b> voix</span><span><b id="c_ms">–</b> ms par pixel</span></div>
+      <button id="play" class="cmd" aria-pressed="false">lecture</button>
+      <button id="export" class="cmd">wav</button>
+      <span id="stat"></span>
     </div>
     <p id="msg" role="status"></p>
-    <pre class="code" id="code" aria-label="Résumé des réglages"></pre>
   </div>
 
   <div class="panel" id="panel">
     <section>
       <h2>image</h2>
       <div class="seg">
-        <label class="filebtn">Charger une image<input type="file" id="file" accept="image/*"></label>
+        <label class="filebtn cmd">charger<input type="file" id="file" accept="image/*"></label>
         <button data-demo="manekineko">manekineko</button>
         <button data-demo="sunset">sunset</button>
         <button data-demo="damier">damier</button>
       </div>
       <div data-s="grid"></div>
-    </section>
-    <section>
-      <h2>parcours</h2>
-      <div class="seg" data-seg="path"></div>
+      <div class="row wide"><span>parcours</span><div class="seg" data-seg="path"></div></div>
     </section>
     <section>
       <h2>gaussienne</h2>
@@ -109,29 +96,23 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
     </section>
     <section>
       <h2>son</h2>
-      <div class="seg" data-seg="wave"></div>
+      <div class="row wide"><span>onde</span><div class="seg" data-seg="wave"></div></div>
       <div data-s="fmin"></div>
       <div data-s="fmax"></div>
-      <div class="seglabel">Échelle des fréquences</div>
-      <div class="seg" data-seg="scale"></div>
-      <div class="seglabel">Accordage</div>
-      <div class="seg" data-seg="tune"></div>
+      <div class="row wide"><span>échelle</span><div class="seg" data-seg="scale"></div></div>
+      <div class="row wide"><span>accord</span><div class="seg" data-seg="tune"></div></div>
       <div data-s="dyn"></div>
       <div data-s="stereo"></div>
-      <div data-s="vol"></div>
     </section>
     <section>
       <h2>temps</h2>
-      <div class="seglabel">Mesure</div>
-      <div class="seg" data-seg="sig"></div>
+      <div class="row wide"><span>mesure</span><div class="seg" data-seg="sig"></div></div>
+      <div class="row wide" id="row_bars"><span>mesures</span><div class="seg" data-seg="bars"></div></div>
       <div data-s="bpm"></div>
-      <div class="seglabel">Nombre de mesures</div>
-      <div class="seg" data-seg="bars"></div>
       <div data-s="freeDur"></div>
-      <div>Durée de la boucle : <span id="durout"></span></div>
     </section>
     <section>
-      <h2>visuel</h2>
+      <h2>image animée</h2>
       <div data-s="wobble"></div>
     </section>
   </div>
@@ -402,29 +383,28 @@ const DEMOS = { manekineko: "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAkGBwgHBgkIBwgKCgk
 const $ = id => document.getElementById(id);
 
 const P = { grid: 16, path: "cycleH", sigma: 15, flat: 50, ring: 0.25, infl: 60,
-  wave: "sine", fmin: 5, fmax: 500, scale: "lin", tune: "libre", dyn: 60, stereo: 80, vol: 80,
+  wave: "sine", fmin: 5, fmax: 500, scale: "lin", tune: "libre", dyn: 60, stereo: 80,
   sig: "4/4", bpm: 120, bars: "4", freeDur: 8, wobble: 50 };
 if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) P.wobble = 0;
 
 const SLIDERS = {
-  grid:      { label: "Résolution", min: 1, max: 64, step: 1, unit: "px", hint: "Nombre de pixels (de voix) sur le grand côté. Tous sont parcourus : plus il y en a, plus la tête va vite." },
-  sigma:     { label: "Largeur", min: 2, max: 100, step: 1, unit: "%", log: true, hint: "Rayon du chœur, en proportion du grand côté de la sélection. Vers 50 %, presque tous les pixels chantent en même temps." },
-  flat:      { label: "Sommet", min: 0, max: 100, step: 1, unit: "%", hint: "0 % : cloche de Gauss. 100 % : plateau large aux bords francs, proche de la fenêtre de la v2.21." },
-  ring:      { label: "Résonance", min: 0, max: 2, step: 0.01, unit: "s", hint: "Temps d'extinction d'une voix après le passage (0 = amortissement maximal)." },
-  infl:      { label: "Influence de l'image", min: 0, max: 100, step: 1, unit: "%", hint: "À 0 %, largeur et résonance restent fixes. À 100 %, elles varient de 1 à 16 : zone unie = gaussienne large, zone contrastée = étroite, couleur vive = résonance longue." },
-  fmin:      { label: "Fréquence basse", min: 0.5, max: 2000, step: 0.1, unit: "Hz", log: true },
-  fmax:      { label: "Fréquence haute", min: 1, max: 4000, step: 0.1, unit: "Hz", log: true, hint: "Couleur : la teinte donne la note (rouge grave, violet aigu). Noir et blanc : la luminosité." },
-  dyn:       { label: "Dynamique", min: 0, max: 100, step: 1, unit: "%", hint: "Poids de la luminosité sur le volume de chaque voix : à 100 %, un pixel noir se tait." },
-  stereo:    { label: "Largeur stéréo", min: 0, max: 100, step: 1, unit: "%" },
-  vol:       { label: "Volume d'écoute", min: 0, max: 100, step: 1, unit: "%", live: true },
-  bpm:       { label: "Tempo", min: 40, max: 240, step: 1, unit: "bpm" },
-  freeDur:   { label: "Durée libre", min: 0.5, max: 30, step: 0.1, unit: "s" },
-  wobble:    { label: "Wobble", min: 0, max: 100, step: 1, unit: "%", live: true, hint: "Pendant la lecture, la surface ondule avec le son réel : la force suit le volume, la finesse des rides suit la hauteur des notes." }
+  grid:    { label: "résolution", min: 1, max: 64, step: 1, unit: "px" },
+  sigma:   { label: "largeur", min: 2, max: 100, step: 1, unit: "%", log: true },
+  flat:    { label: "sommet", min: 0, max: 100, step: 1, unit: "%" },
+  ring:    { label: "résonance", min: 0, max: 2, step: 0.01, unit: "s" },
+  infl:    { label: "influence", min: 0, max: 100, step: 1, unit: "%" },
+  fmin:    { label: "grave", min: 0.5, max: 2000, step: 0.1, unit: "Hz", log: true },
+  fmax:    { label: "aigu", min: 1, max: 4000, step: 0.1, unit: "Hz", log: true },
+  dyn:     { label: "dynamique", min: 0, max: 100, step: 1, unit: "%" },
+  stereo:  { label: "stéréo", min: 0, max: 100, step: 1, unit: "%" },
+  bpm:     { label: "tempo", min: 40, max: 240, step: 1, unit: "bpm" },
+  freeDur: { label: "durée", min: 0.5, max: 30, step: 0.1, unit: "s" },
+  wobble:  { label: "wobble", min: 0, max: 100, step: 1, unit: "%", live: true }
 };
 const SEGS = {
   path:  [["cycleH", "serpentin ↔"], ["cycleV", "serpentin ↕"], ["pong", "aller-retour"], ["spirale", "spirale"]],
-  wave:  [["saw", "dent de scie"], ["square", "carré"], ["triangle", "triangle"], ["sine", "sinus"]],
-  scale: [["lin", "linéaire"], ["log", "logarithmique"]],
+  wave:  [["sine", "sinus"], ["triangle", "triangle"], ["saw", "scie"], ["square", "carré"]],
+  scale: [["lin", "linéaire"], ["log", "log"]],
   tune:  [["libre", "libre"], ["chromatique", "chromatique"], ["penta", "pentatonique"]],
   sig:   [["3/4", "3/4"], ["4/4", "4/4"], ["5/4", "5/4"], ["6/8", "6/8"], ["7/8", "7/8"], ["libre", "libre"]],
   bars:  [["1", "1"], ["2", "2"], ["4", "4"], ["8", "8"], ["16", "16"]]
@@ -457,8 +437,7 @@ function buildControls() {
     const un = document.createElement("i"); un.textContent = d.unit; num.append(ni, un);
     const ri = document.createElement("input"); ri.type = "range"; ri.id = "s_" + id; ri.setAttribute("aria-label", d.label);
     if (d.log) { ri.min = 0; ri.max = 1000; ri.step = 1; } else { ri.min = d.min; ri.max = d.max; ri.step = d.step; }
-    host.append(lab, num, ri);
-    if (d.hint) { const sm = document.createElement("small"); sm.textContent = d.hint; host.append(sm); }
+    host.append(lab, ri, num);
     const toPos = v => d.log ? 1000 * Math.log(v / d.min) / Math.log(d.max / d.min) : v;
     const fromPos = x => d.log ? d.min * Math.pow(d.max / d.min, x / 1000) : Number(x);
     const paint = () => { const lo = Number(ri.min), hi = Number(ri.max); ri.style.setProperty("--f", (100 * (Number(ri.value) - lo) / (hi - lo)) + "%"); };
@@ -488,26 +467,10 @@ const DEFAULTS = Object.assign({}, P);
 
 function changed(liveOnly) {
   const free = P.sig === "libre";
-  $("row_bpm").classList.toggle("off", free); $("row_freeDur").classList.toggle("off", !free);
-  document.querySelector('[data-seg="bars"]').style.opacity = free ? 0.35 : 1;
-  $("durout").textContent = getDur().toFixed(2) + " s" + (free ? "" : "  ·  " + P.bars + " mesure" + (P.bars === "1" ? "" : "s") + " de " + P.sig + " à " + P.bpm + " bpm");
-  if (master) master.gain.value = P.vol / 100;
-  writeCode();
+  $("row_bpm").classList.toggle("off", free); $("row_bars").classList.toggle("off", free); $("row_freeDur").classList.toggle("off", !free);
   if (liveOnly) return;
   refreshPixels();
   clearTimeout(timer); timer = setTimeout(rerender, 260);
-}
-
-function writeCode() {
-  const c = $("code"); c.textContent = "";
-  const add = (cls, t) => { const s = document.createElement("span"); if (cls) s.className = cls; s.textContent = t; c.append(s); };
-  const call = (name, args) => { add("", "."); add("f", name); add("", "("); args.forEach((a, i) => { if (i) add("", ","); add(typeof a === "string" ? "s" : "n", typeof a === "string" ? '"' + a + '"' : String(a)); }); add("", ")"); };
-  const r2 = v => Math.round(v * 100) / 100;
-  add("f", "image"); add("", "("); add("s", '"' + imgName + '"'); add("", ")");
-  call("sel", [r2(sel.x), r2(sel.y), r2(sel.w), r2(sel.h)]); call("grid", [P.grid]); call("path", [P.path]);
-  call("gauss", [P.sigma / 100, P.flat / 100, r2(P.ring)]); call("wave", [P.wave]); call("range", [r2(P.fmin), r2(P.fmax)]);
-  call("pan", [P.stereo / 100]);
-  if (P.sig === "libre") call("dur", [r2(P.freeDur)]); else call("loop", [P.bpm, P.sig, Number(P.bars)]);
 }
 
 /* ── Image et pixels ── */
@@ -538,11 +501,8 @@ function refreshPixels() {
   an = analyse(data, gw, gh); an.rgba = data;
   cols = new Array(gw * gh); for (let i = 0; i < gw * gh; i++) cols[i] = "rgb(" + data[4 * i] + "," + data[4 * i + 1] + "," + data[4 * i + 2] + ")";
   pathPts = buildPath(P.path, gw, gh);
-  $("c_mode").textContent = an.colour ? "couleur" : "noir et blanc";
-  $("c_vox").textContent = String(gw * gh);
-  $("c_dur").textContent = getDur().toFixed(2) + " s";
   let len = 0; for (let i = 1; i < pathPts.length; i++) len += Math.hypot(pathPts[i][0] - pathPts[i - 1][0], pathPts[i][1] - pathPts[i - 1][1]);
-  $("c_ms").textContent = String(Math.round(1000 * getDur() / Math.max(1, len)));
+  $("stat").textContent = getDur().toFixed(2) + " s · " + gw * gh + " px · " + Math.round(1000 * getDur() / Math.max(1, len)) + " ms/px";
 }
 
 /* ── Rendu audio ── */
@@ -590,7 +550,7 @@ function togglePlay() {
   if (playing) { playing = false; stopSource(0.05); }
   else {
     try {
-      if (!actx) { actx = new (window.AudioContext || window.webkitAudioContext)(); master = actx.createGain(); master.gain.value = P.vol / 100; master.connect(actx.destination); }
+      if (!actx) { actx = new (window.AudioContext || window.webkitAudioContext)(); master = actx.createGain(); master.gain.value = 0.9; master.connect(actx.destination); }
       if (actx.state !== "running") actx.resume();
     } catch (e) { say("Le son n'a pas pu démarrer dans ce navigateur."); return; }
     playing = true; clkInit = false;
@@ -598,7 +558,7 @@ function togglePlay() {
     setTimeout(() => { if (playing && actx.state !== "running") say("Le navigateur retient le son. Touche Stop puis Lecture, et vérifie que le téléphone n'est pas en mode silencieux."); }, 1200);
   }
   $("play").setAttribute("aria-pressed", String(playing));
-  $("play").textContent = playing ? "■ Stop" : "▶ Lecture";
+  $("play").textContent = playing ? "stop" : "lecture";
 }
 
 /* ── Export ── */
@@ -639,7 +599,7 @@ function draw() {
   requestAnimationFrame(draw);
   if (!src.width || !an) return;
   const g = geom(); ctx.clearRect(0, 0, g.W, g.H);
-  ctx.imageSmoothingEnabled = true; ctx.globalAlpha = 0.3; ctx.drawImage(src, g.ox, g.oy, g.iw, g.ih); ctx.globalAlpha = 1;
+  ctx.imageSmoothingEnabled = true; ctx.globalAlpha = 0.22; ctx.drawImage(src, g.ox, g.oy, g.iw, g.ih); ctx.globalAlpha = 1;
   const rx = g.ox + sel.x * g.iw, ry = g.oy + sel.y * g.ih, rw = sel.w * g.iw, rh = sel.h * g.ih, cw = rw / gw, ch = rh / gh;
   const live = R && R.gw === gw && R.gh === gh, amp = P.wobble / 100;
   let hx = 0, hy = 0, sg = 1, fkNow = 0;
@@ -656,16 +616,16 @@ function draw() {
   if (pathPts.length) {
     ctx.beginPath();
     for (let i = 0; i < pathPts.length; i++) { const x = rx + pathPts[i][0] * cw, y = ry + pathPts[i][1] * ch; if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); }
-    ctx.strokeStyle = "rgba(255,255,255,.13)"; ctx.lineWidth = 1; ctx.stroke();
+    ctx.strokeStyle = "rgba(255,255,255,.12)"; ctx.lineWidth = 1; ctx.stroke();
   }
   if (live) {
     ctx.beginPath(); ctx.ellipse(rx + hx * cw, ry + hy * ch, Math.max(3, sg * cw), Math.max(3, sg * ch), 0, 0, 6.2832);
-    ctx.strokeStyle = "rgba(255,180,84,.5)"; ctx.lineWidth = 1.2; ctx.stroke();
-    ctx.beginPath(); ctx.arc(rx + hx * cw, ry + hy * ch, 2.5, 0, 6.2832); ctx.fillStyle = "#ffb454"; ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,.55)"; ctx.lineWidth = 1; ctx.stroke();
+    ctx.beginPath(); ctx.arc(rx + hx * cw, ry + hy * ch, 2, 0, 6.2832); ctx.fillStyle = "#fff"; ctx.fill();
   }
-  ctx.setLineDash([5, 4]); ctx.strokeStyle = "#7fe3c4"; ctx.lineWidth = 1; ctx.strokeRect(rx + 0.5, ry + 0.5, rw, rh); ctx.setLineDash([]);
-  ctx.fillStyle = "#7fe3c4";
-  for (const [x, y] of [[rx, ry], [rx + rw, ry], [rx, ry + rh], [rx + rw, ry + rh]]) ctx.fillRect(x - 4, y - 4, 8, 8);
+  ctx.setLineDash([3, 3]); ctx.strokeStyle = "#e8e8e8"; ctx.lineWidth = 1; ctx.strokeRect(rx + 0.5, ry + 0.5, rw, rh); ctx.setLineDash([]);
+  ctx.fillStyle = "#e8e8e8";
+  for (const [x, y] of [[rx, ry], [rx + rw, ry], [rx, ry + rh], [rx + rw, ry + rh]]) ctx.fillRect(x - 3, y - 3, 6, 6);
 }
 
 /* Wobble : la surface de l'image ondule comme de l'eau, soulevée par la gaussienne.
@@ -735,7 +695,7 @@ cv.addEventListener("pointermove", e => {
     sel = { x: Math.min(p.x, drag.ax), y: Math.min(p.y, drag.ay), w: Math.max(0.04, w), h: Math.max(0.04, h) };
     sel.x = Math.min(sel.x, 1 - sel.w); sel.y = Math.min(sel.y, 1 - sel.h);
   }
-  refreshPixels(); writeCode();
+  refreshPixels();
 });
 const endDrag = () => { if (!drag) return; drag = null; clearTimeout(timer); timer = setTimeout(rerender, 120); };
 cv.addEventListener("pointerup", endDrag); cv.addEventListener("pointercancel", endDrag);

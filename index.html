@@ -112,7 +112,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <dt>dynamique</dt><dd>How much brightness affects loudness. At 100 %, black pixels are silent.</dd>
     <dt>stéréo</dt><dd>Stereo width. The left of the image plays in the left speaker.</dd>
     <dt>mesure, mesures, tempo</dt><dd>Loop length in bars, so that samples line up on the beat. Choose libre to set a length in seconds with durée.</dd>
-    <dt>wobble</dt><dd>Strength of the ripple on the image while it plays. The ripple follows the real loudness and pitch of the sound.</dd>
+    <dt>wobble</dt><dd>Strength of the ripple on the image while it plays, up to 200 %. The ripple follows the real loudness and pitch of the sound.</dd>
     <dt>sauver, ouvrir, défauts</dt><dd>Save the settings to a .json file, load one back, or return to the starting values.</dd>
   </dl>
   <h2>good to know</h2>
@@ -123,7 +123,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Video is recorded in real time: keep the page visible until it ends.</li>
     <li>On an iPhone, the silent switch mutes the sound.</li>
   </ul>
-  <p class="ver">version A · e091808</p>
+  <p class="ver">version A · 2c341f1</p>
 </article>
 <main>
   <div class="stage">
@@ -186,7 +186,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
         <button id="reset" class="cmd">défauts</button>
       </div>
     </section>
-    <p class="ver">pixels to soundscape patterns · A · e091808</p>
+    <p class="ver">pixels to soundscape patterns · A · 2c341f1</p>
   </div>
 </main>
 
@@ -484,7 +484,7 @@ const SLIDERS = {
   stereo:  { label: "stéréo", min: 0, max: 100, step: 1, unit: "%" },
   bpm:     { label: "tempo", min: 40, max: 240, step: 1, unit: "bpm" },
   freeDur: { label: "durée", min: 0.5, max: 30, step: 0.1, unit: "s" },
-  wobble:  { label: "wobble", min: 0, max: 100, step: 1, unit: "%", live: true }
+  wobble:  { label: "wobble", min: 0, max: 200, step: 1, unit: "%", live: true }
 };
 const SEGS = {
   path:  [["cycleH", "serpentin ↔"], ["cycleV", "serpentin ↕"], ["pong", "aller-retour"], ["spirale", "spirale"]],
@@ -788,7 +788,7 @@ function draw() {
    Hauteur = enveloppe de la gaussienne × onde qui s'éloigne de la tête. L'onde vient du son réel : sa force suit le
    volume mesuré dans la boucle (retardé avec la distance, donc les pulsations partent en anneaux), son rythme et sa
    longueur suivent la hauteur des notes sous la tête. Chaque point de l'écran va chercher
-   sa couleur un peu plus loin selon la pente (réfraction), et la pente est éclairée pour donner le relief. */
+   sa couleur un peu plus loin selon la pente (réfraction). Les couleurs ne sont pas modifiées. */
 const wcan = document.createElement("canvas"); let wimg = null, WXc = new Float32Array(0), WYc = new Float32Array(0);
 function ripple(hx, hy, sg, amp, rw, rh, fk, side) {
   const sc = side / Math.max(rw, rh), ww = Math.max(8, Math.round(rw * sc)), wh = Math.max(8, Math.round(rh * sc));
@@ -804,19 +804,18 @@ function ripple(hx, hy, sg, amp, rw, rh, fk, side) {
     const gy = (y + 0.5) * ky, dy = gy - hy, wy = WYc[y];
     for (let x = 0; x < ww; x++, o += 4) {
       const gx = (x + 0.5) * kx;
-      let sx = gx, sy = gy, lit = 1, w = WXc[x] * wy;
+      let sx = gx, sy = gy, w = WXc[x] * wy;
       if (w > 0.004) {
         w = flatTop(w > 1 ? 1 : w, shp);
         const dx = gx - hx, d = Math.sqrt(dx * dx + dy * dy), ph = d / lam - ph0, sn = Math.sin(ph), ux = d > 1e-3 ? dx / d : 0, uy = d > 1e-3 ? dy / d : 0;
         let ei = (fk - d * kd) | 0; ei %= K; if (ei < 0) ei += K;
         const E = env[ei], soft = d * d / (d * d + c2), dp = A * w * E * sn * soft; sx += ux * dp; sy += uy * dp;
-        lit = 1 + amp * w * E * (0.1 * Math.cos(ph) - 0.3 * sn * soft * (ux + uy) * 0.707);
         if (sx < 0) sx = -sx; else if (sx >= gw) sx = 2 * gw - sx - 0.001;
         if (sy < 0) sy = -sy; else if (sy >= gh) sy = 2 * gh - sy - 0.001;
       }
       let ix = sx | 0, iy = sy | 0; if (ix < 0) ix = 0; else if (ix >= gw) ix = gw - 1; if (iy < 0) iy = 0; else if (iy >= gh) iy = gh - 1;
       const i = 4 * (iy * gw + ix);
-      out[o] = px[i] * lit; out[o + 1] = px[i + 1] * lit; out[o + 2] = px[i + 2] * lit; out[o + 3] = 255;
+      out[o] = px[i]; out[o + 1] = px[i + 1]; out[o + 2] = px[i + 2]; out[o + 3] = 255;
     }
   }
   wcan.getContext("2d").putImageData(wimg, 0, 0);

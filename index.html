@@ -187,8 +187,10 @@ function analyse(rgba, gw, gh) {
 function buildPath(type, gw, gh) {
   const pts = [], P = (c, r) => pts.push([c + 0.5, r + 0.5]);
   let pong = false;
-  const T = type === "cycleV", W = T ? gh : gw, H = T ? gw : gh;
-  if ((type === "cycleH" || T) && H % 2 === 0 && W >= 2) {
+  let T = type === "cycleV";
+  if ((type === "cycleH" || T) && (T ? gw : gh) % 2 && (T ? gh : gw) % 2 === 0) T = !T;   /* seul l'autre sens permet de boucler */
+  const W = T ? gh : gw, H = T ? gw : gh;
+  if ((type === "cycleH" || type === "cycleV") && H % 2 === 0 && W >= 2) {
     /* Cycle : chaque pixel une seule fois, retour par la première colonne. */
     const add = (c, r) => T ? P(r, c) : P(c, r);
     add(0, 0); add(W - 1, 0);
@@ -400,12 +402,12 @@ const DEMOS = { manekineko: "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAkGBwgHBgkIBwgKCgk
 const $ = id => document.getElementById(id);
 
 const P = { grid: 16, path: "cycleH", sigma: 15, flat: 50, ring: 0.25, infl: 60,
-  wave: "saw", fmin: 5, fmax: 200, scale: "lin", tune: "libre", dyn: 60, stereo: 80, vol: 80,
-  sig: "4/4", bpm: 120, bars: "4", freeDur: 8, wobble: 60 };
+  wave: "sine", fmin: 5, fmax: 500, scale: "lin", tune: "libre", dyn: 60, stereo: 80, vol: 80,
+  sig: "4/4", bpm: 120, bars: "4", freeDur: 8, wobble: 50 };
 if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) P.wobble = 0;
 
 const SLIDERS = {
-  grid:      { label: "Résolution", min: 8, max: 64, step: 2, unit: "px", hint: "Nombre de pixels (de voix) sur le grand côté. Tous sont parcourus : plus il y en a, plus la tête va vite." },
+  grid:      { label: "Résolution", min: 1, max: 64, step: 1, unit: "px", hint: "Nombre de pixels (de voix) sur le grand côté. Tous sont parcourus : plus il y en a, plus la tête va vite." },
   sigma:     { label: "Largeur", min: 2, max: 100, step: 1, unit: "%", log: true, hint: "Rayon du chœur, en proportion du grand côté de la sélection. Vers 50 %, presque tous les pixels chantent en même temps." },
   flat:      { label: "Sommet", min: 0, max: 100, step: 1, unit: "%", hint: "0 % : cloche de Gauss. 100 % : plateau large aux bords francs, proche de la fenêtre de la v2.21." },
   ring:      { label: "Résonance", min: 0, max: 2, step: 0.01, unit: "s", hint: "Temps d'extinction d'une voix après le passage (0 = amortissement maximal)." },
@@ -525,8 +527,9 @@ function loadURL(url, name) {
 function refreshPixels() {
   if (!src.width) return;
   const aw = sel.w * src.width, ah = sel.h * src.height;
-  const even = v => Math.max(2, 2 * Math.round(v / 2));
-  if (aw >= ah) { gw = even(P.grid); gh = even(P.grid * ah / aw); } else { gh = even(P.grid); gw = even(P.grid * aw / ah); }
+  /* Le petit côté est arrondi au nombre pair le plus proche quand c'est possible : le serpentin peut alors se refermer en passant une seule fois par pixel. */
+  const side = v => v < 1.5 ? 1 : Math.max(2, 2 * Math.round(v / 2));
+  if (aw >= ah) { gw = P.grid; gh = Math.min(P.grid, side(P.grid * ah / aw)); } else { gh = P.grid; gw = Math.min(P.grid, side(P.grid * aw / ah)); }
   off.width = gw; off.height = gh;
   const o = off.getContext("2d", { willReadFrequently: true });
   o.imageSmoothingQuality = "high";

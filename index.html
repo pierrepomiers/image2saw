@@ -109,6 +109,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <dt>grave, aigu</dt><dd>Lowest and highest frequency. Go below 20 Hz for rumbles and beats.</dd>
     <dt>échelle</dt><dd>Linear or logarithmic spread of the pitches between those two limits.</dd>
     <dt>accord</dt><dd>Leaves pitches free, or snaps them to the chromatic or pentatonic scale.</dd>
+    <dt>égaliseur</dt><dd>Seven output bands, closer together in the bass. The first one sets everything below 30 Hz, the last one everything above 8 kHz. The overall level is kept steady and never clips: cutting the lowest bands trades inaudible rumble for more level in the rest. [ plat ] sets all bands back to 0 dB.</dd>
     <dt>dynamique</dt><dd>How much brightness affects loudness. At 100 %, black pixels are silent.</dd>
     <dt>stéréo</dt><dd>Stereo width. The left of the image plays in the left speaker.</dd>
     <dt>mesure, mesures, tempo</dt><dd>Loop length in bars, so that samples line up on the beat: a slower tempo makes a longer loop, shown in seconds under the image. Choose libre to set a length in seconds with durée.</dd>
@@ -123,7 +124,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Video is recorded in real time: keep the page visible until it ends.</li>
     <li>On an iPhone, the silent switch mutes the sound.</li>
   </ul>
-  <p class="ver">version A · 175d3e9</p>
+  <p class="ver">version A · c2d2b58</p>
 </article>
 <main>
   <div class="stage">
@@ -168,6 +169,17 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
       <div data-s="stereo"></div>
     </section>
     <section>
+      <h2>égaliseur</h2>
+      <div data-s="eq0"></div>
+      <div data-s="eq1"></div>
+      <div data-s="eq2"></div>
+      <div data-s="eq3"></div>
+      <div data-s="eq4"></div>
+      <div data-s="eq5"></div>
+      <div data-s="eq6"></div>
+      <div class="seg"><button id="flat" class="cmd">plat</button></div>
+    </section>
+    <section>
       <h2>temps</h2>
       <div class="row wide"><span>mesure</span><div class="seg" data-seg="sig"></div></div>
       <div class="row wide" id="row_bars"><span>mesures</span><div class="seg" data-seg="bars"></div></div>
@@ -186,7 +198,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
         <button id="reset" class="cmd">défauts</button>
       </div>
     </section>
-    <p class="ver">pixels to soundscape patterns · A · 175d3e9</p>
+    <p class="ver">pixels to soundscape patterns · A · c2d2b58</p>
   </div>
 </main>
 
@@ -482,25 +494,67 @@ function* voices(an, p, c, L, R, freq, start, step) {
   }
 }
 
+/* Gain de mise à niveau d'une boucle : on vise la même force perçue quelle que soit la forme d'onde.
+   La force est mesurée après un filtre proche de la sensibilité de l'oreille (le grave compte peu, le médium
+   beaucoup), puis le gain est plafonné pour que la crête ne sature jamais. */
+function levelGain(L, R, sr) {
+  const n = L.length; let peak = 0;
+  for (let j = 0; j < n; j++) { const a = Math.abs(L[j]), b = Math.abs(R[j]); if (a > peak) peak = a; if (b > peak) peak = b; }
+  if (!(peak > 0)) return { peak: 0, g: 1 };
+  const a = Math.exp(-6.283185307179586 * 400 / sr); let pw = 0;
+  for (const ch of [L, R]) {
+    let x1 = 0, y1 = 0, x2 = 0, y2 = 0;
+    for (let pass = 0; pass < 2; pass++) for (let j = 0; j < n; j++) {
+      const x = ch[j]; y1 = a * (y1 + x - x1); x1 = x; y2 = a * (y2 + y1 - x2); x2 = y1;
+      if (pass) pw += y2 * y2;
+    }
+  }
+  const loud = Math.sqrt(pw / (2 * n));
+  return { peak, g: Math.min(0.89 / peak, loud > 1e-9 ? LOUD / loud : 1e9) };
+}
+
+/* Égaliseur de sortie à 7 bandes, resserrées dans le grave : type de filtre, fréquence, finesse.
+   La première règle tout ce qui est sous 30 Hz, la dernière tout ce qui est au-dessus de 8 kHz, les cinq autres
+   sont des cloches. Mêmes filtres que ceux du navigateur, pour que l'export sonne comme l'écoute. */
+const EQ_BANDS = [["lowshelf", 30, 0], ["peaking", 60, 1.4], ["peaking", 120, 1.4], ["peaking", 250, 1.4], ["peaking", 500, 1.4], ["peaking", 2000, 0.7], ["highshelf", 8000, 0]];
+function eqCoef(type, f, q, db, sr) {
+  const A = Math.pow(10, db / 40), w = 6.283185307179586 * f / sr, cs = Math.cos(w), sn = Math.sin(w);
+  let b0, b1, b2, a0, a1, a2;
+  if (type === "peaking") {
+    const al = sn / (2 * q); b0 = 1 + al * A; b1 = -2 * cs; b2 = 1 - al * A; a0 = 1 + al / A; a1 = -2 * cs; a2 = 1 - al / A;
+  } else {
+    const k = 2 * Math.sqrt(A) * sn / 2 * Math.SQRT2;
+    if (type === "lowshelf") {
+      b0 = A * ((A + 1) - (A - 1) * cs + k); b1 = 2 * A * ((A - 1) - (A + 1) * cs); b2 = A * ((A + 1) - (A - 1) * cs - k);
+      a0 = (A + 1) + (A - 1) * cs + k; a1 = -2 * ((A - 1) + (A + 1) * cs); a2 = (A + 1) + (A - 1) * cs - k;
+    } else {
+      b0 = A * ((A + 1) + (A - 1) * cs + k); b1 = -2 * A * ((A - 1) + (A + 1) * cs); b2 = A * ((A + 1) + (A - 1) * cs - k);
+      a0 = (A + 1) - (A - 1) * cs + k; a1 = 2 * ((A - 1) - (A + 1) * cs); a2 = (A + 1) - (A - 1) * cs - k;
+    }
+  }
+  return [b0 / a0, b1 / a0, b2 / a0, a1 / a0, a2 / a0];
+}
+/* Applique l'égaliseur à une boucle et renvoie de nouveaux tableaux. Chaque filtre prend d'abord son élan
+   sur la fin de la boucle, pour que le début et la fin se raccordent toujours sans clic. */
+function eqApply(L, R, sr, gains) {
+  const n = L.length, oL = Float32Array.from(L), oR = Float32Array.from(R), pre = Math.min(n, Math.round(sr * 1.5));
+  EQ_BANDS.forEach((b, i) => {
+    const db = gains[i] || 0; if (Math.abs(db) < 0.01 || b[1] >= 0.45 * sr) return;
+    const c = eqCoef(b[0], b[1], b[2], db, sr), c0 = c[0], c1 = c[1], c2 = c[2], c3 = c[3], c4 = c[4];
+    for (const ch of [oL, oR]) {
+      let x1 = 0, x2 = 0, y1 = 0, y2 = 0;
+      for (let j = n - pre; j < n; j++) { const x = ch[j], y = c0 * x + c1 * x1 + c2 * x2 - c3 * y1 - c4 * y2; x2 = x1; x1 = x; y2 = y1; y1 = y; }
+      for (let j = 0; j < n; j++) { const x = ch[j], y = c0 * x + c1 * x1 + c2 * x2 - c3 * y1 - c4 * y2; x2 = x1; x1 = x; y2 = y1; y1 = y; ch[j] = y; }
+    }
+  });
+  return { L: oL, R: oR };
+}
+
 /* Mise à niveau, puis mesure de ce que le son fait réellement (pour l'image animée). */
 function finish(an, p, c, L, R, freq) {
   const { gw, gh } = an, { K, hx, hy, sg, bound, Ls, D, hopSec, lo, hi, sr } = c;
-  let peak = 0;
-  for (let j = 0; j < Ls; j++) { const a = Math.abs(L[j]), b = Math.abs(R[j]); if (a > peak) peak = a; if (b > peak) peak = b; }
-  if (peak > 0) {
-    /* Niveau : on vise la même force perçue quelle que soit la forme d'onde. La force est mesurée après un filtre
-       proche de la sensibilité de l'oreille (le grave compte peu, le médium beaucoup), puis le gain est plafonné pour ne jamais saturer. */
-    const a = Math.exp(-6.283185307179586 * 400 / sr); let pw = 0;
-    for (const ch of [L, R]) {
-      let x1 = 0, y1 = 0, x2 = 0, y2 = 0;
-      for (let pass = 0; pass < 2; pass++) for (let j = 0; j < Ls; j++) {
-        const x = ch[j]; y1 = a * (y1 + x - x1); x1 = x; y2 = a * (y2 + y1 - x2); x2 = y1;
-        if (pass) pw += y2 * y2;
-      }
-    }
-    const loud = Math.sqrt(pw / (2 * Ls)), g = Math.min(0.89 / peak, loud > 1e-9 ? LOUD / loud : 1e9);
-    for (let j = 0; j < Ls; j++) { L[j] *= g; R[j] *= g; }
-  }
+  const { peak, g } = levelGain(L, R, sr);
+  if (peak > 0) for (let j = 0; j < Ls; j++) { L[j] *= g; R[j] *= g; }
   const venv = new Float32Array(K), pn = new Float32Array(K), phs = new Float32Array(K + 1);
   for (let k = 0; k < K; k++) { let a = 0; for (let j = bound[k]; j < bound[k + 1]; j++) a += L[j] * L[j] + R[j] * R[j]; venv[k] = Math.sqrt(a / (2 * Math.max(1, bound[k + 1] - bound[k]))); }
   const lf0 = Math.log(lo), lf1 = Math.log(hi);
@@ -576,7 +630,8 @@ const $ = id => document.getElementById(id);
 
 const P = { grid: 16, path: "cycleH", sigma: 15, flat: 50, disc: 100, ring: 0.25, infl: 60,
   wave: "sine", fmin: 5, fmax: 500, scale: "lin", tune: "libre", dyn: 60, stereo: 80,
-  sig: "4/4", bpm: 120, bars: "4", freeDur: 8, wobble: 50 };
+  sig: "4/4", bpm: 120, bars: "4", freeDur: 8, wobble: 50,
+  eq0: 0, eq1: 0, eq2: 0, eq3: 0, eq4: 0, eq5: 0, eq6: 0 };
 if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) P.wobble = 0;
 
 const SLIDERS = {
@@ -592,7 +647,14 @@ const SLIDERS = {
   stereo:  { label: "stéréo", min: 0, max: 100, step: 1, unit: "%" },
   bpm:     { label: "tempo", min: 40, max: 240, step: 1, unit: "bpm" },
   freeDur: { label: "durée", min: 0.5, max: 30, step: 0.1, unit: "s" },
-  wobble:  { label: "wobble", min: 0, max: 200, step: 1, unit: "%", live: true }
+  wobble:  { label: "wobble", min: 0, max: 200, step: 1, unit: "%", live: true },
+  eq0:     { label: "< 30 Hz", min: -15, max: 15, step: 0.5, unit: "dB", fx: true },
+  eq1:     { label: "60 Hz", min: -15, max: 15, step: 0.5, unit: "dB", fx: true },
+  eq2:     { label: "120 Hz", min: -15, max: 15, step: 0.5, unit: "dB", fx: true },
+  eq3:     { label: "250 Hz", min: -15, max: 15, step: 0.5, unit: "dB", fx: true },
+  eq4:     { label: "500 Hz", min: -15, max: 15, step: 0.5, unit: "dB", fx: true },
+  eq5:     { label: "2 kHz", min: -15, max: 15, step: 0.5, unit: "dB", fx: true },
+  eq6:     { label: "> 8 kHz", min: -15, max: 15, step: 0.5, unit: "dB", fx: true }
 };
 const SEGS = {
   path:  [["cycleH", "serpentin ↔"], ["cycleV", "serpentin ↕"], ["pong", "aller-retour"], ["spirale", "spirale"]],
@@ -627,7 +689,7 @@ function buildControls() {
     host.className = "row"; host.id = "row_" + id;
     const lab = document.createElement("label"); lab.htmlFor = "n_" + id; lab.textContent = d.label;
     const num = document.createElement("span"); num.className = "num";
-    const ni = document.createElement("input"); ni.type = "number"; ni.id = "n_" + id; ni.inputMode = "decimal"; ni.min = d.min; ni.max = d.max; ni.step = d.step;
+    const ni = document.createElement("input"); ni.type = "number"; ni.id = "n_" + id; if (d.min >= 0) ni.inputMode = "decimal"; ni.min = d.min; ni.max = d.max; ni.step = d.step;
     const un = document.createElement("i"); un.textContent = d.unit; num.append(ni, un);
     const ri = document.createElement("input"); ri.type = "range"; ri.id = "s_" + id; ri.setAttribute("aria-label", d.label);
     if (d.log) { ri.min = 0; ri.max = 1000; ri.step = 1; } else { ri.min = d.min; ri.max = d.max; ri.step = d.step; }
@@ -640,7 +702,7 @@ function buildControls() {
       P[id] = d.step >= 1 ? Math.round(v) : v;
       if (from !== "range") ri.value = toPos(v);
       if (from !== "num") ni.value = fmt(v, d.step);
-      paint(); if (!quiet) changed(d.live);
+      paint(); if (!quiet) { if (d.fx) eqChanged(); else changed(d.live); }
     };
     SETTERS[id] = v => set(Number(v), "any", true);
     ri.addEventListener("input", () => set(fromPos(ri.value), "range"));
@@ -778,7 +840,7 @@ function previewParams(p, est) {
 }
 function applyResult(res) {
   const u = playing && R && actx ? (((playTime() % R.dur) + R.dur) % R.dur) / R.dur : 0;
-  R = res; R.name = imgName;
+  R = res; R.name = imgName; setTrim();
   if (!res.preview) say(res.peak > 0 ? "" : "Cette sélection ne produit aucun son : augmente la largeur ou baisse la dynamique.");
   if (playing && !rec) startSource(u * R.dur);
 }
@@ -821,7 +883,7 @@ function startSource(offset, opt) {
     buf = actx.createBuffer(2, R.L.length * m, SR); buf.copyToChannel(up(R.L), 0); buf.copyToChannel(up(R.R), 1);
   }
   const s = actx.createBufferSource(), g = actx.createGain(), now = actx.currentTime;
-  s.buffer = buf; s.loop = !(opt && opt.once); s.connect(g); g.connect(master); if (opt && opt.dest) g.connect(opt.dest);
+  s.buffer = buf; s.loop = !(opt && opt.once); s.connect(g); g.connect(eqNodes[0]);
   g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(1, now + 0.04);
   s.start(now, Math.max(0, Math.min(offset, buf.duration - 0.001)));
   stopSource(0.04);
@@ -832,9 +894,30 @@ function stopSource(fade) {
   const { s, g } = cur, now = actx.currentTime; cur = null;
   try { g.gain.cancelScheduledValues(now); g.gain.setValueAtTime(g.gain.value, now); g.gain.linearRampToValueAtTime(0, now + fade); s.stop(now + fade + 0.02); } catch (e) {}
 }
+/* ── Égaliseur de sortie ── */
+let eqNodes = [], trimNode = null, trim = 1, eqTimer = 0;
+const eqGains = () => EQ_BANDS.map((b, i) => P["eq" + i]);
+const eqFlat = () => eqGains().every(v => Math.abs(v) < 0.01);
+/* Les filtres réagissent tout de suite ; le niveau d'ensemble est recalculé juste après, sur le son égalisé. */
+function eqChanged() {
+  if (actx) eqNodes.forEach((f, i) => f.gain.setTargetAtTime(P["eq" + i], actx.currentTime, 0.02));
+  clearTimeout(eqTimer); eqTimer = setTimeout(setTrim, 180);
+}
+function setTrim() {
+  if (!R) return;
+  if (eqFlat()) trim = 1;
+  else { const e = eqApply(R.L, R.R, R.sr || SR, eqGains()); trim = levelGain(e.L, e.R, R.sr || SR).g; }
+  if (trimNode) trimNode.gain.setTargetAtTime(trim, actx.currentTime, 0.03);
+}
 function wakeAudio() {
   try {
-    if (!actx) { actx = new (window.AudioContext || window.webkitAudioContext)(); master = actx.createGain(); master.gain.value = 0.9; master.connect(actx.destination); }
+    if (!actx) {
+      actx = new (window.AudioContext || window.webkitAudioContext)(); master = actx.createGain(); master.gain.value = 0.9; master.connect(actx.destination);
+      /* Sortie : source → 7 filtres de l'égaliseur → gain de mise à niveau → écoute (et enregistrement vidéo). */
+      trimNode = actx.createGain(); trimNode.gain.value = trim; trimNode.connect(master);
+      eqNodes = EQ_BANDS.map((b, i) => { const f = actx.createBiquadFilter(); f.type = b[0]; f.frequency.value = b[1]; if (b[2]) f.Q.value = b[2]; f.gain.value = P["eq" + i]; return f; });
+      eqNodes.forEach((f, i) => f.connect(i + 1 < eqNodes.length ? eqNodes[i + 1] : trimNode));
+    }
     if (actx.state !== "running") actx.resume();
     return true;
   } catch (e) { say("Le son n'a pas pu démarrer dans ce navigateur."); return false; }
@@ -872,7 +955,13 @@ async function deliver(filename, blob, zipName) {
 async function exportWav() {
   if (!R || R.preview || busy) { say("Le calcul complet n'est pas terminé : attends la fin de la barre."); return; }
   const base = baseName();
-  await deliver(base + ".wav", new Blob([wavBytes(R.L, R.R)], { type: "audio/wav" }), dl ? base + ".zip" : null);
+  let L = R.L, Rr = R.R;
+  if (!eqFlat()) {
+    /* Même égaliseur et même mise à niveau qu'à l'écoute. */
+    const e = eqApply(L, Rr, SR, eqGains()), g = levelGain(e.L, e.R, SR).g; L = e.L; Rr = e.R;
+    for (let j = 0; j < L.length; j++) { L[j] *= g; Rr[j] *= g; }
+  }
+  await deliver(base + ".wav", new Blob([wavBytes(L, Rr)], { type: "audio/wav" }), dl ? base + ".zip" : null);
 }
 
 /* Vidéo : un tour de boucle filmé en temps réel, image animée seule (sans cadre ni tête) avec le son. */
@@ -898,12 +987,13 @@ function exportVideo() {
   const base = baseName(), ext = mime.indexOf("mp4") >= 0 ? ".mp4" : ".webm";
   mr.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
   mr.onstop = () => {
-    const r = rec; rec = null; playing = false; stopSource(0.02); setPlayUI();
+    const r = rec; rec = null; playing = false; stopSource(0.02); setPlayUI(); try { trimNode.disconnect(dest); } catch (e) {}
     if (r.cancelled) { say("Enregistrement annulé."); return; }
     deliver(base + ext, new Blob(chunks, { type: mime.split(";")[0] }), null);
   };
   rec = { mr, cancelled: false, n: 0 };
-  playing = true; startSource(0, { once: true, dest }); mr.start(250);
+  trimNode.connect(dest);
+  playing = true; startSource(0, { once: true }); mr.start(250);
   cur.s.onended = () => { setTimeout(() => { if (rec && rec.mr === mr && mr.state !== "inactive") mr.stop(); }, 120); };
   setPlayUI();
 }
@@ -918,7 +1008,7 @@ function applyParams(data) {
   for (const k in SETTERS) if (k in p && (typeof p[k] === "number" || typeof p[k] === "string")) SETTERS[k](p[k]);
   const s = data.selection;
   if (s && [s.x, s.y, s.w, s.h].every(v => typeof v === "number" && v >= 0 && v <= 1) && s.w >= 0.04 && s.h >= 0.04) sel = { x: Math.min(s.x, 1 - s.w), y: Math.min(s.y, 1 - s.h), w: s.w, h: s.h };
-  say("Réglages chargés.");
+  say("Réglages chargés."); eqChanged();
   if (typeof data.image === "string" && DEMOS[data.image] && data.image !== imgName) { const keep = sel; loadURL("data:image/jpeg;base64," + DEMOS[data.image], data.image, keep); }
   else changed(false);
 }
@@ -1072,6 +1162,7 @@ $("help").addEventListener("click", () => {
 });
 $("video").addEventListener("click", exportVideo);
 $("save").addEventListener("click", saveParams);
+$("flat").addEventListener("click", () => { EQ_BANDS.forEach((b, i) => SETTERS["eq" + i](0)); eqChanged(); });
 $("reset").addEventListener("click", () => applyParams({ reglages: DEFAULTS }));
 $("open").addEventListener("change", e => {
   const f = e.target.files && e.target.files[0]; e.target.value = ""; if (!f) return;

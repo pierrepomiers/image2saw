@@ -17,13 +17,14 @@ Transforme une image en boucle sonore. Chaque pixel de la zone sélectionnée es
 1. Charger une image (ou choisir un des trois exemples).
 2. Glisser sur l'image pour sélectionner la zone à jouer.
 3. Régler le parcours, la gaussienne, le son et le temps avec les sliders ou en tapant les valeurs.
-4. Écouter, puis exporter la boucle en WAV 16 bits stéréo.
+4. Écouter, puis exporter la boucle en WAV 16 bits stéréo, ou en vidéo (l'image qui ondule avec le son).
+5. Sauver les réglages dans un fichier `.json` pour les retrouver ou les partager.
 
 Tout tient dans un seul fichier, `index.html`, sans dépendance ni serveur : le son est calculé dans le navigateur.
 
 ## État du projet
 
-Prototype. Restent à faire : l'enchaînement des samples avec fondus, l'export vidéo du wobble, puis le portage en plugin audio.
+Prototype. Restent à faire : l'enchaînement des samples avec fondus, puis le portage en plugin audio.
 
 Cette version A repart de zéro : le code n'a plus rien de commun avec les versions Python précédentes (v2.x), qui généraient un WAV en ligne de commande à partir d'oscillateurs séquencés.
 

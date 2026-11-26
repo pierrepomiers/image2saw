@@ -70,6 +70,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <div class="transport">
       <button id="play" class="cmd" aria-pressed="false">lecture</button>
       <button id="export" class="cmd">wav</button>
+      <button id="video" class="cmd">vidéo</button>
       <span id="stat"></span>
     </div>
     <p id="msg" role="status"></p>
@@ -114,6 +115,14 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <section>
       <h2>image animée</h2>
       <div data-s="wobble"></div>
+    </section>
+    <section>
+      <h2>réglages</h2>
+      <div class="seg">
+        <button id="save" class="cmd">sauver</button>
+        <label class="filebtn cmd">ouvrir<input type="file" id="open" accept=".json,application/json"></label>
+        <button id="reset" class="cmd">défauts</button>
+      </div>
     </section>
   </div>
 </main>
@@ -427,6 +436,7 @@ function getDur() {
 function fmt(v, step) { return step >= 1 ? String(Math.round(v)) : step >= 0.1 ? (Math.round(v * 10) / 10).toString() : (Math.round(v * 100) / 100).toString(); }
 
 /* ── Construction des réglages ── */
+const SETTERS = {};
 function buildControls() {
   document.querySelectorAll("[data-s]").forEach(host => {
     const id = host.dataset.s, d = SLIDERS[id];
@@ -441,13 +451,14 @@ function buildControls() {
     const toPos = v => d.log ? 1000 * Math.log(v / d.min) / Math.log(d.max / d.min) : v;
     const fromPos = x => d.log ? d.min * Math.pow(d.max / d.min, x / 1000) : Number(x);
     const paint = () => { const lo = Number(ri.min), hi = Number(ri.max); ri.style.setProperty("--f", (100 * (Number(ri.value) - lo) / (hi - lo)) + "%"); };
-    const set = (v, from) => {
+    const set = (v, from, quiet) => {
       v = Math.min(d.max, Math.max(d.min, v)); if (!isFinite(v)) v = d.min;
       P[id] = d.step >= 1 ? Math.round(v) : v;
       if (from !== "range") ri.value = toPos(v);
       if (from !== "num") ni.value = fmt(v, d.step);
-      paint(); changed(d.live);
+      paint(); if (!quiet) changed(d.live);
     };
+    SETTERS[id] = v => set(Number(v), "any", true);
     ri.addEventListener("input", () => set(fromPos(ri.value), "range"));
     ni.addEventListener("change", () => set(parseFloat(String(ni.value).replace(",", ".")), "any"));
     lab.addEventListener("dblclick", () => set(DEFAULTS[id], "any"));
@@ -455,6 +466,7 @@ function buildControls() {
   });
   document.querySelectorAll("[data-seg]").forEach(host => {
     const id = host.dataset.seg;
+    SETTERS[id] = v => { if (!SEGS[id].some(o => o[0] === String(v))) return; P[id] = String(v); host.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.v === P[id]))); };
     for (const [val, text] of SEGS[id]) {
       const b = document.createElement("button"); b.type = "button"; b.textContent = text; b.dataset.v = val;
       b.setAttribute("aria-pressed", String(P[id] === val));
@@ -474,16 +486,16 @@ function changed(liveOnly) {
 }
 
 /* ── Image et pixels ── */
-function setImage(image, name) {
+function setImage(image, name, keepSel) {
   const s = Math.min(1, 1024 / Math.max(image.naturalWidth, image.naturalHeight));
   src.width = Math.max(1, Math.round(image.naturalWidth * s)); src.height = Math.max(1, Math.round(image.naturalHeight * s));
   src.getContext("2d").drawImage(image, 0, 0, src.width, src.height);
-  imgName = name; sel = { x: 0.1, y: 0.1, w: 0.8, h: 0.8 };
+  imgName = name; sel = keepSel || { x: 0.1, y: 0.1, w: 0.8, h: 0.8 };
   changed(false);
 }
-function loadURL(url, name) {
+function loadURL(url, name, keepSel) {
   const im = new Image();
-  im.onload = () => setImage(im, name);
+  im.onload = () => setImage(im, name, keepSel);
   im.onerror = () => say("Cette image n'a pas pu être lue. Essaie un JPEG ou un PNG.");
   im.src = url;
 }
@@ -529,13 +541,13 @@ async function rerender() {
   const u = playing && R ? ((actx.currentTime - startAt) % R.dur) / R.dur : 0;
   R = res; R.name = imgName;
   say(res.peak > 0 ? "" : "Cette sélection ne produit aucun son : augmente la largeur ou baisse la dynamique.");
-  if (playing) startSource(u * R.dur);
+  if (playing && !rec) startSource(u * R.dur);
 }
-function startSource(offset) {
+function startSource(offset, opt) {
   const buf = actx.createBuffer(2, R.L.length, SR);
   buf.copyToChannel(R.L, 0); buf.copyToChannel(R.R, 1);
   const s = actx.createBufferSource(), g = actx.createGain(), now = actx.currentTime;
-  s.buffer = buf; s.loop = true; s.connect(g); g.connect(master);
+  s.buffer = buf; s.loop = !(opt && opt.once); s.connect(g); g.connect(master); if (opt && opt.dest) g.connect(opt.dest);
   g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(1, now + 0.04);
   s.start(now, Math.max(0, Math.min(offset, buf.duration - 0.001)));
   stopSource(0.04);
@@ -546,33 +558,95 @@ function stopSource(fade) {
   const { s, g } = cur, now = actx.currentTime; cur = null;
   try { g.gain.cancelScheduledValues(now); g.gain.setValueAtTime(g.gain.value, now); g.gain.linearRampToValueAtTime(0, now + fade); s.stop(now + fade + 0.02); } catch (e) {}
 }
+function wakeAudio() {
+  try {
+    if (!actx) { actx = new (window.AudioContext || window.webkitAudioContext)(); master = actx.createGain(); master.gain.value = 0.9; master.connect(actx.destination); }
+    if (actx.state !== "running") actx.resume();
+    return true;
+  } catch (e) { say("Le son n'a pas pu démarrer dans ce navigateur."); return false; }
+}
+function setPlayUI() { $("play").setAttribute("aria-pressed", String(playing)); $("play").textContent = playing ? "stop" : "lecture"; $("video").textContent = rec ? "annuler" : "vidéo"; }
 function togglePlay() {
+  if (rec) { rec.cancelled = true; try { rec.mr.stop(); } catch (e) {} return; }
   if (playing) { playing = false; stopSource(0.05); }
   else {
-    try {
-      if (!actx) { actx = new (window.AudioContext || window.webkitAudioContext)(); master = actx.createGain(); master.gain.value = 0.9; master.connect(actx.destination); }
-      if (actx.state !== "running") actx.resume();
-    } catch (e) { say("Le son n'a pas pu démarrer dans ce navigateur."); return; }
+    if (!wakeAudio()) return;
     playing = true; clkInit = false;
     if (R) startSource(0);
     setTimeout(() => { if (playing && actx.state !== "running") say("Le navigateur retient le son. Touche Stop puis Lecture, et vérifie que le téléphone n'est pas en mode silencieux."); }, 1200);
   }
-  $("play").setAttribute("aria-pressed", String(playing));
-  $("play").textContent = playing ? "stop" : "lecture";
+  setPlayUI();
 }
 
 /* ── Export ── */
-async function exportWav() {
-  if (!R) { say("Le son est encore en cours de calcul."); return; }
-  const base = (R.name || "image2saw").replace(/[^a-zA-Z0-9_-]+/g, "_") + "_" + (P.sig === "libre" ? P.freeDur + "s" : P.bpm + "bpm_" + P.sig.replace("/", "-") + "_" + P.bars + "m");
-  const wav = wavBytes(R.L, R.R);
+function baseName() {
+  return (R && R.name || imgName || "image2saw").replace(/[^a-zA-Z0-9_-]+/g, "_") + "_" + (P.sig === "libre" ? P.freeDur + "s" : P.bpm + "bpm_" + P.sig.replace("/", "-") + "_" + P.bars + "m");
+}
+/* Remet un fichier à l'artiste : par Claude quand la page y est ouverte, sinon par téléchargement direct. */
+async function deliver(filename, blob, zipName) {
   if (dl) {
-    try { await dl.save({ filename: base + ".zip", data: new Blob([zipStore(base + ".wav", wav)]) }); say("Export terminé : le WAV est dans l'archive " + base + ".zip."); }
-    catch (e) { say(e && e.code === "declined" ? "" : "L'export a échoué (" + ((e && e.code) || "erreur") + "). Réessaie dans un instant."); }
+    try {
+      if (zipName) await dl.save({ filename: zipName, data: new Blob([zipStore(filename, new Uint8Array(await blob.arrayBuffer()))]) });
+      else await dl.save({ filename, data: blob });
+      say(zipName ? "Export terminé : " + filename + " est dans l'archive " + zipName + "." : "Export terminé : " + filename);
+    } catch (e) { say(e && e.code === "declined" ? "" : "L'export a échoué (" + ((e && e.code) || "erreur") + "). Réessaie dans un instant."); }
   } else {
-    try { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([wav], { type: "audio/wav" })); a.download = base + ".wav"; document.body.append(a); a.click(); a.remove(); }
+    try { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename; document.body.append(a); a.click(); a.remove(); say("Export terminé : " + filename); }
     catch (e) { say("L'export n'est pas disponible dans cette vue."); }
   }
+}
+async function exportWav() {
+  if (!R) { say("Le son est encore en cours de calcul."); return; }
+  const base = baseName();
+  await deliver(base + ".wav", new Blob([wavBytes(R.L, R.R)], { type: "audio/wav" }), dl ? base + ".zip" : null);
+}
+
+/* Vidéo : un tour de boucle filmé en temps réel, image animée seule (sans cadre ni tête) avec le son. */
+const xcan = document.createElement("canvas"), xctx = xcan.getContext("2d");
+xcan.style.cssText = "position:fixed;left:-9999px;top:0;width:8px;height:8px"; document.body.append(xcan);
+let rec = null;
+function exportVideo() {
+  if (rec) { togglePlay(); return; }
+  if (!R || R.gw !== gw || R.gh !== gh) { say("Le son est encore en cours de calcul."); return; }
+  /* MP4 H.264 d'abord (lisible partout), sinon WebM, et en dernier le MP4 générique du navigateur. */
+  const types = ['video/mp4;codecs="avc1.42E01E,mp4a.40.2"', "video/mp4;codecs=avc1.42E01E,mp4a.40.2", "video/mp4;codecs=avc1,mp4a.40.2", "video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm", "video/mp4"];
+  const mime = window.MediaRecorder && xcan.captureStream ? types.find(m => MediaRecorder.isTypeSupported(m)) : null;
+  if (!mime) { say("Ce navigateur ne sait pas enregistrer de vidéo. Essaie avec Chrome ou Safari à jour."); return; }
+  if (!wakeAudio()) return;
+  if (playing) { playing = false; stopSource(0.03); }
+  const aw = sel.w * src.width, ah = sel.h * src.height, ev = v => Math.max(2, 2 * Math.round(v / 2));
+  xcan.width = ev(aw >= ah ? 720 : 720 * aw / ah); xcan.height = ev(ah > aw ? 720 : 720 * ah / aw);
+  let mr; const chunks = [], dest = actx.createMediaStreamDestination();
+  try {
+    const stream = xcan.captureStream(30); dest.stream.getAudioTracks().forEach(tr => stream.addTrack(tr));
+    mr = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 6000000, audioBitsPerSecond: 192000 });
+  } catch (e) { say("L'enregistrement vidéo n'a pas pu démarrer dans ce navigateur."); return; }
+  const base = baseName(), ext = mime.indexOf("mp4") >= 0 ? ".mp4" : ".webm";
+  mr.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+  mr.onstop = () => {
+    const r = rec; rec = null; playing = false; stopSource(0.02); setPlayUI();
+    if (r.cancelled) { say("Enregistrement annulé."); return; }
+    deliver(base + ext, new Blob(chunks, { type: mime.split(";")[0] }), null);
+  };
+  rec = { mr, cancelled: false, n: 0 };
+  playing = true; startSource(0, { once: true, dest }); mr.start(250);
+  cur.s.onended = () => { setTimeout(() => { if (rec && rec.mr === mr && mr.state !== "inactive") mr.stop(); }, 120); };
+  setPlayUI();
+}
+
+/* ── Réglages : fichier .json ── */
+function saveParams() {
+  const data = { app: "image2saw", version: "A", image: imgName, selection: sel, reglages: P };
+  deliver((imgName || "image2saw").replace(/[^a-zA-Z0-9_-]+/g, "_") + "_reglages.json", new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }), null);
+}
+function applyParams(data) {
+  const p = data && data.reglages; if (!p || typeof p !== "object") { say("Ce fichier ne contient pas de réglages image2saw."); return; }
+  for (const k in SETTERS) if (k in p && (typeof p[k] === "number" || typeof p[k] === "string")) SETTERS[k](p[k]);
+  const s = data.selection;
+  if (s && [s.x, s.y, s.w, s.h].every(v => typeof v === "number" && v >= 0 && v <= 1) && s.w >= 0.04 && s.h >= 0.04) sel = { x: Math.min(s.x, 1 - s.w), y: Math.min(s.y, 1 - s.h), w: s.w, h: s.h };
+  say("Réglages chargés.");
+  if (typeof data.image === "string" && DEMOS[data.image] && data.image !== imgName) { const keep = sel; loadURL("data:image/jpeg;base64," + DEMOS[data.image], data.image, keep); }
+  else changed(false);
 }
 
 /* ── Dessin ── */
@@ -609,10 +683,16 @@ function draw() {
     const u = playing ? (((t % R.dur) + R.dur) % R.dur) / R.dur : 0, fk = u * R.K, k0 = Math.min(R.K - 1, Math.floor(fk)), k1 = (k0 + 1) % R.K, fr = fk - k0;
     fkNow = fk; hx = R.hx[k0] + (R.hx[k1] - R.hx[k0]) * fr; hy = R.hy[k0] + (R.hy[k1] - R.hy[k0]) * fr; sg = R.sg[k0] + (R.sg[k1] - R.sg[k0]) * fr;
   }
-  if (live && amp > 0 && playing) {
-    ripple(hx, hy, sg, amp, rw, rh, fkNow);
+  const wavy = live && amp > 0 && playing;
+  if (wavy) {
+    ripple(hx, hy, sg, amp, rw, rh, fkNow, rec ? 480 : Math.min(256, Math.round(Math.max(rw, rh) * Math.min(2, window.devicePixelRatio || 1))));
     ctx.imageSmoothingEnabled = true; ctx.drawImage(wcan, rx, ry, rw, rh);
   } else { ctx.imageSmoothingEnabled = false; ctx.drawImage(off, rx, ry, rw, rh); }
+  if (rec) {
+    /* Image filmée : la sélection seule, plein cadre. */
+    xctx.imageSmoothingEnabled = wavy; xctx.drawImage(wavy ? wcan : off, 0, 0, xcan.width, xcan.height);
+    if (rec.n++ % 12 === 0 && live && actx) say("Enregistrement " + Math.min(R.dur, Math.max(0, playTime())).toFixed(1) + " / " + R.dur.toFixed(1) + " s. Garde la page affichée.");
+  }
   if (pathPts.length) {
     ctx.beginPath();
     for (let i = 0; i < pathPts.length; i++) { const x = rx + pathPts[i][0] * cw, y = ry + pathPts[i][1] * ch; if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); }
@@ -634,9 +714,8 @@ function draw() {
    longueur suivent la hauteur des notes sous la tête. Chaque point de l'écran va chercher
    sa couleur un peu plus loin selon la pente (réfraction), et la pente est éclairée pour donner le relief. */
 const wcan = document.createElement("canvas"); let wimg = null, WXc = new Float32Array(0), WYc = new Float32Array(0);
-function ripple(hx, hy, sg, amp, rw, rh, fk) {
-  const d0 = Math.min(2, window.devicePixelRatio || 1), sc = Math.min(1, 256 / (Math.max(rw, rh) * d0)) * d0;
-  const ww = Math.max(8, Math.round(rw * sc)), wh = Math.max(8, Math.round(rh * sc));
+function ripple(hx, hy, sg, amp, rw, rh, fk, side) {
+  const sc = side / Math.max(rw, rh), ww = Math.max(8, Math.round(rw * sc)), wh = Math.max(8, Math.round(rh * sc));
   if (!wimg || wimg.width !== ww || wimg.height !== wh) { wcan.width = ww; wcan.height = wh; wimg = wcan.getContext("2d").createImageData(ww, wh); WXc = new Float32Array(ww); WYc = new Float32Array(wh); }
   const out = wimg.data, px = an.rgba, inv = 1 / (2 * sg * sg), shp = 1 + 3 * P.flat / 100;
   const K = R.K, k0 = Math.min(K - 1, Math.floor(fk)), fr = fk - k0, env = R.env;
@@ -704,6 +783,13 @@ cv.addEventListener("pointerup", endDrag); cv.addEventListener("pointercancel", 
 buildControls();
 $("play").addEventListener("click", togglePlay);
 $("export").addEventListener("click", exportWav);
+$("video").addEventListener("click", exportVideo);
+$("save").addEventListener("click", saveParams);
+$("reset").addEventListener("click", () => applyParams({ reglages: DEFAULTS }));
+$("open").addEventListener("change", e => {
+  const f = e.target.files && e.target.files[0]; e.target.value = ""; if (!f) return;
+  f.text().then(txt => { let d = null; try { d = JSON.parse(txt); } catch (err) {} applyParams(d); }).catch(() => say("Ce fichier n'a pas pu être lu."));
+});
 $("file").addEventListener("change", e => {
   const f = e.target.files && e.target.files[0]; if (!f) return;
   loadURL(URL.createObjectURL(f), f.name.replace(/\.[^.]+$/, ""));

@@ -34,7 +34,10 @@ header h1{display:inline;font-size:13px;font-weight:400;margin:0;color:var(--ink
 main{display:grid;gap:8px}
 main[hidden],#doc[hidden]{display:none}
 [hidden]{display:none!important}
-.stage{position:sticky;top:0;z-index:5;background:var(--bg);padding-bottom:6px;display:grid;gap:6px;min-width:0}
+.stage{position:sticky;top:0;z-index:5;background:#000;margin:0 -16px;padding:12px 16px;display:grid;gap:8px;min-width:0;overflow:hidden;border-bottom:1px solid var(--line)}
+.stage > *{position:relative}
+#bg{position:absolute;left:-12%;top:-12%;width:124%;height:124%;border:0;filter:blur(26px) saturate(1.3) brightness(.5);pointer-events:none;background:#000}
+.stage #line{color:#b4b4b4}
 canvas{display:block;width:100%;height:min(calc(100vw - 32px),44vh);background:#000;border:1px solid var(--line);touch-action:none;cursor:crosshair}
 #line{min-height:1.4em;white-space:pre;overflow:hidden;color:var(--dim);font-variant-numeric:tabular-nums}
 #line.busy{color:var(--ink)}
@@ -95,14 +98,14 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
 @media (orientation:landscape) and (min-width:560px), (min-width:900px){
   header{padding:2px 0}
   main{grid-template-columns:minmax(0,1.15fr) minmax(290px,.85fr);gap:22px;align-items:start}
-  .stage{top:4px}
+  .stage{top:4px;margin:0;border:1px solid var(--line)}
   canvas{height:max(130px,calc(100vh - 186px));height:max(130px,calc(100dvh - 186px))}
   section:first-child h2{margin-top:0}
 }
 </style>
 </head>
 <body>
-<header><span><h1>image2saw</h1> <span aria-hidden="true">╝║╝║╝║</span><br><small>creative pixels to soundscape generator</small></span><button id="help" class="cmd" aria-expanded="false" aria-controls="doc" aria-label="Help">?</button></header>
+<header><span><h1>image2saw</h1> <span aria-hidden="true">╝║╝║╝║</span></span><button id="help" class="cmd" aria-expanded="false" aria-controls="doc" aria-label="Help">?</button></header>
 <article id="doc" lang="en" hidden>
   <p>image2saw: pixels to soundscape patterns.</p>
   <p>It turns an image into a seamless sound loop. Every pixel of the selected area is a voice. A soft window travels across the area and makes the pixels under it sing.</p>
@@ -149,10 +152,11 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Video is recorded in real time: keep the page visible until it ends.</li>
     <li>On an iPhone, the silent switch mutes the sound.</li>
   </ul>
-  <p class="ver">version A · 07cf51a</p>
+  <p class="ver">version A · 62513ac</p>
 </article>
 <main>
   <div class="stage">
+    <canvas id="bg" width="48" height="48" aria-hidden="true"></canvas>
     <canvas id="cv" aria-label="Image et sélection. Glisser pour sélectionner la zone à jouer."></canvas>
     <div id="line" role="status"></div>
     <div class="transport">
@@ -233,7 +237,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
         <button id="reset" class="cmd">défauts</button>
       </div>
     </section>
-    <p class="ver">pixels to soundscape patterns · A · 07cf51a</p>
+    <p class="ver">pixels to soundscape patterns · A · 62513ac</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>
@@ -1413,9 +1417,12 @@ function resize() {
   cv.width = Math.round(cv.clientWidth * d); cv.height = Math.round(cv.clientHeight * d);
   ctx.setTransform(d, 0, 0, d, 0, 0);
 }
+let bgN = 0;
 function draw() {
   requestAnimationFrame(draw);
   if (!src.width || !an) return;
+  /* Fond de la zone d'écoute : l'image ou la caméra, en tout petit, que la page floute. */
+  if (bgN++ % 3 === 0) $("bg").getContext("2d").drawImage(src, 0, 0, 48, 48);
   const g = geom(); ctx.clearRect(0, 0, g.W, g.H);
   ctx.imageSmoothingEnabled = true; ctx.globalAlpha = 0.22; ctx.drawImage(src, g.ox, g.oy, g.iw, g.ih); ctx.globalAlpha = 1;
   const rx = g.ox + sel.x * g.iw, ry = g.oy + sel.y * g.ih, rw = sel.w * g.iw, rh = sel.h * g.ih, cw = rw / gw, ch = rh / gh;

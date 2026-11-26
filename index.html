@@ -343,7 +343,22 @@ function* engine(an, p) {
   let peak = 0;
   for (let j = 0; j < Ls; j++) { const a = Math.abs(L[j]), b = Math.abs(R[j]); if (a > peak) peak = a; if (b > peak) peak = b; }
   if (peak > 0) { const g = 0.89 / peak; for (let j = 0; j < Ls; j++) { L[j] *= g; R[j] *= g; } }
-  return { L, R, dur: D, K, hx, hy, sg, freq, gw, gh, peak };
+  /* Pour l'image : ce que le son fait réellement à chaque instant de la boucle. */
+  const venv = new Float32Array(K), pn = new Float32Array(K), phs = new Float32Array(K + 1);
+  for (let k = 0; k < K; k++) { let a = 0; for (let j = bound[k]; j < bound[k + 1]; j++) a += L[j] * L[j] + R[j] * R[j]; venv[k] = Math.sqrt(a / (2 * Math.max(1, bound[k + 1] - bound[k]))); }
+  const lf0 = Math.log(lo), lf1 = Math.log(hi);
+  for (let k = 0; k < K; k++) {
+    const ix = Math.min(gw - 1, Math.max(0, Math.floor(hx[k]))), iy = Math.min(gh - 1, Math.max(0, Math.floor(hy[k])));
+    pn[k] = Math.min(1, Math.max(0, (Math.log(Math.max(lo, freq[iy * gw + ix])) - lf0) / (lf1 - lf0)));
+  }
+  const lp = (arr, tc) => { const a = 1 - Math.exp(-hopSec / tc); let v = arr[K - 1]; for (let pass = 0; pass < 2; pass++) for (let k = 0; k < K; k++) { v += a * (arr[k] - v); if (pass) arr[k] = v; } };
+  lp(venv, 0.02); lp(pn, 0.15);
+  const ref = Math.max(1e-6, Float32Array.from(venv).sort()[Math.floor(0.95 * (K - 1))]);
+  for (let k = 0; k < K; k++) venv[k] = Math.pow(Math.min(1.5, venv[k] / ref), 1.7);   /* contraste accentué : les pulsations se voient mieux */
+  let acc = 0; for (let k = 0; k < K; k++) { phs[k] = acc; acc += (1.2 + 5 * pn[k]) * hopSec; }
+  const turns = Math.max(1, Math.round(acc)) / Math.max(1e-6, acc) * 6.283185307179586;
+  phs[K] = acc; for (let k = 0; k <= K; k++) phs[k] *= turns;
+  return { L, R, dur: D, K, hx, hy, sg, freq, gw, gh, peak, env: venv, pn, phs, hopSec };
 }
 
 /* WAV 16 bits stéréo, puis archive ZIP (sans compression). */
@@ -402,7 +417,7 @@ const SLIDERS = {
   vol:       { label: "Volume d'écoute", min: 0, max: 100, step: 1, unit: "%", live: true },
   bpm:       { label: "Tempo", min: 40, max: 240, step: 1, unit: "bpm" },
   freeDur:   { label: "Durée libre", min: 0.5, max: 30, step: 0.1, unit: "s" },
-  wobble:    { label: "Wobble", min: 0, max: 100, step: 1, unit: "%", live: true, hint: "La surface de l'image ondule sous la gaussienne, comme une goutte sur l'eau, au rythme du tempo." }
+  wobble:    { label: "Wobble", min: 0, max: 100, step: 1, unit: "%", live: true, hint: "Pendant la lecture, la surface ondule avec le son réel : la force suit le volume, la finesse des rides suit la hauteur des notes." }
 };
 const SEGS = {
   path:  [["cycleH", "serpentin ↔"], ["cycleV", "serpentin ↕"], ["pong", "aller-retour"], ["spirale", "spirale"]],
@@ -624,15 +639,15 @@ function draw() {
   ctx.imageSmoothingEnabled = true; ctx.globalAlpha = 0.3; ctx.drawImage(src, g.ox, g.oy, g.iw, g.ih); ctx.globalAlpha = 1;
   const rx = g.ox + sel.x * g.iw, ry = g.oy + sel.y * g.ih, rw = sel.w * g.iw, rh = sel.h * g.ih, cw = rw / gw, ch = rh / gh;
   const live = R && R.gw === gw && R.gh === gh, amp = P.wobble / 100;
-  let hx = 0, hy = 0, sg = 1;
+  let hx = 0, hy = 0, sg = 1, fkNow = 0;
   if (live) {
     /* Tête de lecture, interpolée entre deux points du parcours pour un mouvement continu. */
     const t = playing && actx ? playTime() : 0;
     const u = playing ? (((t % R.dur) + R.dur) % R.dur) / R.dur : 0, fk = u * R.K, k0 = Math.min(R.K - 1, Math.floor(fk)), k1 = (k0 + 1) % R.K, fr = fk - k0;
-    hx = R.hx[k0] + (R.hx[k1] - R.hx[k0]) * fr; hy = R.hy[k0] + (R.hy[k1] - R.hy[k0]) * fr; sg = R.sg[k0] + (R.sg[k1] - R.sg[k0]) * fr;
+    fkNow = fk; hx = R.hx[k0] + (R.hx[k1] - R.hx[k0]) * fr; hy = R.hy[k0] + (R.hy[k1] - R.hy[k0]) * fr; sg = R.sg[k0] + (R.sg[k1] - R.sg[k0]) * fr;
   }
-  if (live && amp > 0) {
-    ripple(hx, hy, sg, amp, rw, rh);
+  if (live && amp > 0 && playing) {
+    ripple(hx, hy, sg, amp, rw, rh, fkNow);
     ctx.imageSmoothingEnabled = true; ctx.drawImage(wcan, rx, ry, rw, rh);
   } else { ctx.imageSmoothingEnabled = false; ctx.drawImage(off, rx, ry, rw, rh); }
   if (pathPts.length) {
@@ -651,15 +666,18 @@ function draw() {
 }
 
 /* Wobble : la surface de l'image ondule comme de l'eau, soulevée par la gaussienne.
-   Hauteur = enveloppe de la gaussienne × onde qui s'éloigne de la tête. Chaque point de l'écran va chercher
+   Hauteur = enveloppe de la gaussienne × onde qui s'éloigne de la tête. L'onde vient du son réel : sa force suit le
+   volume mesuré dans la boucle (retardé avec la distance, donc les pulsations partent en anneaux), son rythme et sa
+   longueur suivent la hauteur des notes sous la tête. Chaque point de l'écran va chercher
    sa couleur un peu plus loin selon la pente (réfraction), et la pente est éclairée pour donner le relief. */
 const wcan = document.createElement("canvas"); let wimg = null, WXc = new Float32Array(0), WYc = new Float32Array(0);
-function ripple(hx, hy, sg, amp, rw, rh) {
+function ripple(hx, hy, sg, amp, rw, rh, fk) {
   const d0 = Math.min(2, window.devicePixelRatio || 1), sc = Math.min(1, 256 / (Math.max(rw, rh) * d0)) * d0;
   const ww = Math.max(8, Math.round(rw * sc)), wh = Math.max(8, Math.round(rh * sc));
   if (!wimg || wimg.width !== ww || wimg.height !== wh) { wcan.width = ww; wcan.height = wh; wimg = wcan.getContext("2d").createImageData(ww, wh); WXc = new Float32Array(ww); WYc = new Float32Array(wh); }
   const out = wimg.data, px = an.rgba, inv = 1 / (2 * sg * sg), shp = 1 + 3 * P.flat / 100;
-  const lam = Math.max(0.35, sg * 0.35), fv = P.sig === "libre" ? 2 : P.bpm / 60, ph0 = 6.2832 * fv * performance.now() / 1000;
+  const K = R.K, k0 = Math.min(K - 1, Math.floor(fk)), fr = fk - k0, env = R.env;
+  const lam = Math.max(0.35, sg * 0.35 * (1.4 - 0.8 * R.pn[k0])), ph0 = R.phs[k0] + (R.phs[k0 + 1] - R.phs[k0]) * fr, kd = 0.1 / sg / R.hopSec;
   const A = amp * Math.min(2.5, Math.max(0.7, 0.22 * sg)), c2 = lam * lam, kx = gw / ww, ky = gh / wh;
   for (let x = 0; x < ww; x++) WXc[x] = mirrorW(hx, (x + 0.5) * kx, gw, inv);
   for (let y = 0; y < wh; y++) WYc[y] = mirrorW(hy, (y + 0.5) * ky, gh, inv);
@@ -672,8 +690,9 @@ function ripple(hx, hy, sg, amp, rw, rh) {
       if (w > 0.004) {
         w = flatTop(w > 1 ? 1 : w, shp);
         const dx = gx - hx, d = Math.sqrt(dx * dx + dy * dy), ph = d / lam - ph0, sn = Math.sin(ph), ux = d > 1e-3 ? dx / d : 0, uy = d > 1e-3 ? dy / d : 0;
-        const soft = d * d / (d * d + c2), dp = A * w * sn * soft; sx += ux * dp; sy += uy * dp;
-        lit = 1 + amp * w * (0.1 * Math.cos(ph) - 0.3 * sn * soft * (ux + uy) * 0.707);
+        let ei = (fk - d * kd) | 0; ei %= K; if (ei < 0) ei += K;
+        const E = env[ei], soft = d * d / (d * d + c2), dp = A * w * E * sn * soft; sx += ux * dp; sy += uy * dp;
+        lit = 1 + amp * w * E * (0.1 * Math.cos(ph) - 0.3 * sn * soft * (ux + uy) * 0.707);
         if (sx < 0) sx = -sx; else if (sx >= gw) sx = 2 * gw - sx - 0.001;
         if (sy < 0) sy = -sy; else if (sy >= gh) sy = 2 * gh - sy - 0.001;
       }

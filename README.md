@@ -76,4 +76,4 @@ Cette version A repart de zéro : le code n'a plus rien de commun avec les versi
 
 Pierre Pomiers — projet *Image to Sound*, exploration des liens entre vision, vibration et matière sonore.
 
-Licence MIT.
+© 2026 Pierre Pomiers. Licence MIT : voir le fichier `LICENSE`.

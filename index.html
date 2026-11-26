@@ -379,6 +379,7 @@ const $ = id => document.getElementById(id);
 const P = { grid: 16, path: "cycleH", sigma: 15, ring: 0.25, infl: 60,
   wave: "saw", fmin: 5, fmax: 200, scale: "lin", tune: "libre", dyn: 60, stereo: 80, vol: 80,
   sig: "4/4", bpm: 120, bars: "4", freeDur: 8, wobble: 60 };
+if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) P.wobble = 0;
 
 const SLIDERS = {
   grid:      { label: "Résolution", min: 8, max: 64, step: 2, unit: "px", hint: "Nombre de pixels (de voix) sur le grand côté. Tous sont parcourus : plus il y en a, plus la tête va vite." },
@@ -551,7 +552,7 @@ function startSource(offset) {
   g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(1, now + 0.04);
   s.start(now, Math.max(0, Math.min(offset, buf.duration - 0.001)));
   stopSource(0.04);
-  cur = { s, g }; startAt = now - offset;
+  cur = { s, g }; startAt = now - offset; clkInit = false;
 }
 function stopSource(fade) {
   if (!cur) return;
@@ -567,6 +568,7 @@ function togglePlay() {
     } catch (e) { say("Le son n'a pas pu démarrer dans ce navigateur."); return; }
     playing = true; clkInit = false;
     if (R) startSource(0);
+    setTimeout(() => { if (playing && actx.state !== "running") say("Le navigateur retient le son. Touche Stop puis Lecture, et vérifie que le téléphone n'est pas en mode silencieux."); }, 1200);
   }
   $("play").setAttribute("aria-pressed", String(playing));
   $("play").textContent = playing ? "■ Stop" : "▶ Lecture";
@@ -590,9 +592,11 @@ async function exportWav() {
 let VX = new Float32Array(0), VY = new Float32Array(0), VW = new Float32Array(0), cols = [], clkOff = 0, clkInit = false;
 /* Horloge de lecture lissée : l'horloge audio avance par à-coups, celle de l'écran est régulière. */
 function playTime() {
-  const pn = performance.now() / 1000, raw = actx.currentTime - pn;
-  if (!clkInit) { clkOff = raw; clkInit = true; } else clkOff += 0.03 * (raw - clkOff);
-  return pn + clkOff - startAt;
+  const pn = performance.now() / 1000;
+  if (!clkInit) { clkOff = pn - (actx.currentTime - startAt); clkInit = true; }
+  let tp = pn - clkOff;
+  if (actx.state === "running") { const err = (actx.currentTime - startAt) - tp; if (Math.abs(err) < 0.5) clkOff -= 0.03 * err; else { clkOff -= err; tp += err; } }
+  return tp;
 }
 function geom() {
   const W = cv.clientWidth, H = cv.clientHeight, s = Math.min(W / src.width, H / src.height) * 0.96;
@@ -618,14 +622,14 @@ function draw() {
   }
   if (R && R.gw === gw && R.gh === gh) {
     /* Tête de lecture, interpolée entre deux points du parcours pour un mouvement continu. */
-    const t = playing && actx ? playTime() : 0, tw = playing ? t : performance.now() / 1000;
+    const t = playing && actx ? playTime() : 0, tw = performance.now() / 1000;
     const u = playing ? (((t % R.dur) + R.dur) % R.dur) / R.dur : 0, fk = u * R.K, k0 = Math.min(R.K - 1, Math.floor(fk)), k1 = (k0 + 1) % R.K, fr = fk - k0;
     const hx = R.hx[k0] + (R.hx[k1] - R.hx[k0]) * fr, hy = R.hy[k0] + (R.hy[k1] - R.hy[k0]) * fr, sg = R.sg[k0] + (R.sg[k1] - R.sg[k0]) * fr, inv = 1 / (2 * sg * sg);
-    const amp = reduce ? 0 : P.wobble / 100;
+    const amp = P.wobble / 100;
     if (amp > 0) {
       /* Wobble : une onde part de la tête et déplace les sommets de la grille ; chaque carré suit ses quatre coins. */
       const rad = Math.ceil(3.2 * sg) + 1, c0 = Math.max(0, Math.floor(hx - rad)), c1 = Math.min(gw - 1, Math.floor(hx + rad)), r0 = Math.max(0, Math.floor(hy - rad)), r1 = Math.min(gh - 1, Math.floor(hy + rad));
-      const nx = c1 - c0 + 2, ny = r1 - r0 + 2, A = amp * 0.85, lam = Math.max(0.5, sg * 0.45), fv = P.sig === "libre" ? 2 : P.bpm / 60, ph0 = 6.2832 * fv * tw;
+      const nx = c1 - c0 + 2, ny = r1 - r0 + 2, A = amp * 1.4, lam = Math.max(0.5, sg * 0.45), fv = P.sig === "libre" ? 2 : P.bpm / 60, ph0 = 6.2832 * fv * tw;
       if (VX.length < nx * ny) { VX = new Float32Array(nx * ny); VY = new Float32Array(nx * ny); VW = new Float32Array(nx * ny); }
       for (let iy = 0; iy < ny; iy++) for (let ix = 0; ix < nx; ix++) {
         const gx = c0 + ix, gy = r0 + iy, dx = gx - hx, dy = gy - hy, d = Math.hypot(dx, dy);

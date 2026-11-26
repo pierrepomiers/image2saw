@@ -19,9 +19,9 @@ header,main{max-width:1100px;margin:0 auto}
 header{padding:6px 0;color:var(--ink);white-space:nowrap;display:flex;justify-content:space-between;align-items:center;gap:12px}
 #doc{max-width:1100px;margin:0 auto;padding-bottom:24px}
 #doc p,#doc li,#doc dd{max-width:68ch}
-#doc h2{margin:22px 0 8px;font-size:13px;font-weight:400;color:var(--ink);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;display:flex;gap:1ch;min-width:0}
-#doc h2::before{content:"║╔ ║╔ ║╔ ═";letter-spacing:0}
-#doc h2::after{content:"════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════";letter-spacing:0;flex:1;min-width:0;overflow:hidden;order:2}
+#doc h2{margin:22px 0 8px;font-size:13px;font-weight:400;color:var(--ink);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;display:flex;min-width:0}
+#doc h2::before{content:"║╔║╔║╔═";letter-spacing:0;margin-right:1ch}
+#doc h2::after{content:"════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════";letter-spacing:0;flex:1;min-width:0;overflow:hidden;order:2;margin-left:1ch;direction:rtl}
 #doc h2 i{font-style:normal;letter-spacing:0;order:3}
 #doc ol,#doc ul{margin:0;padding-left:3ch}
 #doc li{margin:4px 0}
@@ -53,9 +53,9 @@ button:focus-visible,.filebtn:focus-within,input:focus-visible{outline:1px solid
 #msg:empty{display:none}
 .panel{display:grid;min-width:0;align-content:start}
 section{display:grid}
-section h2{margin:26px 0 6px;font-size:13px;font-weight:400;color:var(--ink);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;display:flex;gap:1ch;min-width:0}
-section h2::before{content:"║╔ ║╔ ║╔ ═";letter-spacing:0}
-section h2::after{content:"════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════";letter-spacing:0;flex:1;min-width:0;overflow:hidden;order:2}
+section h2{margin:26px 0 6px;font-size:13px;font-weight:400;color:var(--ink);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;display:flex;min-width:0}
+section h2::before{content:"║╔║╔║╔═";letter-spacing:0;margin-right:1ch}
+section h2::after{content:"════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════";letter-spacing:0;flex:1;min-width:0;overflow:hidden;order:2;margin-left:1ch;direction:rtl}
 section h2 i{font-style:normal;letter-spacing:0;order:3}
 .row{display:grid;grid-template-columns:10ch minmax(0,1fr) 9ch;gap:10px;align-items:center;min-height:36px}
 .row.wide{grid-template-columns:10ch minmax(0,1fr)}
@@ -154,7 +154,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Video is recorded in real time: keep the page visible until it ends.</li>
     <li>On an iPhone, the silent switch mutes the sound.</li>
   </ul>
-  <p class="ver">version A · a519a92</p>
+  <p class="ver">version A · eff2792</p>
 </article>
 <main>
   <div class="stage">
@@ -239,7 +239,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
         <button id="reset" class="cmd">défauts</button>
       </div>
     </section>
-    <p class="ver">pixels to soundscape patterns · A · a519a92</p>
+    <p class="ver">pixels to soundscape patterns · A · eff2792</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>

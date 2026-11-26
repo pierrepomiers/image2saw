@@ -16,7 +16,7 @@
 html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--mono);font-size:13px;line-height:1.4}
 body{padding:0 16px 40px}
 header,main{max-width:1100px;margin:0 auto}
-header{padding:4px 0;color:var(--ink);white-space:nowrap;display:flex;justify-content:space-between;align-items:center;gap:12px}
+header{padding:6px 0;color:var(--ink);white-space:nowrap;display:flex;justify-content:space-between;align-items:center;gap:12px}
 #doc{max-width:1100px;margin:0 auto;padding-bottom:24px}
 #doc p,#doc li,#doc dd{max-width:68ch}
 #doc h2{margin:18px 0 6px;font-size:13px;font-weight:400;color:var(--dim);white-space:nowrap;overflow:hidden}
@@ -28,6 +28,7 @@ header{padding:4px 0;color:var(--ink);white-space:nowrap;display:flex;justify-co
 #doc dt{color:var(--ink)}
 #doc dd{margin:0;color:var(--dim)}
 .ver{color:var(--dim);margin:18px 0 0}
+header small{color:var(--dim);font-size:13px}
 header h1{display:inline;font-size:13px;font-weight:400;margin:0;color:var(--ink)}
 main{display:grid;gap:8px}
 main[hidden],#doc[hidden]{display:none}
@@ -69,16 +70,16 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
 .filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
 /* Paysage (téléphone couché, tablette, ordinateur) : image à gauche, réglages à droite. */
 @media (orientation:landscape) and (min-width:560px), (min-width:900px){
-  header{padding:0}
+  header{padding:2px 0}
   main{grid-template-columns:minmax(0,1.15fr) minmax(290px,.85fr);gap:22px;align-items:start}
   .stage{top:4px}
-  canvas{height:max(130px,calc(100vh - 150px));height:max(130px,calc(100dvh - 150px))}
+  canvas{height:max(130px,calc(100vh - 170px));height:max(130px,calc(100dvh - 170px))}
   section:first-child h2{margin-top:0}
 }
 </style>
 </head>
 <body>
-<header><span><h1>image2saw</h1> <span aria-hidden="true">╝║╝║╝║</span></span><button id="help" class="cmd" aria-expanded="false" aria-controls="doc" aria-label="Help">?</button></header>
+<header><span><h1>image2saw</h1> <span aria-hidden="true">╝║╝║╝║</span><br><small>creative pixels to soundscape generator</small></span><button id="help" class="cmd" aria-expanded="false" aria-controls="doc" aria-label="Help">?</button></header>
 <article id="doc" lang="en" hidden>
   <p>image2saw: pixels to soundscape patterns.</p>
   <p>It turns an image into a seamless sound loop. Every pixel of the selected area is a voice. A soft window travels across the area and makes the pixels under it sing.</p>
@@ -122,7 +123,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Video is recorded in real time: keep the page visible until it ends.</li>
     <li>On an iPhone, the silent switch mutes the sound.</li>
   </ul>
-  <p class="ver">version A · b3bbd86</p>
+  <p class="ver">version A · 60609f3</p>
 </article>
 <main>
   <div class="stage">
@@ -185,7 +186,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
         <button id="reset" class="cmd">défauts</button>
       </div>
     </section>
-    <p class="ver">pixels to soundscape patterns · A · b3bbd86</p>
+    <p class="ver">pixels to soundscape patterns · A · 60609f3</p>
   </div>
 </main>
 

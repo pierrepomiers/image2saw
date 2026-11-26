@@ -120,7 +120,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <dt>grave, aigu</dt><dd>Lowest and highest pitch. The sliders move by semitones from C0 to B6, and the note name is shown next to the value. To set any other frequency, type it in hertz: for example 5 for rumbles and beats.</dd>
     <dt>échelle</dt><dd>Linear or logarithmic spread of the pitches between those two limits.</dd>
     <dt>accord</dt><dd>Leaves pitches free, or snaps them to the chromatic or pentatonic scale.</dd>
-    <dt>égaliseur</dt><dd>Seven output faders, closer together in the bass. The first one sets everything below 30 Hz, the last one everything above 8 kHz. The overall level is kept steady and never clips: cutting the lowest bands trades inaudible rumble for more level in the rest. [ plat ] sets all bands back to 0 dB.</dd>
+    <dt>égaliseur</dt><dd>Seven output faders, closer together in the bass. The first one sets everything below 30 Hz. The last one sets everything above 2 kHz: no note is played up there, only the harmonics that make the saw and square waves bright. The overall level is kept steady and never clips: cutting the lowest bands trades inaudible rumble for more level in the rest. [ plat ] sets all bands back to 0 dB.</dd>
     <dt>stéréo</dt><dd>Stereo width. The left of the image plays in the left speaker.</dd>
     <dt>mesure, mesures, tempo</dt><dd>Loop length in bars, so that samples line up on the beat: a slower tempo makes a longer loop, shown in seconds under the image. Choose libre to set a length in seconds with durée.</dd>
     <dt>wobble</dt><dd>Strength of the ripple on the image while it plays, up to 200 %. The ripple follows the real loudness and pitch of the sound.</dd>
@@ -134,7 +134,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Video is recorded in real time: keep the page visible until it ends.</li>
     <li>On an iPhone, the silent switch mutes the sound.</li>
   </ul>
-  <p class="ver">version A · c80a340</p>
+  <p class="ver">version A · bd1feae</p>
 </article>
 <main>
   <div class="stage">
@@ -207,7 +207,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
         <button id="reset" class="cmd">défauts</button>
       </div>
     </section>
-    <p class="ver">pixels to soundscape patterns · A · c80a340</p>
+    <p class="ver">pixels to soundscape patterns · A · bd1feae</p>
   </div>
 </main>
 
@@ -555,9 +555,10 @@ function levelGain(L, R, sr) {
 }
 
 /* Égaliseur de sortie à 7 bandes, resserrées dans le grave : type de filtre, fréquence, finesse.
-   La première règle tout ce qui est sous 30 Hz, la dernière tout ce qui est au-dessus de 8 kHz, les cinq autres
-   sont des cloches. Mêmes filtres que ceux du navigateur, pour que l'export sonne comme l'écoute. */
-const EQ_BANDS = [["lowshelf", 30, 0], ["peaking", 60, 1.4], ["peaking", 120, 1.4], ["peaking", 250, 1.4], ["peaking", 500, 1.4], ["peaking", 2000, 0.7], ["highshelf", 8000, 0]];
+   La première règle tout ce qui est sous 30 Hz, les cinq suivantes sont des cloches d'une octave qui couvrent les notes
+   jouables (C0 à B6, soit 16 Hz à 2 kHz), la dernière règle tout ce qui est au-dessus de 2 kHz : il n'y a là que les
+   harmoniques de la scie et du carré. Mêmes filtres que ceux du navigateur, pour que l'export sonne comme l'écoute. */
+const EQ_BANDS = [["lowshelf", 30, 0], ["peaking", 60, 1.4], ["peaking", 120, 1.4], ["peaking", 250, 1.4], ["peaking", 500, 1.4], ["peaking", 1000, 1.4], ["highshelf", 2000, 0]];
 function eqCoef(type, f, q, db, sr) {
   const A = Math.pow(10, db / 40), w = 6.283185307179586 * f / sr, cs = Math.cos(w), sn = Math.sin(w);
   let b0, b1, b2, a0, a1, a2;
@@ -703,8 +704,8 @@ const SLIDERS = {
   eq2:     { label: "120", min: -15, max: 15, step: 1, unit: "dB", fx: true },
   eq3:     { label: "250", min: -15, max: 15, step: 1, unit: "dB", fx: true },
   eq4:     { label: "500", min: -15, max: 15, step: 1, unit: "dB", fx: true },
-  eq5:     { label: "2k", min: -15, max: 15, step: 1, unit: "dB", fx: true },
-  eq6:     { label: ">8k", min: -15, max: 15, step: 1, unit: "dB", fx: true }
+  eq5:     { label: "1k", min: -15, max: 15, step: 1, unit: "dB", fx: true },
+  eq6:     { label: ">2k", min: -15, max: 15, step: 1, unit: "dB", fx: true }
 };
 const SEGS = {
   path:  [["cycleH", "h-snake"], ["cycleV", "v-snake"], ["pong", "aller-retour"], ["spirale", "spirale"], ["chaos", "chaos"]],

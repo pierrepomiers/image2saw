@@ -1,4 +1,4 @@
-# Image2Saw v3 — la chorale des pixels
+# Image2Saw A — la chorale des pixels
 
 Transforme une image en boucle sonore. Chaque pixel de la zone sélectionnée est une voix ; une gaussienne parcourt l'image et fait chanter les pixels qu'elle recouvre.
 
@@ -25,7 +25,7 @@ Tout tient dans un seul fichier, `index.html`, sans dépendance ni serveur : le 
 
 Prototype. Restent à faire : l'enchaînement des samples avec fondus, l'export vidéo du wobble, puis le portage en plugin audio.
 
-Les versions Python précédentes (v2.x) généraient un WAV en ligne de commande à partir d'oscillateurs séquencés.
+Cette version A repart de zéro : le code n'a plus rien de commun avec les versions Python précédentes (v2.x), qui généraient un WAV en ligne de commande à partir d'oscillateurs séquencés.
 
 ## Auteur
 

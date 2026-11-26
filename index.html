@@ -15,7 +15,8 @@
 html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--mono);font-size:13px;line-height:1.4}
 body{padding:0 16px 40px}
 header,main{max-width:1100px;margin:0 auto}
-header{padding:12px 0 8px;color:var(--dim);white-space:nowrap;overflow:hidden}
+header{padding:10px 0 8px;color:var(--ink);overflow:hidden}
+.logo{margin:0;font:inherit;line-height:1.15;white-space:pre}
 header h1{display:inline;font-size:13px;font-weight:400;margin:0;color:var(--ink)}
 main{display:grid;gap:8px}
 .stage{position:sticky;top:0;z-index:5;background:var(--bg);padding-bottom:6px;display:grid;gap:6px;min-width:0}
@@ -59,13 +60,15 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
   header{padding:6px 0 4px}
   main{grid-template-columns:minmax(0,1.15fr) minmax(290px,.85fr);gap:22px;align-items:start}
   .stage{top:4px}
-  canvas{height:max(130px,calc(100vh - 150px));height:max(130px,calc(100dvh - 150px))}
+  canvas{height:max(130px,calc(100vh - 170px));height:max(130px,calc(100dvh - 170px))}
   section:first-child h2{margin-top:0}
 }
 </style>
 </head>
 <body>
-<header><h1>image2saw</h1> <span aria-hidden="true">/|/|/|</span></header>
+<header><pre class="logo">             /|  /|  /|
+            / | / | / |
+<h1>image2saw</h1>  /  |/  |/  |</pre></header>
 <main>
   <div class="stage">
     <canvas id="cv" aria-label="Image et sélection. Glisser pour sélectionner la zone à jouer."></canvas>

@@ -122,7 +122,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Video is recorded in real time: keep the page visible until it ends.</li>
     <li>On an iPhone, the silent switch mutes the sound.</li>
   </ul>
-  <p class="ver">version A · da887dc</p>
+  <p class="ver">version A · 92f0f84</p>
 </article>
 <main>
   <div class="stage">
@@ -185,14 +185,14 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
         <button id="reset" class="cmd">défauts</button>
       </div>
     </section>
-    <p class="ver">pixels to soundscape patterns · A · da887dc</p>
+    <p class="ver">pixels to soundscape patterns · A · 92f0f84</p>
   </div>
 </main>
 
 <script id="engine">
 "use strict";
 /* ───────── Moteur : la chorale des pixels (aucune dépendance au DOM) ───────── */
-const SR = 44100, HOP = 128, EPS = 0.002;
+const SR = 44100, HOP = 128, EPS = 0.002, LOUD = 0.07;
 
 function smoothstep(a, b, x) { x = (x - a) / (b - a); x = x < 0 ? 0 : x > 1 ? 1 : x; return x * x * (3 - 2 * x); }
 
@@ -396,7 +396,20 @@ function* engine(an, p) {
   }
   let peak = 0;
   for (let j = 0; j < Ls; j++) { const a = Math.abs(L[j]), b = Math.abs(R[j]); if (a > peak) peak = a; if (b > peak) peak = b; }
-  if (peak > 0) { const g = 0.89 / peak; for (let j = 0; j < Ls; j++) { L[j] *= g; R[j] *= g; } }
+  if (peak > 0) {
+    /* Niveau : on vise la même force perçue quelle que soit la forme d'onde. La force est mesurée après un filtre
+       proche de la sensibilité de l'oreille (le grave compte peu, le médium beaucoup), puis le gain est plafonné pour ne jamais saturer. */
+    const a = Math.exp(-6.283185307179586 * 400 / SR); let pw = 0;
+    for (const ch of [L, R]) {
+      let x1 = 0, y1 = 0, x2 = 0, y2 = 0;
+      for (let pass = 0; pass < 2; pass++) for (let j = 0; j < Ls; j++) {
+        const x = ch[j]; y1 = a * (y1 + x - x1); x1 = x; y2 = a * (y2 + y1 - x2); x2 = y1;
+        if (pass) pw += y2 * y2;
+      }
+    }
+    const loud = Math.sqrt(pw / (2 * Ls)), g = Math.min(0.89 / peak, loud > 1e-9 ? LOUD / loud : 1e9);
+    for (let j = 0; j < Ls; j++) { L[j] *= g; R[j] *= g; }
+  }
   /* Pour l'image : ce que le son fait réellement à chaque instant de la boucle. */
   const venv = new Float32Array(K), pn = new Float32Array(K), phs = new Float32Array(K + 1);
   for (let k = 0; k < K; k++) { let a = 0; for (let j = bound[k]; j < bound[k + 1]; j++) a += L[j] * L[j] + R[j] * R[j]; venv[k] = Math.sqrt(a / (2 * Math.max(1, bound[k + 1] - bound[k]))); }

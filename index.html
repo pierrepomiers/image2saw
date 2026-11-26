@@ -34,8 +34,8 @@ main{display:grid;gap:8px}
 main[hidden],#doc[hidden]{display:none}
 .stage{position:sticky;top:0;z-index:5;background:var(--bg);padding-bottom:6px;display:grid;gap:6px;min-width:0}
 canvas{display:block;width:100%;height:min(calc(100vw - 32px),44vh);background:#000;border:1px solid var(--line);touch-action:none;cursor:crosshair}
-.bar{height:1px;background:var(--line)}
-.bar i{display:block;height:100%;width:0;background:var(--ink)}
+#line{min-height:1.4em;white-space:pre;overflow:hidden;color:var(--dim);font-variant-numeric:tabular-nums}
+#line.busy{color:var(--ink)}
 .transport{display:flex;gap:4px 16px;flex-wrap:wrap;align-items:center}
 button,.filebtn{font:inherit;color:var(--ink);background:none;border:0;border-radius:0;padding:8px 0;min-height:36px;cursor:pointer;white-space:nowrap}
 .cmd::before{content:"[ ";color:var(--dim)} .cmd::after{content:" ]";color:var(--dim)}
@@ -43,7 +43,6 @@ button:hover,.filebtn:hover{text-decoration:underline}
 button:focus-visible,.filebtn:focus-within,input:focus-visible{outline:1px solid var(--ink);outline-offset:2px}
 .seg button[aria-pressed="true"]{background:var(--ink);color:#000;padding:2px 6px;min-height:0}
 #play[aria-pressed="true"]{color:var(--ink);text-decoration:underline}
-#stat{color:var(--dim);margin-left:auto;font-variant-numeric:tabular-nums}
 #msg{color:var(--ink);margin:0}
 #msg:empty{display:none}
 .panel{display:grid;min-width:0;align-content:start}
@@ -73,7 +72,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
   header{padding:2px 0}
   main{grid-template-columns:minmax(0,1.15fr) minmax(290px,.85fr);gap:22px;align-items:start}
   .stage{top:4px}
-  canvas{height:max(130px,calc(100vh - 170px));height:max(130px,calc(100dvh - 170px))}
+  canvas{height:max(130px,calc(100vh - 186px));height:max(130px,calc(100dvh - 186px))}
   section:first-child h2{margin-top:0}
 }
 </style>
@@ -88,7 +87,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Load an image with [ charger ], or pick one of the three examples.</li>
     <li>Drag on the image to select the area to play. Drag inside the frame to move it, drag a corner to resize it.</li>
     <li>Press [ lecture ] to listen. The space bar does the same.</li>
-    <li>Change the settings. The sound is recomputed after each change; the thin line under the image shows progress.</li>
+    <li>Change the settings. The sound is recomputed after each change, and the bar under the image shows progress. When a loop takes long to compute, a rough preview plays first and the full-quality loop replaces it.</li>
     <li>[ wav ] exports the loop as a 16-bit stereo file. [ vidéo ] records one loop of the moving image with its sound.</li>
   </ol>
   <h2>what the image does</h2>
@@ -99,7 +98,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
   </dl>
   <h2>settings</h2>
   <dl>
-    <dt>résolution</dt><dd>Number of pixels on the long side of the area, from 1 to 64. Every pixel is visited, so more pixels means faster travel (see ms/px under the image).</dd>
+    <dt>résolution</dt><dd>Number of pixels on the long side of the area, from 1 to 64. Every pixel is visited, so more pixels means faster travel (see ms/px under the image) and a longer computation.</dd>
     <dt>parcours</dt><dd>Path of the window. serpentin snakes through every pixel once, by rows (↔) or columns (↕). aller-retour goes there and back. spirale winds to the centre and back out.</dd>
     <dt>largeur</dt><dd>Width of the window, as a share of the area. Around 50 %, nearly every pixel sings at once.</dd>
     <dt>sommet</dt><dd>Shape of the window. 0 % is a bell curve, 100 % is a flat plateau with sharp edges.</dd>
@@ -111,7 +110,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <dt>accord</dt><dd>Leaves pitches free, or snaps them to the chromatic or pentatonic scale.</dd>
     <dt>dynamique</dt><dd>How much brightness affects loudness. At 100 %, black pixels are silent.</dd>
     <dt>stéréo</dt><dd>Stereo width. The left of the image plays in the left speaker.</dd>
-    <dt>mesure, mesures, tempo</dt><dd>Loop length in bars, so that samples line up on the beat. Choose libre to set a length in seconds with durée.</dd>
+    <dt>mesure, mesures, tempo</dt><dd>Loop length in bars, so that samples line up on the beat: a slower tempo makes a longer loop, shown in seconds under the image. Choose libre to set a length in seconds with durée.</dd>
     <dt>wobble</dt><dd>Strength of the ripple on the image while it plays, up to 200 %. The ripple follows the real loudness and pitch of the sound.</dd>
     <dt>sauver, ouvrir, défauts</dt><dd>Save the settings to a .json file, load one back, or return to the starting values.</dd>
   </dl>
@@ -123,17 +122,16 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Video is recorded in real time: keep the page visible until it ends.</li>
     <li>On an iPhone, the silent switch mutes the sound.</li>
   </ul>
-  <p class="ver">version A · 648f356</p>
+  <p class="ver">version A · 11c99fe</p>
 </article>
 <main>
   <div class="stage">
     <canvas id="cv" aria-label="Image et sélection. Glisser pour sélectionner la zone à jouer."></canvas>
-    <div class="bar"><i id="prog"></i></div>
+    <div id="line" role="status"></div>
     <div class="transport">
       <button id="play" class="cmd" aria-pressed="false">lecture</button>
       <button id="export" class="cmd">wav</button>
       <button id="video" class="cmd">vidéo</button>
-      <span id="stat"></span>
     </div>
     <p id="msg" role="status"></p>
   </div>
@@ -186,7 +184,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
         <button id="reset" class="cmd">défauts</button>
       </div>
     </section>
-    <p class="ver">pixels to soundscape patterns · A · 648f356</p>
+    <p class="ver">pixels to soundscape patterns · A · 11c99fe</p>
   </div>
 </main>
 
@@ -319,21 +317,29 @@ function voice(L, R, n0, n1, ph, dph, e, de, gl, gr, wv) {
   } else if (wv === 1) for (let j = n0; j < n1; j++) {
     let p2 = ph + 0.5; if (p2 >= 1) p2 -= 1;
     const sv = ((ph < 0.5 ? 1 : -1) + blep(ph, dph) - blep(p2, dph)) * e; L[j] += sv * gl; R[j] += sv * gr; ph += dph; if (ph >= 1) ph -= 1; e += de;
-  } else if (wv === 2) for (let j = n0; j < n1; j++) {
-    const sv = (1 - 4 * Math.abs(ph - 0.5)) * e; L[j] += sv * gl; R[j] += sv * gr; ph += dph; if (ph >= 1) ph -= 1; e += de;
   } else for (let j = n0; j < n1; j++) {
-    const sv = Math.sin(6.283185307179586 * ph) * e; L[j] += sv * gl; R[j] += sv * gr; ph += dph; if (ph >= 1) ph -= 1; e += de;
+    const sv = (1 - 4 * Math.abs(ph - 0.5)) * e; L[j] += sv * gl; R[j] += sv * gr; ph += dph; if (ph >= 1) ph -= 1; e += de;
   }
 }
+/* Sinus par rotation : quatre multiplications par échantillon au lieu d'un appel à Math.sin.
+   st garde le sinus et le cosinus courants, pour enchaîner les segments d'une même voix sans rien recalculer. */
+function sineSeg(L, R, n0, n1, st, cw, sw, e, de, gl, gr) {
+  let s = st[0], c = st[1];
+  for (let j = n0; j < n1; j++) { const sv = s * e; L[j] += sv * gl; R[j] += sv * gr; const s2 = s * cw + c * sw; c = c * cw - s * sw; s = s2; e += de; }
+  st[0] = s; st[1] = c;
+}
 
-/* Rendu d'une boucle parfaite. Générateur : émet la progression (0..1), renvoie le résultat. */
-function* engine(an, p) {
-  const { n, gw, gh } = an;
-  const Ls = Math.max(HOP * 8, Math.round(p.dur * SR)), D = Ls / SR;
-  const K = Math.max(8, Math.round(Ls / HOP)), hopSec = D / K;
+/* Préparation commune : durée exacte, trajet de la tête, largeur de la gaussienne le long du trajet.
+   Pour un aperçu rapide, les mêmes voix sont calculées à une fréquence d'échantillonnage plus basse (p.sr) :
+   même son, mêmes battements, moins de détail dans l'aigu. */
+function prep(an, p) {
+  const sr = p.sr || SR, hop = Math.max(16, Math.round(HOP * sr / SR));
+  const { gw, gh } = an;
+  const Ls = Math.max(hop * 8, Math.round(p.dur * sr)), D = Ls / sr;
+  const K = Math.max(8, Math.round(Ls / hop)), hopSec = D / K;
   const { hx, hy } = samplePath(buildPath(p.path, gw, gh), K);
 
-  /* Largeur de la gaussienne le long du parcours : zone unie → large, zone contrastée → étroite. */
+  /* Largeur de la gaussienne le long du trajet : zone unie → large, zone contrastée → étroite. */
   const sg = new Float32Array(K), inv = new Float32Array(K), gn = new Float32Array(K);
   for (let k = 0; k < K; k++) {
     const ix = Math.min(gw - 1, Math.max(0, Math.floor(hx[k]))), iy = Math.min(gh - 1, Math.max(0, Math.floor(hy[k])));
@@ -346,14 +352,23 @@ function* engine(an, p) {
 
   const bound = new Int32Array(K + 1);
   for (let k = 0; k <= K; k++) bound[k] = Math.round(k * Ls / K);
-  const L = new Float32Array(Ls), R = new Float32Array(Ls), env = new Float32Array(K);
-  const freq = new Float32Array(n);
   const lo = Math.max(0.05, Math.min(p.fmin, p.fmax)), hi = Math.max(lo + 0.01, Math.max(p.fmin, p.fmax));
-  const shp = p.shape || 1;
-  const wv = { saw: 0, square: 1, triangle: 2, sine: 3 }[p.wave] || 0;
+  /* Le poids d'une voix est le produit d'un poids par colonne et d'un poids par ligne : on les calcule une fois.
+     La forme du sommet passe par une petite table, bien plus rapide qu'un logarithme et une puissance par point. */
+  const WX = [], WY = [], shp = p.shape || 1, lut = new Float32Array(1026);
+  for (let x = 0; x < gw; x++) { const a = new Float32Array(K), cx = x + 0.5; for (let k = 0; k < K; k++) a[k] = mirrorW(hx[k], cx, gw, inv[k]); WX.push(a); }
+  for (let y = 0; y < gh; y++) { const a = new Float32Array(K), cy = y + 0.5; for (let k = 0; k < K; k++) a[k] = mirrorW(hy[k], cy, gh, inv[k]); WY.push(a); }
+  for (let i = 0; i < 1026; i++) lut[i] = flatTop(Math.min(1, i / 1024), shp);
+  return { sr, Ls, D, K, hopSec, hx, hy, sg, inv, gn, bound, lo, hi, shp, WX, WY, lut, wv: { saw: 0, square: 1, triangle: 2, sine: 3 }[p.wave] || 0 };
+}
 
-  for (let i = 0; i < n; i++) {
-    const c = i % gw, r = (i / gw) | 0, cx = c + 0.5, cy = r + 0.5;
+/* Ajoute dans L et R les voix d'indice start, start + step, … Générateur : émet la progression (0..1).
+   Découper par indices permet de répartir le calcul entre plusieurs fils. */
+function* voices(an, p, c, L, R, freq, start, step) {
+  const { n, gw } = an, { K, gn, bound, Ls, D, hopSec, lo, hi, shp, wv, WX, WY, lut } = c;
+  const env = new Float32Array(K), st = new Float64Array(2);
+  for (let i = start; i < n; i += step) {
+    const col = i % gw, wx = WX[col], wy = WY[(i / gw) | 0];
     /* Note du pixel */
     let pp = an.lum[i];
     const v = 1 - p.dyn * (1 - an.lum[i] * an.lum[i]);
@@ -365,15 +380,17 @@ function* engine(an, p) {
     f = tuneFreq(f, p.tune);
     const mcyc = Math.max(1, Math.round(f * D));   /* nombre entier de cycles : la boucle se referme sans clic */
     freq[i] = mcyc / D;
-    if (v < 0.004) { if ((i & 15) === 0) yield i / n; continue; }
+    if (v < 0.004) { yield i / n; continue; }
 
     /* Enveloppe : passage(s) de la gaussienne sur ce pixel */
     let mx = 0;
     for (let k = 0; k < K; k++) {
-      const e = gn[k] * flatTop(mirrorW(hx[k], cx, gw, inv[k]) * mirrorW(hy[k], cy, gh, inv[k]), shp);
+      const w = wx[k] * wy[k]; let e = 0;
+      if (w >= 1) e = gn[k] * (shp === 1 ? w : 1);
+      else if (w >= EPS) { const t = w * 1024, i0 = t | 0; e = gn[k] * (lut[i0] + (lut[i0 + 1] - lut[i0]) * (t - i0)); }
       env[k] = e; if (e > mx) mx = e;
     }
-    if (mx * v < EPS) { if ((i & 15) === 0) yield i / n; continue; }
+    if (mx * v < EPS) { yield i / n; continue; }
     /* Résonance : la voix s'éteint plus ou moins vite après le passage */
     const tau = p.ring * Math.pow(4, p.autoRing * (2 * an.sat[i] - 1));
     if (tau > 0.002) {
@@ -381,26 +398,36 @@ function* engine(an, p) {
       for (let pass = 0; pass < 2; pass++) for (let k = 0; k < K; k++) { e *= rr; if (env[k] > e) e = env[k]; else env[k] = e; }
     }
     /* Place dans la scène stéréo */
-    const xn = gw > 1 ? c / (gw - 1) : 0.5, th = (Math.PI / 2) * (0.5 + (xn - 0.5) * p.stereo);
+    const xn = gw > 1 ? col / (gw - 1) : 0.5, th = (Math.PI / 2) * (0.5 + (xn - 0.5) * p.stereo);
     const gl = Math.cos(th) * v, gr = Math.sin(th) * v;
     const dph = mcyc / Ls;
 
     const ph0 = Math.abs(Math.sin(i * 12.9898 + 4.1) * 43758.5453) % 1;   /* phase propre à chaque voix */
+    const wr = 6.283185307179586 * dph, cw = Math.cos(wr), sw = Math.sin(wr); let run = false;
     for (let k = 0; k < K; k++) {
       const e0 = env[k], e1 = env[k + 1 === K ? 0 : k + 1];
-      if (e0 < EPS && e1 < EPS) continue;
+      if (e0 < EPS && e1 < EPS) { run = false; continue; }
       const n0 = bound[k], n1 = bound[k + 1];
       let ph = ((mcyc * n0) % Ls) / Ls + ph0; if (ph >= 1) ph -= 1;
-      voice(L, R, n0, n1, ph, dph, e0, (e1 - e0) / (n1 - n0), gl, gr, wv);
+      if (wv !== 3) voice(L, R, n0, n1, ph, dph, e0, (e1 - e0) / (n1 - n0), gl, gr, wv);
+      else {
+        if (!run) { st[0] = Math.sin(6.283185307179586 * ph); st[1] = Math.cos(6.283185307179586 * ph); run = true; }
+        sineSeg(L, R, n0, n1, st, cw, sw, e0, (e1 - e0) / (n1 - n0), gl, gr);
+      }
     }
     yield i / n;
   }
+}
+
+/* Mise à niveau, puis mesure de ce que le son fait réellement (pour l'image animée). */
+function finish(an, p, c, L, R, freq) {
+  const { gw, gh } = an, { K, hx, hy, sg, bound, Ls, D, hopSec, lo, hi, sr } = c;
   let peak = 0;
   for (let j = 0; j < Ls; j++) { const a = Math.abs(L[j]), b = Math.abs(R[j]); if (a > peak) peak = a; if (b > peak) peak = b; }
   if (peak > 0) {
     /* Niveau : on vise la même force perçue quelle que soit la forme d'onde. La force est mesurée après un filtre
        proche de la sensibilité de l'oreille (le grave compte peu, le médium beaucoup), puis le gain est plafonné pour ne jamais saturer. */
-    const a = Math.exp(-6.283185307179586 * 400 / SR); let pw = 0;
+    const a = Math.exp(-6.283185307179586 * 400 / sr); let pw = 0;
     for (const ch of [L, R]) {
       let x1 = 0, y1 = 0, x2 = 0, y2 = 0;
       for (let pass = 0; pass < 2; pass++) for (let j = 0; j < Ls; j++) {
@@ -411,7 +438,6 @@ function* engine(an, p) {
     const loud = Math.sqrt(pw / (2 * Ls)), g = Math.min(0.89 / peak, loud > 1e-9 ? LOUD / loud : 1e9);
     for (let j = 0; j < Ls; j++) { L[j] *= g; R[j] *= g; }
   }
-  /* Pour l'image : ce que le son fait réellement à chaque instant de la boucle. */
   const venv = new Float32Array(K), pn = new Float32Array(K), phs = new Float32Array(K + 1);
   for (let k = 0; k < K; k++) { let a = 0; for (let j = bound[k]; j < bound[k + 1]; j++) a += L[j] * L[j] + R[j] * R[j]; venv[k] = Math.sqrt(a / (2 * Math.max(1, bound[k + 1] - bound[k]))); }
   const lf0 = Math.log(lo), lf1 = Math.log(hi);
@@ -426,7 +452,25 @@ function* engine(an, p) {
   let acc = 0; for (let k = 0; k < K; k++) { phs[k] = acc; acc += (1.2 + 5 * pn[k]) * hopSec; }
   const turns = Math.max(1, Math.round(acc)) / Math.max(1e-6, acc) * 6.283185307179586;
   phs[K] = acc; for (let k = 0; k <= K; k++) phs[k] *= turns;
-  return { L, R, dur: D, K, hx, hy, sg, freq, gw, gh, peak, env: venv, pn, phs, hopSec };
+  return { L, R, sr, dur: D, K, hx, hy, sg, freq, gw, gh, peak, env: venv, pn, phs, hopSec };
+}
+
+/* Rendu d'une boucle parfaite sur un seul fil. Générateur : émet la progression (0..1), renvoie le résultat. */
+function* engine(an, p) {
+  const c = prep(an, p), L = new Float32Array(c.Ls), R = new Float32Array(c.Ls), freq = new Float32Array(an.n);
+  yield* voices(an, p, c, L, R, freq, 0, 1);
+  return finish(an, p, c, L, R, freq);
+}
+
+/* Dans un fil de calcul (worker), ce même fichier reçoit une part des voix et renvoie sa somme. */
+function workerMain() {
+  self.onmessage = e => {
+    const { an, p, start, step } = e.data, c = prep(an, p);
+    const L = new Float32Array(c.Ls), R = new Float32Array(c.Ls), freq = new Float32Array(an.n);
+    let t = Date.now();
+    for (const f of voices(an, p, c, L, R, freq, start, step)) { if (Date.now() - t > 60) { self.postMessage({ f }); t = Date.now(); } }
+    self.postMessage({ L, R, freq }, [L.buffer, R.buffer, freq.buffer]);
+  };
 }
 
 /* WAV 16 bits stéréo, puis archive ZIP (sans compression). */
@@ -500,7 +544,7 @@ const cv = $("cv"), ctx = cv.getContext("2d");
 const src = document.createElement("canvas"), off = document.createElement("canvas");
 let imgName = "manekineko", sel = { x: 0.1, y: 0.1, w: 0.8, h: 0.8 };
 let an = null, gw = 0, gh = 0, pathPts = [];
-let R = null, job = 0, timer = 0;
+let R = null, job = 0, timer = 0, busy = false, prog = 0, statTxt = "";
 let actx = null, master = null, cur = null, startAt = 0, playing = false, dl = null;
 const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -557,7 +601,7 @@ function changed(liveOnly) {
   const free = P.sig === "libre";
   $("row_bpm").classList.toggle("off", free); $("row_bars").classList.toggle("off", free); $("row_freeDur").classList.toggle("off", !free);
   if (liveOnly) return;
-  refreshPixels();
+  refreshPixels(); markBusy();
   clearTimeout(timer); timer = setTimeout(rerender, 260);
 }
 
@@ -590,38 +634,128 @@ function refreshPixels() {
   cols = new Array(gw * gh); for (let i = 0; i < gw * gh; i++) cols[i] = "rgb(" + data[4 * i] + "," + data[4 * i + 1] + "," + data[4 * i + 2] + ")";
   pathPts = buildPath(P.path, gw, gh);
   let len = 0; for (let i = 1; i < pathPts.length; i++) len += Math.hypot(pathPts[i][0] - pathPts[i - 1][0], pathPts[i][1] - pathPts[i - 1][1]);
-  $("stat").textContent = getDur().toFixed(2) + " s · " + gw * gh + " px · " + Math.round(1000 * getDur() / Math.max(1, len)) + " ms/px";
+  statTxt = getDur().toFixed(2) + " s · " + gw * gh + " px · " + Math.round(1000 * getDur() / Math.max(1, len)) + " ms/px";
+  paintLine();
 }
 
 /* ── Rendu audio ── */
 function say(t) { $("msg").textContent = t || ""; }
-async function rerender() {
-  if (!an) return;
-  const my = ++job, a = an;
-  const p = { dur: getDur(), path: P.path, sigma: P.sigma / 100 * Math.max(a.gw, a.gh), autoSigma: P.infl / 100, shape: 1 + 3 * P.flat / 100, ring: P.ring, autoRing: P.infl / 100,
-    wave: P.wave, fmin: P.fmin, fmax: P.fmax, scale: P.scale, tune: P.tune === "penta" ? "penta" : P.tune, dyn: P.dyn / 100, stereo: P.stereo / 100 };
-  const gen = engine(a, p); let t = performance.now(), res;
-  $("prog").style.width = "2%";
+/* Ligne d'état sous l'image : les chiffres de la boucle au repos, une barre bien visible pendant le calcul. */
+function paintLine() {
+  const el = $("line");
+  if (busy) {
+    const n = 20, k = Math.round(prog * n), heard = R && R.preview && R.gw === gw && R.gh === gh;
+    el.textContent = "calcul " + "▓".repeat(k) + "░".repeat(n - k) + " " + String(Math.round(prog * 100)).padStart(3) + " %" + (heard ? " · aperçu" : "");
+  } else el.textContent = statTxt;
+  el.classList.toggle("busy", busy);
+}
+/* Un réglage vient de changer : le calcul en cours ne vaut plus rien, on le dit tout de suite. */
+function markBusy() { ++job; killWorkers(); busy = true; prog = 0; paintLine(); }
+
+/* ── Calcul : plusieurs fils en parallèle, aperçu rapide puis rendu complet ── */
+let workerURL = null, workers = [], cancelRun = null, runId = 0, useWorkers = !!window.Worker;
+function killWorkers() {
+  runId++; workers.forEach(w => w.terminate()); workers = [];
+  if (cancelRun) { const c = cancelRun; cancelRun = null; c(); }
+}
+/* Répartit les voix entre plusieurs fils de calcul et additionne leurs sorties. */
+function runWorkers(a, p, onProg) {
+  const c = prep(a, p), cores = Math.max(1, Math.min(8, navigator.hardwareConcurrency || 4));
+  const N = Math.max(1, Math.min(cores, Math.ceil(a.n * c.Ls / 2e7), Math.floor(16e7 / (8 * c.Ls)) || 1));
+  const L = new Float32Array(c.Ls), Rr = new Float32Array(c.Ls), freq = new Float32Array(a.n), fr = new Float32Array(N);
+  const slim = { n: a.n, gw: a.gw, gh: a.gh, hue: a.hue, sat: a.sat, lum: a.lum, chr: a.chr, con: a.con, colour: a.colour };
+  return new Promise((ok, fail) => {
+    if (!workerURL) workerURL = URL.createObjectURL(new Blob([$("engine").textContent + "\nworkerMain();"], { type: "text/javascript" }));
+    let done = 0;
+    cancelRun = () => fail(new Error("annulé"));
+    for (let w = 0; w < N; w++) {
+      const wk = new Worker(workerURL); workers.push(wk);
+      wk.onerror = () => { cancelRun = null; workers.forEach(x => x.terminate()); workers = []; fail(new Error("fil")); };
+      wk.onmessage = e => {
+        const d = e.data;
+        if (d.f !== undefined) fr[w] = d.f;
+        else {
+          for (let j = 0; j < c.Ls; j++) { L[j] += d.L[j]; Rr[j] += d.R[j]; }
+          for (let i = 0; i < a.n; i++) freq[i] += d.freq[i];
+          fr[w] = 1; wk.terminate();
+          if (++done === N) { cancelRun = null; workers = []; ok(finish(a, p, c, L, Rr, freq)); return; }
+        }
+        let s = 0; for (let i = 0; i < N; i++) s += fr[i]; onProg(s / N);
+      };
+      wk.postMessage({ an: slim, p, start: w, step: N });
+    }
+  });
+}
+/* Même calcul sur le fil de la page, par petites tranches, pour les navigateurs sans fils de calcul. */
+async function runHere(a, p, onProg) {
+  const id = runId, gen = engine(a, p); let t = performance.now();
   for (;;) {
     const r = gen.next();
-    if (r.done) { res = r.value; break; }
+    if (r.done) return r.value;
     if (performance.now() - t > 22) {
-      $("prog").style.width = Math.round(r.value * 100) + "%";
-      await new Promise(ok => setTimeout(ok, 0));
-      if (my !== job) return;
+      onProg(r.value); await new Promise(ok => setTimeout(ok, 0));
+      if (id !== runId) throw new Error("annulé");
       t = performance.now();
     }
   }
-  if (my !== job) return;
-  $("prog").style.width = "0";
-  const u = playing && R ? ((actx.currentTime - startAt) % R.dur) / R.dur : 0;
+}
+async function runJob(a, p, onProg) {
+  if (useWorkers) {
+    try { return await runWorkers(a, p, onProg); }
+    catch (e) { if (e.message === "annulé") throw e; useWorkers = false; }
+  }
+  return runHere(a, p, onProg);
+}
+/* Réglages de l'aperçu : mêmes voix, fréquence d'échantillonnage réduite sans perdre les notes les plus hautes. */
+function previewParams(p, est) {
+  const hi = Math.max(p.fmin, p.fmax); let div = est > 4 ? 8 : 4;
+  while (div > 2 && SR / div < 5 * hi) div /= 2;
+  return Object.assign({}, p, { sr: SR / div });
+}
+function applyResult(res) {
+  const u = playing && R && actx ? (((playTime() % R.dur) + R.dur) % R.dur) / R.dur : 0;
   R = res; R.name = imgName;
-  say(res.peak > 0 ? "" : "Cette sélection ne produit aucun son : augmente la largeur ou baisse la dynamique.");
+  if (!res.preview) say(res.peak > 0 ? "" : "Cette sélection ne produit aucun son : augmente la largeur ou baisse la dynamique.");
   if (playing && !rec) startSource(u * R.dur);
 }
+async function rerender() {
+  if (!an) return;
+  killWorkers();
+  const my = ++job, a = an;
+  const p = { dur: getDur(), path: P.path, sigma: P.sigma / 100 * Math.max(a.gw, a.gh), autoSigma: P.infl / 100, shape: 1 + 3 * P.flat / 100, ring: P.ring, autoRing: P.infl / 100,
+    wave: P.wave, fmin: P.fmin, fmax: P.fmax, scale: P.scale, tune: P.tune, dyn: P.dyn / 100, stereo: P.stereo / 100 };
+  const show = v => { if (my === job) { prog = v; paintLine(); } };
+  busy = true; prog = 0; paintLine();
+  try {
+    /* Le rendu complet démarre tout de suite. S'il s'annonce long, on l'interrompt le temps de calculer un aperçu,
+       qu'on fait entendre aussitôt, puis on reprend le rendu complet. */
+    const t0 = performance.now(); let full = runJob(a, p, show); full.catch(() => {});
+    let res = await Promise.race([full, new Promise(ok => setTimeout(() => ok(null), 450))]);
+    if (!res) {
+      const est = (performance.now() - t0) / 1000 / Math.max(prog, 0.01);
+      if (est > 1.6) {
+        killWorkers();
+        const pv = await runJob(a, previewParams(p, est), () => {});
+        if (my !== job) return;
+        pv.preview = true; applyResult(pv); prog = 0; paintLine();
+        full = runJob(a, p, show);
+      }
+      res = await full;
+    }
+    if (my !== job) return;
+    busy = false; applyResult(res); paintLine();
+  } catch (e) {
+    if (my === job) { busy = false; paintLine(); say("Le calcul n'a pas abouti. Change un réglage pour le relancer."); }
+  }
+}
 function startSource(offset, opt) {
-  const buf = actx.createBuffer(2, R.L.length, SR);
-  buf.copyToChannel(R.L, 0); buf.copyToChannel(R.R, 1);
+  let buf; const sr = R.sr || SR;
+  try { buf = actx.createBuffer(2, R.L.length, sr); buf.copyToChannel(R.L, 0); buf.copyToChannel(R.R, 1); }
+  catch (e) {
+    /* Navigateur qui refuse cette fréquence d'échantillonnage : on ramène l'aperçu à la fréquence normale. */
+    const m = Math.round(SR / sr), up = x => { const o = new Float32Array(x.length * m); for (let i = 0; i < x.length; i++) { const a = x[i], b = x[(i + 1) % x.length]; for (let j = 0; j < m; j++) o[i * m + j] = a + (b - a) * j / m; } return o; };
+    buf = actx.createBuffer(2, R.L.length * m, SR); buf.copyToChannel(up(R.L), 0); buf.copyToChannel(up(R.R), 1);
+  }
   const s = actx.createBufferSource(), g = actx.createGain(), now = actx.currentTime;
   s.buffer = buf; s.loop = !(opt && opt.once); s.connect(g); g.connect(master); if (opt && opt.dest) g.connect(opt.dest);
   g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(1, now + 0.04);
@@ -672,7 +806,7 @@ async function deliver(filename, blob, zipName) {
   }
 }
 async function exportWav() {
-  if (!R) { say("Le son est encore en cours de calcul."); return; }
+  if (!R || R.preview || busy) { say("Le calcul complet n'est pas terminé : attends la fin de la barre."); return; }
   const base = baseName();
   await deliver(base + ".wav", new Blob([wavBytes(R.L, R.R)], { type: "audio/wav" }), dl ? base + ".zip" : null);
 }
@@ -683,7 +817,7 @@ xcan.style.cssText = "position:fixed;left:-9999px;top:0;width:8px;height:8px"; d
 let rec = null;
 function exportVideo() {
   if (rec) { togglePlay(); return; }
-  if (!R || R.gw !== gw || R.gh !== gh) { say("Le son est encore en cours de calcul."); return; }
+  if (!R || R.preview || busy || R.gw !== gw || R.gh !== gh) { say("Le calcul complet n'est pas terminé : attends la fin de la barre."); return; }
   /* MP4 H.264 d'abord (lisible partout), sinon WebM, et en dernier le MP4 générique du navigateur. */
   const types = ['video/mp4;codecs="avc1.42E01E,mp4a.40.2"', "video/mp4;codecs=avc1.42E01E,mp4a.40.2", "video/mp4;codecs=avc1,mp4a.40.2", "video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm", "video/mp4"];
   const mime = window.MediaRecorder && xcan.captureStream ? types.find(m => MediaRecorder.isTypeSupported(m)) : null;
@@ -851,7 +985,7 @@ cv.addEventListener("pointermove", e => {
   }
   refreshPixels();
 });
-const endDrag = () => { if (!drag) return; drag = null; clearTimeout(timer); timer = setTimeout(rerender, 120); };
+const endDrag = () => { if (!drag) return; drag = null; markBusy(); clearTimeout(timer); timer = setTimeout(rerender, 120); };
 cv.addEventListener("pointerup", endDrag); cv.addEventListener("pointercancel", endDrag);
 
 /* ── Démarrage ── */

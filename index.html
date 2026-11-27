@@ -171,6 +171,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <dt>width</dt><dd>Width of the window, as a share of the area. Around 50 %, nearly every pixel sings at once.</dd>
     <dt>resonance</dt><dd>How long a voice keeps ringing after the window has passed.</dd>
     <dt>influence</dt><dd>How much the image drives width and resonance. Flat areas widen the window, busy areas narrow it, vivid colours ring longer.</dd>
+    <dt>relief</dt><dd>Makes the window roll over the image like a marble on a roller coaster, where the height of the ground is the pitch of the pixels. Climbing towards high notes costs it speed, so it lingers on the peaks; going down it speeds up and rushes through the low notes. At 0 it moves at a steady pace; at 100 % it is about six times slower on the highest note than on the lowest. The loop keeps its length and still closes seamlessly. Not applied in camera mode.</dd>
     <dt>wave</dt><dd>Waveform of every voice: sine, triangle, saw or square.</dd>
     <dt>low, high</dt><dd>Lowest and highest pitch. The sliders move by semitones from C0 to B6, and the note name is shown next to the value. To set any other frequency, type it in hertz: for example 5 for rumbles and beats.</dd>
     <dt>scale</dt><dd>Linear or logarithmic (log) spread of the pitches between those two limits.</dd>
@@ -195,7 +196,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>On a phone held upright, the settings are laid out as pages side by side: swipe sideways, or tap a section name under the image (source, function, sound, EQ, time, anim, settings).</li>
     <li>On an iPhone or iPad, the sound plays even when the silent switch is on, like a music app. Use the volume buttons.</li>
   </ul>
-  <p class="ver">version A · 575e18f</p>
+  <p class="ver">version A · 0b3324e</p>
   </div>
   <div data-doc="fr" lang="fr">
   <p>image2saw : des pixels aux paysages sonores.</p>
@@ -224,6 +225,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <dt>largeur</dt><dd>Largeur de la fenêtre, en part de la zone. Vers 50 %, presque tous les pixels chantent en même temps.</dd>
     <dt>résonance</dt><dd>Durée pendant laquelle une voix continue de sonner après le passage de la fenêtre.</dd>
     <dt>influence</dt><dd>Part que prend l'image dans la largeur et la résonance. Les zones unies élargissent la fenêtre, les zones chargées la resserrent, les couleurs vives résonnent plus longtemps.</dd>
+    <dt>relief</dt><dd>Fait rouler la fenêtre sur l'image comme une bille sur des montagnes russes, où la hauteur du terrain est la hauteur de note des pixels. Monter vers les notes aiguës lui coûte de la vitesse : elle s'attarde sur les points hauts ; en descente elle accélère et file dans les notes graves. À 0 elle avance à pas régulier ; à 100 % elle est environ six fois plus lente sur la note la plus haute que sur la plus basse. La boucle garde sa durée et se referme toujours sans clic. Sans effet en mode caméra.</dd>
     <dt>onde</dt><dd>Forme d'onde de chaque voix : sinus, triangle, scie ou carré.</dd>
     <dt>grave, aigu</dt><dd>Note la plus basse et la plus haute. Les curseurs avancent par demi-tons de C0 à B6, et le nom de la note s'affiche à côté de la valeur. Pour toute autre fréquence, tape-la en hertz : par exemple 5 pour des grondements et des battements.</dd>
     <dt>échelle</dt><dd>Répartition linéaire ou logarithmique (log) des hauteurs entre ces deux limites.</dd>
@@ -248,7 +250,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Sur un téléphone tenu debout, les réglages sont des pages côte à côte : glisse de côté, ou touche le nom d'une section sous l'image (source, fonction, son, EQ, temps, animation, réglages).</li>
     <li>Sur iPhone ou iPad, le son joue même avec le bouton silencieux, comme une application de musique. Utilise les boutons de volume.</li>
   </ul>
-  <p class="ver">version A · 575e18f</p>
+  <p class="ver">version A · 0b3324e</p>
   </div>
 </article>
 <main>
@@ -291,6 +293,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
       <div data-s="sigma"></div>
       <div data-s="ring"></div>
       <div data-s="infl"></div>
+      <div data-s="relief"></div>
     </section>
     <section>
       <h2>son</h2>
@@ -344,7 +347,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
       <div class="row wide" id="row_lang"><span>langue</span><div class="seg" id="langseg"><button type="button" data-lang="fr" aria-pressed="false">français</button><button type="button" data-lang="en" aria-pressed="false">english</button></div></div>
     </section>
     </div>
-    <p class="ver">pixels to soundscape patterns · A · 575e18f</p>
+    <p class="ver">pixels to soundscape patterns · A · 0b3324e</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>
@@ -458,13 +461,36 @@ function chaosPath(gw, gh, seed) {
 }
 
 /* Échantillonne le parcours à vitesse constante en K points. */
-function samplePath(pts, K) {
+/* Relief : la fenêtre roule sur l'image comme une bille sur des montagnes russes. La hauteur du terrain est la
+   hauteur de note des pixels traversés. En montée la bille perd de la vitesse, en descente elle en reprend et
+   accélère : elle s'attarde sur les sommets (notes aiguës) et file dans les creux. L'énergie se conserve, donc le
+   mouvement se referme exactement sur lui-même, et la boucle garde sa durée.
+   Renvoie, pour K instants réguliers, la fraction de trajet parcourue. */
+function reliefWarp(an, pts, K, amount) {
+  const M = 2048, flat = samplePath(pts, M), h = new Float32Array(M), { gw, gh } = an;
+  for (let m = 0; m < M; m++) {
+    const i = Math.min(gh - 1, Math.max(0, Math.floor(flat.hy[m]))) * gw + Math.min(gw - 1, Math.max(0, Math.floor(flat.hx[m])));
+    let pp = an.lum[i]; if (an.colour) { const cw = smoothstep(0.05, 0.2, an.chr[i]); pp = an.lum[i] * (1 - cw) + hueToPitch(an.hue[i]) * cw; }
+    h[m] = pp;
+  }
+  /* Le terrain est adouci sur à peu près un pixel de trajet, en tournant : pas de marche d'escalier, pas de couture. */
+  const w = Math.max(1, Math.round(M / Math.max(2, pts.length) * 0.75)), sm = new Float32Array(M); let lo = Infinity, hi = -Infinity;
+  for (let m = 0; m < M; m++) { let a = 0; for (let d = -w; d <= w; d++) a += h[(m + d + M * 8) % M]; sm[m] = a / (2 * w + 1); if (sm[m] < lo) lo = sm[m]; if (sm[m] > hi) hi = sm[m]; }
+  const span = hi - lo, out = new Float64Array(K); if (!(span > 1e-6)) { for (let k = 0; k < K; k++) out[k] = k / K; return out; }
+  /* Vitesse = racine de l'énergie restante : au plus haut, la bille garde un peu d'élan pour ne jamais s'arrêter. */
+  const T = new Float64Array(M + 1), a = 0.97 * Math.min(1, Math.max(0, amount));
+  for (let m = 0; m < M; m++) T[m + 1] = T[m] + 1 / Math.sqrt(1 - a * (sm[m] - lo) / span);
+  let j = 0;
+  for (let k = 0; k < K; k++) { const t = T[M] * k / K; while (j < M - 1 && T[j + 1] <= t) j++; out[k] = (j + (t - T[j]) / (T[j + 1] - T[j])) / M; }
+  return out;
+}
+function samplePath(pts, K, warp) {
   const cum = new Float64Array(pts.length);
   for (let i = 1; i < pts.length; i++) cum[i] = cum[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
   const total = cum[pts.length - 1] || 1, hx = new Float32Array(K), hy = new Float32Array(K);
   let j = 1;
   for (let k = 0; k < K; k++) {
-    const t = total * k / K;
+    const t = total * (warp ? warp[k] : k / K);
     while (j < pts.length - 1 && cum[j] < t) j++;
     const seg = cum[j] - cum[j - 1], f = seg > 0 ? (t - cum[j - 1]) / seg : 0;
     hx[k] = pts[j - 1][0] + (pts[j][0] - pts[j - 1][0]) * f;
@@ -530,7 +556,8 @@ function prep(an, p) {
   const { gw, gh } = an;
   const Ls = Math.max(hop * 8, Math.round(p.dur * sr)), D = Ls / sr;
   const K = Math.max(8, Math.round(Ls / hop)), hopSec = D / K;
-  const { hx, hy } = samplePath(p.pts || buildPath(p.path, gw, gh), K);   /* p.pts : parcours déjà tracé (chaos) */
+  const pts = p.pts || buildPath(p.path, gw, gh);   /* p.pts : parcours déjà tracé (chaos) */
+  const { hx, hy } = samplePath(pts, K, p.relief > 0 ? reliefWarp(an, pts, K, p.relief) : null);
 
   /* Largeur de la gaussienne le long du trajet : zone unie → large, zone contrastée → étroite. */
   const sg = new Float32Array(K), inv = new Float32Array(K), gn = new Float32Array(K);
@@ -871,7 +898,7 @@ const fmtHz = v => String(Number(v.toFixed(v < 100 ? 2 : v < 1000 ? 1 : 0)));
 /* Réglages retirés de l'interface et figés à leur ancienne valeur par défaut : sommet 50 %, découverte 100 %, dynamique 60 %. */
 const FIXED = { shape: 2.5, disc: 1, dyn: 0.6 };
 
-const P = { grid: 16, path: "cycleH", sigma: 15, ring: 0.25, infl: 60,
+const P = { relief: 0, grid: 16, path: "cycleH", sigma: 15, ring: 0.25, infl: 60,
   wave: "sine", fmin: noteHz(0), fmax: noteHz(59), scale: "lin", tune: "libre", stereo: 80,
   sig: "4/4", bpm: 120, bars: "4", freeDur: 8, wobble: 50, seed: 1, death: 0, fps: 12, zoom: 1, rhythm: 0, rseed: 1, dmix: 50,
   eq0: 0, eq1: 0, eq2: 0, eq3: 0, eq4: 0, eq5: 0, eq6: 0 };
@@ -884,6 +911,7 @@ const SLIDERS = {
   sigma:   { label: "largeur", min: 2, max: 100, step: 1, unit: "%", log: true },
   ring:    { label: "résonance", min: 0, max: 2, step: 0.01, unit: "s" },
   infl:    { label: "influence", min: 0, max: 100, step: 1, unit: "%" },
+  relief:  { label: "relief", min: 0, max: 100, step: 1, unit: "%" },
   fmin:    { label: "grave", min: 0.5, max: 4000, step: 0.01, unit: "Hz", note: true },
   fmax:    { label: "aigu", min: 0.5, max: 4000, step: 0.01, unit: "Hz", note: true },
   stereo:  { label: "stéréo", min: 0, max: 100, step: 1, unit: "%" },
@@ -1278,7 +1306,7 @@ async function rerender() {
   killWorkers();
   const my = ++job, a = an;
   const tag = r => { if (r) r.an = a; return r; };
-  const p = { dur: getDur(), path: P.path, pts: P.path === "chaos" ? pathPoints(a.gw, a.gh) : null, sigma: P.sigma / 100 * Math.max(a.gw, a.gh), autoSigma: P.infl / 100, shape: FIXED.shape, disc: FIXED.disc, ring: P.ring, autoRing: P.infl / 100,
+  const p = { dur: getDur(), path: P.path, pts: P.path === "chaos" ? pathPoints(a.gw, a.gh) : null, sigma: P.sigma / 100 * Math.max(a.gw, a.gh), autoSigma: P.infl / 100, relief: P.relief / 100, shape: FIXED.shape, disc: FIXED.disc, ring: P.ring, autoRing: P.infl / 100,
     wave: P.wave, fmin: P.fmin, fmax: P.fmax, scale: P.scale, tune: P.tune, dyn: FIXED.dyn, stereo: P.stereo / 100 };
   const show = v => { if (my === job) { prog = v; paintLine(); } };
   busy = true; prog = 0; paintLine();

@@ -53,13 +53,13 @@ button:focus-visible,.filebtn:focus-within,input:focus-visible{outline:1px solid
 #msg:empty{display:none}
 .panel{display:grid;min-width:0;align-content:start}
 section{display:grid}
-/* Téléphone debout : les sections se feuillettent de gauche à droite, la suivante dépasse un peu pour le montrer. */
+/* Téléphone debout : les sections se feuillettent de gauche à droite, une seule à l'écran à la fois. */
 #tabs{display:flex;gap:14px;overflow-x:auto;margin:0 -16px -6px;padding:0 16px 3px;scrollbar-width:none;white-space:nowrap}
 #tabs::-webkit-scrollbar,.pages::-webkit-scrollbar{display:none}
 #tabs button{font:inherit;background:none;border:0;padding:6px 0;color:#909090;text-transform:uppercase;letter-spacing:.08em;cursor:pointer}
 #tabs button[aria-current=true]{color:var(--ink);box-shadow:0 1px 0 var(--ink)}
-.pages{display:flex;gap:20px;align-items:start;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 -16px;padding:0 16px;scroll-padding:0 16px;scrollbar-width:none;overscroll-behavior-x:contain}
-.pages > section{flex:0 0 92%;min-width:0;scroll-snap-align:start;position:relative}
+.pages{display:flex;gap:36px;align-items:start;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 -16px;padding:0 16px;scroll-padding:0 16px;scrollbar-width:none;overscroll-behavior-x:contain}
+.pages > section{flex:0 0 100%;min-width:0;scroll-snap-align:start;position:relative}
 .pages > section h2{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);margin:0}   /* les onglets font office de titres */
 .pages{padding-top:6px}
 .row input[type=range]{touch-action:pan-y}
@@ -173,7 +173,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>On a phone held upright, the settings are laid out as pages side by side: swipe sideways, or tap a section name under the image.</li>
     <li>On an iPhone or iPad, the sound plays even when the silent switch is on, like a music app. Use the volume buttons.</li>
   </ul>
-  <p class="ver">version A · acbdebe</p>
+  <p class="ver">version A · b632af2</p>
 </article>
 <main>
   <div class="stage">
@@ -264,7 +264,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
       </div>
     </section>
     </div>
-    <p class="ver">pixels to soundscape patterns · A · acbdebe</p>
+    <p class="ver">pixels to soundscape patterns · A · b632af2</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>

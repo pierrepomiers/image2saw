@@ -16,7 +16,7 @@
 html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--mono);font-size:13px;line-height:1.4}
 body{padding:0 16px 40px}
 header,main{max-width:1100px;margin:0 auto}
-header{padding:6px 0;color:var(--ink);white-space:nowrap;display:flex;justify-content:space-between;align-items:center;gap:12px;position:sticky;top:0;z-index:6;background:var(--bg);box-shadow:0 0 0 100vmax var(--bg);clip-path:inset(0 -100vmax)}
+header{padding:6px 0;color:var(--ink);white-space:nowrap;display:flex;justify-content:space-between;align-items:center;gap:12px;position:sticky;top:0;z-index:6;background:var(--bg);max-width:none;margin:0 -16px;padding:6px max(16px,calc((100% - 1100px) / 2 + 16px))}
 #doc{max-width:1100px;margin:0 auto;padding-bottom:24px}
 #doc p,#doc li,#doc dd{max-width:68ch}
 #doc h2{margin:22px 0 8px;font-size:13px;font-weight:400;color:var(--ink);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;display:flex;min-width:0}
@@ -59,15 +59,16 @@ section{display:grid}
 #tabs button{font:inherit;background:none;border:0;padding:6px 0;color:#909090;text-transform:uppercase;letter-spacing:.08em;cursor:pointer}
 #tabs button[aria-current=true]{color:var(--ink);box-shadow:0 1px 0 var(--ink)}
 .pages{display:flex;gap:20px;align-items:start;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 -16px;padding:0 16px;scroll-padding:0 16px;scrollbar-width:none;overscroll-behavior-x:contain}
-.pages > section{flex:0 0 92%;min-width:0;scroll-snap-align:start}
-.pages > section h2{margin-top:10px}
+.pages > section{flex:0 0 92%;min-width:0;scroll-snap-align:start;position:relative}
+.pages > section h2{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);margin:0}   /* les onglets font office de titres */
+.pages{padding-top:6px}
 .row input[type=range]{touch-action:pan-y}
 section h2{margin:26px 0 6px;font-size:13px;font-weight:400;color:var(--ink);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;display:flex;min-width:0}
 section h2::before{content:"▒▒▒";letter-spacing:0;margin-right:1ch}
 section h2::after{content:"▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒";letter-spacing:0;flex:1;min-width:0;overflow:hidden;order:2;margin-left:1ch;direction:rtl}
 section h2 i{font-style:normal;letter-spacing:0;order:3}
-.row{display:grid;grid-template-columns:10ch minmax(0,1fr) 9ch;gap:10px;align-items:center;min-height:36px}
-.row.wide{grid-template-columns:10ch minmax(0,1fr)}
+.row{display:grid;grid-template-columns:11ch minmax(0,1fr) 9ch;gap:10px;align-items:center;min-height:36px}
+.row.wide{grid-template-columns:11ch minmax(0,1fr)}
 .row > label,.row > span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .row.off{opacity:.3;pointer-events:none}
 .num{display:flex;justify-content:flex-end;align-items:baseline;gap:5px;color:var(--dim)}
@@ -109,14 +110,14 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
 @keyframes shake{0%{transform:translate(calc(var(--amp) * -1),var(--amp))}33%{transform:translate(var(--amp),calc(var(--amp) * -.6))}66%{transform:translate(calc(var(--amp) * -.4),calc(var(--amp) * -1))}}
 @media (prefers-reduced-motion:reduce){.shake{animation:none}}
 @media (orientation:landscape) and (min-width:560px), (min-width:900px){
-  header{padding:2px 0}
+  header{padding-top:2px;padding-bottom:2px}
   main{grid-template-columns:minmax(0,1.15fr) minmax(290px,.85fr);gap:22px;align-items:start}
   .stage{top:calc(var(--hh,0px) + 4px);margin:0;border:1px solid var(--line)}
   canvas{height:max(130px,calc(100vh - 186px));height:max(130px,calc(100dvh - 186px))}
   section:first-child h2{margin-top:0}
   #tabs{display:none}
   .pages{display:grid;overflow:visible;margin:0;padding:0;gap:0}
-  .pages > section h2{margin-top:26px}
+  .pages > section h2{position:static;width:auto;height:auto;overflow:visible;clip-path:none;margin:26px 0 6px}
   .pages > section:first-child h2{margin-top:0}
 }
 </style>
@@ -172,7 +173,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>On a phone held upright, the settings are laid out as pages side by side: swipe sideways, or tap a section name under the image.</li>
     <li>On an iPhone or iPad, the sound plays even when the silent switch is on, like a music app. Use the volume buttons.</li>
   </ul>
-  <p class="ver">version A · dbfb64e</p>
+  <p class="ver">version A · c4f3a74</p>
 </article>
 <main>
   <div class="stage">
@@ -263,7 +264,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
       </div>
     </section>
     </div>
-    <p class="ver">pixels to soundscape patterns · A · dbfb64e</p>
+    <p class="ver">pixels to soundscape patterns · A · c4f3a74</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>
@@ -1633,12 +1634,12 @@ function geom() {
 const WIDE = matchMedia("(orientation:landscape) and (min-width:560px), (min-width:900px)");
 function fitFrame() {
   if (WIDE.matches || !src.width) { cv.style.height = cv.style.width = ""; return; }
-  const full = $("line").clientWidth, r = src.height / src.width, h = Math.round(Math.max(120, Math.min(innerHeight * 0.52, full * r)));
+  const full = $("line").clientWidth, r = src.height / src.width, h = Math.round(Math.max(120, Math.min(document.documentElement.clientHeight * 0.46, full * r)));
   const w = Math.round(Math.min(full, Math.max(120, h / r)));   /* image haute : le cadre se resserre autour d'elle */
   if (cv.style.height !== h + "px") cv.style.height = h + "px";
   if (cv.style.width !== w + "px") cv.style.width = w + "px";
 }
-addEventListener("resize", fitFrame);
+addEventListener("resize", fitFrame); addEventListener("load", fitFrame); setTimeout(fitFrame, 400); setTimeout(fitFrame, 1500);   /* certains téléphones annoncent d'abord une mauvaise hauteur d'écran */
 /* Le bandeau du titre reste en haut ; la zone d'écoute se cale juste dessous. */
 const setHH = () => document.documentElement.style.setProperty("--hh", document.querySelector("header").offsetHeight + "px");
 addEventListener("resize", setHH); setHH();

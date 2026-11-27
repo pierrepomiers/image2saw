@@ -179,7 +179,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <dt>death sur</dt><dd>When <b>rythme</b> plays, doses what the distortion treats. Fully left (0, shown as <b>son</b>): the pixels only, the bass stays clean. In the middle (50, <b>tout</b>): everything, the default. Fully right (100, <b>rythme</b>): the bass only, the pixels stay clean. In between, the part being released slides gradually out of the distortion.</dd>
     <dt>égaliseur</dt><dd>Seven output faders, one per octave, each from −12 to +12 dB with a mark every 6 dB. The first one sets everything below 30 Hz. The last one sets everything above 2 kHz. The sliders stop at B6, just below, so it mostly shapes the harmonics that make the saw and square waves bright; only a pitch typed by hand can reach higher. The overall level is kept steady and never clips: cutting the lowest bands trades inaudible rumble for more level in the rest. [ plat ] sets all bands back to 0 dB.</dd>
     <dt>stéréo</dt><dd>Stereo width. The left of the image plays in the left speaker.</dd>
-    <dt>mesure, mesures, tempo</dt><dd>Loop length in bars, so that samples line up on the beat: a slower tempo makes a longer loop, shown in seconds under the image. Choose libre to set a length in seconds with durée, from half a second up to 180 s (three minutes), enough for a whole soundscape; long loops take longer to compute and to export.</dd>
+    <dt>mesure, mesures, tempo</dt><dd>Loop length in bars, so that samples line up on the beat: a slower tempo makes a longer loop, shown in seconds under the image. Choose libre to set a length in seconds with durée, from half a second up to 60 s, the length of an Instagram story; long loops take longer to compute and to export.</dd>
     <dt>wobble</dt><dd>Strength of the ripple on the image while it plays, up to 200 %. The ripple follows the real loudness and pitch of the sound.</dd>
     <dt>sauver, ouvrir, défauts</dt><dd>Save the settings to a .json file, load one back, or return to the starting values.</dd>
   </dl>
@@ -192,7 +192,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>On a phone held upright, the settings are laid out as pages side by side: swipe sideways, or tap a section name under the image.</li>
     <li>On an iPhone or iPad, the sound plays even when the silent switch is on, like a music app. Use the volume buttons.</li>
   </ul>
-  <p class="ver">version A · d0e6ffe</p>
+  <p class="ver">version A · 85dd08e</p>
 </article>
 <main>
   <div class="stage">
@@ -292,7 +292,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
       </div>
     </section>
     </div>
-    <p class="ver">pixels to soundscape patterns · A · d0e6ffe</p>
+    <p class="ver">pixels to soundscape patterns · A · 85dd08e</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>
@@ -839,7 +839,7 @@ const SLIDERS = {
   dmix:    { label: "death sur", min: 0, max: 100, step: 1, unit: "", dmx: true },
   death:   { label: "death", min: 0, max: 12, step: 1, unit: "/12", dth: true },
   bpm:     { label: "tempo", min: 40, max: 240, step: 1, unit: "bpm" },
-  freeDur: { label: "durée", min: 0.5, max: 180, step: 0.1, unit: "s", log: true },
+  freeDur: { label: "durée", min: 0.5, max: 60, step: 0.1, unit: "s", log: true },
   wobble:  { label: "wobble", min: 0, max: 200, step: 1, unit: "%", live: true },
   eq0:     { label: "<30", min: -12, max: 12, step: 1, unit: "dB", fx: true },
   eq1:     { label: "60", min: -12, max: 12, step: 1, unit: "dB", fx: true },
@@ -932,7 +932,7 @@ function changed(liveOnly) {
   if (liveOnly) return;
   if (cam) { refreshPixels(); camCfg(); return; }   /* en direct, rien à recalculer : le moteur reçoit les nouveaux réglages */
   refreshPixels(); markBusy();
-  clearTimeout(timer); timer = setTimeout(rerender, 260);
+  clearTimeout(timer); timer = setTimeout(rerender, getDur() > 45 ? 800 : 260);   /* longue boucle : on laisse finir le geste avant de recalculer */
 }
 
 /* ── Parcours : choix par flèches, tracé du chaos gardé en mémoire ── */
@@ -1075,7 +1075,7 @@ function rhythmSteps() {
 }
 function mixRhythm(res) {
   if (!res.dryL) { res.dryL = res.L; res.dryR = res.R; res.dryEnv = res.env; }
-  res.L = res.dryL; res.R = res.dryR; res.env = res.dryEnv; res.steps = null; res.mainL = res.mainR = res.bass = null;
+  res.L = res.dryL; res.R = res.dryR; res.env = res.dryEnv; res.steps = null; res.mg = 1; res.bass = null;
   const lvl = P.rhythm / 100, a = res.an || an; if (!(lvl > 0) || !a || !(res.peak > 0)) return;
   const { n, reps } = rhythmSteps(), pat = rhythmPattern(a, P.rseed, n), sr = res.sr || SR, Ls = res.dryL.length;
   let root = Math.max(1, P.fmin); while (root < 38) root *= 2; while (root >= 76) root /= 2;   /* fondamentale ramenée entre 38 et 76 Hz */
@@ -1088,9 +1088,9 @@ function mixRhythm(res) {
   const g = peak > 0.89 ? 0.89 / peak : 1;
   if (g < 1) for (let j = 0; j < Ls; j++) { L[j] *= g; R2[j] *= g; }
   /* Les deux parts sont gardées séparément, au même niveau que dans le mélange : death peut n'en traiter qu'une. */
-  const mL = new Float32Array(Ls), mR = new Float32Array(Ls), ga = g * amp;
-  for (let j = 0; j < Ls; j++) { mL[j] = res.dryL[j] * g; mR[j] = res.dryR[j] * g; b[j] *= ga; }
-  res.mainL = mL; res.mainR = mR; res.bass = b;
+  const ga = g * amp;
+  for (let j = 0; j < Ls; j++) b[j] *= ga;
+  res.mg = g; res.bass = b;   /* le son seul n'est pas recopié : c'est la boucle d'origine, jouée au gain mg */
   res.L = L; res.R = R2; res.env = env; res.steps = { n, reps, vel: pat.vel, idx: pat.idx, gw: a.gw, gh: a.gh };
 }
 let rhTimer = 0;
@@ -1197,14 +1197,14 @@ function startSource(offset, opt) {
   const mk = (part, name) => {
     const buf = makeBuffer(actx, part), s = actx.createBufferSource(), g = actx.createGain();
     s.buffer = buf; s.loop = !once; s.connect(g);
-    if (name) { const w = actx.createGain(), d = actx.createGain(); w.gain.value = sh[name].w; d.gain.value = sh[name].d; g.connect(w); w.connect(fx.input); g.connect(d); d.connect(dryBus); mix[name] = { w, d }; }
+    if (name) { const k = part.k || 1, w = actx.createGain(), d = actx.createGain(); w.gain.value = sh[name].w * k; d.gain.value = sh[name].d * k; g.connect(w); w.connect(fx.input); g.connect(d); d.connect(dryBus); mix[name] = { w, d, k }; }
     else g.connect(fx.input);
     g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(1, now + 0.04);
     s.start(now, Math.max(0, Math.min(offset, buf.duration - 0.001)));
     list.push({ s, g }); return s;
   };
   let s;
-  if (key) { s = mk({ L: R.mainL, R: R.mainR, sr: R.sr }, "main"); mk({ L: R.bass, R: R.bass, sr: R.sr }, "bass"); } else s = mk(R, "");
+  if (key) { s = mk({ L: R.dryL, R: R.dryR, sr: R.sr, k: R.mg }, "main"); mk({ L: R.bass, R: R.bass, sr: R.sr }, "bass"); } else s = mk(R, "");
   stopSource(0.04);
   cur = { s, list, key, mix }; startAt = now - offset; clkInit = false;
 }
@@ -1215,7 +1215,7 @@ function stopSource(fade) {
 }
 /* Le curseur « death sur » agit tout de suite sur les deux flux ; le niveau d'ensemble suit juste après. */
 function dmixChanged() {
-  if (cur && cur.key && actx) { const sh = dmixShares(), t = actx.currentTime; for (const k of ["main", "bass"]) { cur.mix[k].w.gain.setTargetAtTime(sh[k].w, t, 0.02); cur.mix[k].d.gain.setTargetAtTime(sh[k].d, t, 0.02); } }
+  if (cur && cur.key && actx) { const sh = dmixShares(), t = actx.currentTime; for (const k of ["main", "bass"]) { cur.mix[k].w.gain.setTargetAtTime(sh[k].w * cur.mix[k].k, t, 0.02); cur.mix[k].d.gain.setTargetAtTime(sh[k].d * cur.mix[k].k, t, 0.02); } }
   clearTimeout(eqTimer); eqTimer = setTimeout(setTrim, 180);
 }
 SETTERS.dtarget = v => { if (SETTERS.dmix) SETTERS.dmix(v === "son" ? 0 : v === "rythme" ? 100 : 50); };   /* anciens fichiers de réglages */
@@ -1280,21 +1280,32 @@ function buildFx(ctx) {
 }
 /* Rendu hors ligne de la boucle à travers death et l'égaliseur, avec exactement les mêmes modules qu'à l'écoute.
    On rend deux tours et on garde le second : filtres et compresseur y sont en régime, donc la boucle se raccorde. */
-async function renderFx(res) {
+/* Rendu hors ligne de death et de l'égaliseur, identique à l'écoute. Un court élan (la fin de la boucle) précède le
+   tour gardé, pour que les filtres et le compresseur soient en régime.
+   Avec brief, sur une longue boucle, on ne rend que quatre extraits de 8 s répartis sur sa durée : assez pour régler
+   le niveau, sans calculer ni garder en mémoire des minutes de son. La réponse porte ref, le son d'origine comparable. */
+async function renderFx(res, brief) {
   const OC = window.OfflineAudioContext || window.webkitOfflineAudioContext; if (!OC) return null;
-  const n = Math.round(res.dur * SR), oc = new OC(2, 2 * n, SR), s = oc.createBufferSource(), f = buildFx(oc), eq = buildEq(oc);
+  let v = res;
+  if (brief && res.dur > 40) {
+    const sr = res.sr || SR, m = Math.round(8 * sr), Ls = res.L.length;
+    const cut = x => { if (!x) return null; const o = new Float32Array(4 * m); for (let q = 0; q < 4; q++) o.set(x.subarray(Math.floor(q * Ls / 4), Math.floor(q * Ls / 4) + m), q * m); return o; };
+    const bass = cut(res.bass);
+    v = { L: cut(res.L), R: cut(res.R), dryL: res.bass ? cut(res.dryL) : null, dryR: res.bass ? cut(res.dryR) : null, bass, mg: res.mg, sr, dur: 32 };
+  }
+  const n = Math.round(v.dur * SR), lead = Math.min(v.dur * 0.999, 1.5), pre = Math.round(lead * SR), oc = new OC(2, pre + n, SR), s = oc.createBufferSource(), f = buildFx(oc), eq = buildEq(oc);
   f.set(P.death); f.output.connect(eq[0]); eq[eq.length - 1].connect(oc.destination);
-  if (routeKey(res)) {
+  if (routeKey(v)) {
     /* Même partage qu'à l'écoute entre death et le chemin direct retardé. */
     const lat = await fxLatency(), sh = dmixShares(), bus = oc.createDelay(0.1); bus.delayTime.value = lat; bus.connect(eq[0]);
-    for (const [name, part] of [["main", { L: res.mainL, R: res.mainR, sr: res.sr }], ["bass", { L: res.bass, R: res.bass, sr: res.sr }]]) {
+    for (const [name, part, k] of [["main", { L: v.dryL, R: v.dryR, sr: v.sr }, v.mg || 1], ["bass", { L: v.bass, R: v.bass, sr: v.sr }, 1]]) {
       const q = name === "main" ? s : oc.createBufferSource(), w = oc.createGain(), d = oc.createGain();
-      q.buffer = makeBuffer(oc, part); q.loop = true; w.gain.value = sh[name].w; d.gain.value = sh[name].d;
-      q.connect(w); w.connect(f.input); q.connect(d); d.connect(bus); q.start();
+      q.buffer = makeBuffer(oc, part); q.loop = true; w.gain.value = sh[name].w * k; d.gain.value = sh[name].d * k;
+      q.connect(w); w.connect(f.input); q.connect(d); d.connect(bus); q.start(0, v.dur - lead);
     }
-  } else { s.buffer = makeBuffer(oc, res); s.loop = true; s.connect(f.input); s.start(); }
+  } else { s.buffer = makeBuffer(oc, v); s.loop = true; s.connect(f.input); s.start(0, v.dur - lead); }
   const out = await new Promise((ok, no) => { oc.oncomplete = e => ok(e.renderedBuffer); const p = oc.startRendering(); if (p && p.then) p.then(ok, no); });
-  return { L: out.getChannelData(0).slice(n, 2 * n), R: out.getChannelData(1).slice(n, 2 * n) };
+  return { L: out.getChannelData(0).slice(pre, pre + n), R: out.getChannelData(1).slice(pre, pre + n), ref: v };
 }
 /* Les filtres réagissent tout de suite ; le niveau d'ensemble est recalculé juste après, sur le son traité. */
 function eqChanged() {
@@ -1309,7 +1320,7 @@ function paintDeath() {
 }
 function deathChanged() {
   paintDeath(); reroute();
-  if (cur && cur.key && actx) { const sh = dmixShares(), t = actx.currentTime; for (const k of ["main", "bass"]) { cur.mix[k].w.gain.setTargetAtTime(sh[k].w, t, 0.02); cur.mix[k].d.gain.setTargetAtTime(sh[k].d, t, 0.02); } }
+  if (cur && cur.key && actx) { const sh = dmixShares(), t = actx.currentTime; for (const k of ["main", "bass"]) { cur.mix[k].w.gain.setTargetAtTime(sh[k].w * cur.mix[k].k, t, 0.02); cur.mix[k].d.gain.setTargetAtTime(sh[k].d * cur.mix[k].k, t, 0.02); } }
   if (actx) {
     fx.set(P.death, actx.currentTime);
     /* En attendant le niveau exact, on baisse tout de suite : une saturation à plein niveau surprendrait. */
@@ -1317,6 +1328,7 @@ function deathChanged() {
   }
   clearTimeout(eqTimer); eqTimer = setTimeout(setTrim, 180);
 }
+let fxBusy = false, fxAgain = false;
 async function setTrim() {
   if (cam) {
     return;   /* en direct, c'est camLevel qui tient le niveau, en continu */
@@ -1324,9 +1336,13 @@ async function setTrim() {
   if (!R) return;
   const my = ++fxJob, res = R; let g = 1;
   if (P.death > 0) {
-    const e = await renderFx(res).catch(() => null);
+    /* Un seul rendu à la fois : des réglages enchaînés ne doivent pas empiler des calculs lourds en mémoire. */
+    if (fxBusy) { fxAgain = true; return; }
+    fxBusy = true; let e = null;
+    try { e = await renderFx(res, true); } catch (err) {} finally { fxBusy = false; }
+    if (fxAgain) { fxAgain = false; return setTrim(); }
     if (my !== fxJob || res !== R) return;
-    g = e ? fxGain(res, e) : 0.45;
+    g = e ? fxGain(e.ref, e) : 0.45;
   } else if (!eqFlat()) { const e = eqApply(res.L, res.R, res.sr || SR, eqGains()); g = levelGain(e.L, e.R, res.sr || SR).g; }
   trim = g;
   if (trimNode) trimNode.gain.setTargetAtTime(trim, actx.currentTime, 0.03);

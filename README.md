@@ -65,7 +65,7 @@ Sur un téléphone tenu debout, les sections de réglages sont des pages côte �
 
 **temps**
 - `mesure`, `mesures`, `tempo` : durée de la boucle en mesures (3/4, 4/4, 5/4, 6/8, 7/8). Un tempo plus lent donne une boucle plus longue.
-- `durée` : durée en secondes, quand la mesure est sur `libre`. D'une demi-seconde à 180 s (trois minutes), de quoi tenir un paysage sonore entier ; une longue boucle demande plus de temps de calcul et d'export.
+- `durée` : durée en secondes, quand la mesure est sur `libre`. D'une demi-seconde à 60 s, la durée d'une story Instagram ; une longue boucle demande plus de temps de calcul et d'export.
 
 **image animée**
 - `wobble` : force de l'ondulation de l'image pendant la lecture, jusqu'à 200 %. Elle suit le volume et la hauteur réels du son.

@@ -169,7 +169,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <dt>camera</dt><dd>Plays the live picture of the phone or computer camera instead of a still image: move the camera and the sound follows at once. [ flip ] switches between the back and front cameras. [ freeze ] keeps the current picture and goes back to the normal mode, where loops can be exported. While the camera runs, what needs a frozen loop is greyed out: <b>rhythm</b>, <b>death on</b> and the export signs. Every other setting works the same. Picking a demo image or loading one also leaves the camera. The live sound is held at the same loudness as the frozen loop. The camera only works when the page is opened in a browser such as Safari or Chrome, not inside Claude.</dd>
     <dt>zoom</dt><dd>With the camera, zooms in up to 8×. The lens zoom of the device is used when the browser gives access to it; beyond that, or without it, the picture is cropped around its centre.</dd>
     <dt>frames/s</dt><dd>With the camera, how many times per second the sound and the picture are refreshed, from 1 to 30. Low values give a stepped, stroboscopic result.</dd>
-    <dt>resolution</dt><dd>Number of pixels on the long side of the area, from 1 to 64. Every pixel is visited, so more pixels means faster travel and a longer computation. With the camera it is capped at 32.</dd>
+    <dt>resolution</dt><dd>Number of pixels on the long side of the area, from 1 to 64. Every pixel is visited, so more pixels means faster travel and a longer computation. h-snake and v-snake may add one pixel so that their path can close. With the camera it is capped at 32.</dd>
     <dt>path</dt><dd>Path of the window. Step through the five paths with &lt; and &gt;. h-snake and v-snake snake through every pixel once, by rows or by columns. pong goes there and back. spiral winds to the centre and back out. chaos wanders at random from one pixel to a neighbour, still crossing every pixel once before it loops; [ another ] draws another random path.</dd>
     <dt>width</dt><dd>Width of the window, as a share of the area. Around 50 %, nearly every pixel sings at once.</dd>
     <dt>resonance</dt><dd>How long a voice keeps ringing after the window has passed.</dd>
@@ -200,7 +200,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>On a phone held upright, the settings are laid out as pages side by side: swipe sideways, or tap a section name under the image (source, function, sound, EQ, time, anim, settings).</li>
     <li>On an iPhone or iPad, the sound plays even when the silent switch is on, like a music app. Use the volume buttons.</li>
   </ul>
-  <p class="ver">version A · cdea2c8</p>
+  <p class="ver">version A · d1da352</p>
   </div>
   <div data-doc="fr" lang="fr">
   <p>image2saw : des pixels aux paysages sonores.</p>
@@ -224,7 +224,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <dt>caméra</dt><dd>Joue l'image en direct de la caméra du téléphone ou de l'ordinateur à la place d'une image fixe : bouge la caméra et le son suit aussitôt. [ retourner ] passe de la caméra arrière à la caméra avant. [ figer ] garde l'image en cours et revient au mode normal, où les boucles s'exportent. Tant que la caméra tourne, ce qui demande une boucle figée est grisé : <b>rythme</b>, <b>death sur</b> et les signes d'export. Tous les autres réglages agissent de la même façon. Choisir une image d'exemple ou en charger une quitte aussi la caméra. Le son en direct est tenu au même niveau que la boucle figée. La caméra ne fonctionne que si la page est ouverte dans un navigateur comme Safari ou Chrome, pas à l'intérieur de Claude.</dd>
     <dt>zoom</dt><dd>Avec la caméra, grossit jusqu'à 8×. Le zoom de l'objectif est utilisé quand le navigateur y donne accès ; au-delà, ou sans lui, l'image est recadrée autour de son centre.</dd>
     <dt>images/s</dt><dd>Avec la caméra, nombre de fois par seconde où le son et l'image sont rafraîchis, de 1 à 30. Les valeurs basses donnent un résultat saccadé, stroboscopique.</dd>
-    <dt>résolution</dt><dd>Nombre de pixels sur le grand côté de la zone, de 1 à 64. Chaque pixel est visité : plus il y en a, plus le parcours est rapide et le calcul long. Avec la caméra, elle est plafonnée à 32.</dd>
+    <dt>résolution</dt><dd>Nombre de pixels sur le grand côté de la zone, de 1 à 64. Chaque pixel est visité : plus il y en a, plus le parcours est rapide et le calcul long. h-snake et v-snake ajoutent au besoin un pixel pour que leur trajet puisse se refermer. Avec la caméra, elle est plafonnée à 32.</dd>
     <dt>parcours</dt><dd>Trajet de la fenêtre. On passe d'un parcours à l'autre avec &lt; et &gt;. h-snake et v-snake serpentent une fois par chaque pixel, par lignes ou par colonnes. aller-retour va au bout et revient. spirale s'enroule jusqu'au centre et en ressort. chaos erre au hasard d'un pixel à son voisin, en passant quand même une fois par chaque pixel avant de boucler ; [ autre ] tire un autre trajet au hasard.</dd>
     <dt>largeur</dt><dd>Largeur de la fenêtre, en part de la zone. Vers 50 %, presque tous les pixels chantent en même temps.</dd>
     <dt>résonance</dt><dd>Durée pendant laquelle une voix continue de sonner après le passage de la fenêtre.</dd>
@@ -255,7 +255,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Sur un téléphone tenu debout, les réglages sont des pages côte à côte : glisse de côté, ou touche le nom d'une section sous l'image (source, fonction, son, EQ, temps, animation, réglages).</li>
     <li>Sur iPhone ou iPad, le son joue même avec le bouton silencieux, comme une application de musique. Utilise les boutons de volume.</li>
   </ul>
-  <p class="ver">version A · cdea2c8</p>
+  <p class="ver">version A · d1da352</p>
   </div>
 </article>
 <main>
@@ -353,7 +353,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
       <div class="row wide" id="row_lang"><span>langue</span><div class="seg" id="langseg"><button type="button" data-lang="fr" aria-pressed="false">français</button><button type="button" data-lang="en" aria-pressed="false">english</button></div></div>
     </section>
     </div>
-    <p class="ver">pixels to soundscape patterns · A · cdea2c8</p>
+    <p class="ver">pixels to soundscape patterns · A · d1da352</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>
@@ -1099,6 +1099,9 @@ function refreshPixels() {
   const side = v => v < 1.5 ? 1 : Math.max(2, 2 * Math.round(v / 2));
   const G = cam ? Math.min(P.grid, CAM_GRID) : P.grid;   /* en direct, le nombre de voix est plafonné pour tenir le temps réel */
   if (aw >= ah) { gw = G; gh = Math.min(G, side(G * ah / aw)); } else { gh = G; gw = Math.min(G, side(G * aw / ah)); }
+  /* h-snake ne peut boucler par lignes qu'avec un nombre pair de lignes, v-snake par colonnes qu'avec un nombre pair
+     de colonnes : au besoin on ajoute un pixel de ce côté, plutôt que de serpenter dans l'autre sens. */
+  if (P.path === "cycleH" && gh > 1 && gh % 2) gh++; else if (P.path === "cycleV" && gw > 1 && gw % 2) gw++;
   off.width = gw; off.height = gh;
   const o = off.getContext("2d", { willReadFrequently: true });
   o.imageSmoothingQuality = "high";

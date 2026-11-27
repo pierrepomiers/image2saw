@@ -71,7 +71,7 @@ button:focus-visible,.filebtn:focus-within,input:focus-visible{outline:1px solid
 .panel{display:grid;min-width:0;align-content:start}
 section{display:grid}
 /* Téléphone debout : les sections se feuillettent de gauche à droite, une seule à l'écran à la fois. */
-#tabs{display:flex;gap:6px;justify-content:space-between;font-size:12px;overflow-x:auto;margin:0 -16px -6px;padding:0 16px 3px;scrollbar-width:none;white-space:nowrap}
+#tabs{display:flex;gap:5px;justify-content:space-between;font-size:11px;overflow-x:auto;margin:0 -16px -6px;padding:0 16px 3px;scrollbar-width:none;white-space:nowrap}
 #tabs::-webkit-scrollbar,.pages::-webkit-scrollbar{display:none}
 #tabs button{font:inherit;background:none;border:0;padding:6px 0;color:#909090;text-transform:uppercase;letter-spacing:.02em;cursor:pointer}
 #tabs button[aria-current=true]{color:var(--ink);box-shadow:0 1px 0 var(--ink)}
@@ -89,14 +89,12 @@ section h2 i{font-style:normal;letter-spacing:0;order:3}
 .row > label,.row > span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .row.off{opacity:.3;pointer-events:none}
 /* En direct : ce qui n'a pas de sens sans boucle figée est grisé (la basse du rythme, les exports). */
-body.live #row_rhythm,body.live #row_rnew,body.live #row_dmix{opacity:.3;pointer-events:none}
+body.live #row_rhythm,body.live #row_rnew,body.live #row_swing,body.live #row_doom{opacity:.3;pointer-events:none}
 body.live #export,body.live #video,body.live #square{opacity:.35}
 .num{display:flex;justify-content:flex-end;align-items:baseline;gap:5px;color:var(--dim)}
 .num input{font:inherit;width:5ch;text-align:right;background:none;color:var(--ink);border:0;border-bottom:1px solid var(--line);border-radius:0;padding:4px 0;font-variant-numeric:tabular-nums;-moz-appearance:textfield}
 .num input::-webkit-outer-spin-button,.num input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .num i{font-style:normal;width:3ch}
-#row_dmix .num input{width:3ch}
-#row_dmix .num i{width:6ch}
 input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:34px;margin:0;background:transparent;--f:50%}
 input[type=range]::-webkit-slider-runnable-track{height:1px;background:linear-gradient(90deg,var(--ink) var(--f),var(--dim) var(--f))}
 input[type=range]::-moz-range-track{height:1px;background:linear-gradient(90deg,var(--ink) var(--f),var(--dim) var(--f))}
@@ -125,7 +123,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
 .filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
 /* Paysage (téléphone couché, tablette, ordinateur) : image à gauche, réglages à droite. */
 /* Death : la ligne rougit à partir de 7, et son texte tremble de plus en plus fort de 9 à 12. */
-#row_death{color:var(--ink)}
+#row_death,#row_doom{color:var(--ink)}
 .shake{animation:shake .09s steps(1) infinite}
 @keyframes shake{0%{transform:translate(calc(var(--amp) * -1),var(--amp))}33%{transform:translate(var(--amp),calc(var(--amp) * -.6))}66%{transform:translate(calc(var(--amp) * -.4),calc(var(--amp) * -1))}}
 @media (prefers-reduced-motion:reduce){.shake{animation:none}}
@@ -166,7 +164,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
   </dl>
   <h2>settings</h2>
   <dl>
-    <dt>camera</dt><dd>Plays the live picture of the phone or computer camera instead of a still image: move the camera and the sound follows at once. [ flip ] switches between the back and front cameras. [ freeze ] keeps the current picture and goes back to the normal mode, where loops can be exported. While the camera runs, what needs a frozen loop is greyed out: <b>rhythm</b>, <b>death on</b> and the export signs. Every other setting works the same. Picking a demo image or loading one also leaves the camera. The live sound is held at the same loudness as the frozen loop. The camera only works when the page is opened in a browser such as Safari or Chrome, not inside Claude.</dd>
+    <dt>camera</dt><dd>Plays the live picture of the phone or computer camera instead of a still image: move the camera and the sound follows at once. [ flip ] switches between the back and front cameras. [ freeze ] keeps the current picture and goes back to the normal mode, where loops can be exported. While the camera runs, what needs a frozen loop is greyed out: the whole <b>drum</b> section (rhythm, swing, doom) and the export signs. Every other setting works the same. Picking a demo image or loading one also leaves the camera. The live sound is held at the same loudness as the frozen loop. The camera only works when the page is opened in a browser such as Safari or Chrome, not inside Claude.</dd>
     <dt>zoom</dt><dd>With the camera, zooms in up to 8×. The lens zoom of the device is used when the browser gives access to it; beyond that, or without it, the picture is cropped around its centre.</dd>
     <dt>frames/s</dt><dd>With the camera, how many times per second the sound and the picture are refreshed, from 1 to 30. Low values give a stepped, stroboscopic result.</dd>
     <dt>resolution</dt><dd>Number of pixels on the long side of the area, from 1 to 64. Every pixel is visited, so more pixels means faster travel and a longer computation. h-snake and v-snake may add one pixel so that their path can close. With the camera it is capped at 32.</dd>
@@ -180,9 +178,10 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <dt>low, high</dt><dd>Lowest and highest pitch. The sliders move by semitones from C0 to B6, and the note name is shown next to the value. To set any other frequency, type it in hertz: for example 5 for rumbles and beats.</dd>
     <dt>scale</dt><dd>Linear or logarithmic (log) spread of the pitches between those two limits.</dd>
     <dt>tuning</dt><dd>Leaves pitches free, or snaps them to the chromatic or pentatonic scale.</dd>
-    <dt>rhythm</dt><dd>Optional bass line, off at 0. The setting is its volume, added on top of the main sound; past the point where the total would clip, everything is turned down together, so high values (up to 200 %) make the bass dominate. A rhythmic pattern is read from the image: one line of pixels is followed, one pixel per sixteenth note; the steps where the picture changes most are struck, and the colour of the pixel picks the note. It is a sub bass tuned from <b>low</b>, it loops exactly with the main sound and goes into the exports. Its harmonics feed <b>death</b>. While it plays, each pixel that is struck lights up on the image and stays marked until the bar ends. In the moving image, and so in the exported video, each struck pixel also swells for the length of its hit, on top of the ripple (it follows <b>wobble</b>). [ new rhythm ] reads the image another way and gives another pattern. Greyed out in camera mode, where it does not play.</dd>
-    <dt>death</dt><dd>Output distortion, from 0 (off) to 12. The deep bass stays clean; everything above it is driven through a tube-style saturation, then from 6 upwards through a stage that folds the wave over itself, then a speaker-like filter and a heavy compressor. The higher the value, the thicker and more torn the sound. It comes before the equalizer, and the overall level stays close to the level without it. The line turns red and shakes near the top.</dd>
-    <dt>death on</dt><dd>When <b>rhythm</b> plays, doses what the distortion treats. Fully left (0, shown as <b>sound</b>): the pixels only, the bass stays clean. In the middle (50, <b>all</b>): everything, the default. Fully right (100, <b>rhythm</b>): the bass only, the pixels stay clean. In between, the part being released slides gradually out of the distortion.</dd>
+    <dt>rhythm</dt><dd>Optional bass line, off at 0. The setting is its volume, added on top of the main sound; past the point where the total would clip, everything is turned down together, so high values (up to 200 %) make the bass dominate. A rhythmic pattern is read from the image: one line of pixels is followed, one pixel per sixteenth note; the steps where the picture changes most are struck, and the colour of the pixel picks the note. It is a sub bass tuned from <b>low</b>, it loops exactly with the main sound and goes into the exports. Its harmonics feed <b>doom</b>. While it plays, each pixel that is struck lights up on the image and stays marked until the bar ends. In the moving image, and so in the exported video, each struck pixel also swells for the length of its hit, on top of the ripple (it follows <b>wobble</b>). [ new rhythm ] reads the image another way and gives another pattern. Greyed out in camera mode, where it does not play.</dd>
+    <dt>swing</dt><dd>Adds chance to the <b>rhythm</b> so that it sounds less mechanical: each hit lands a little early or late, strikes harder or softer, and now and then is missed. At 0 the rhythm is strictly on the grid. The draw is fixed, so the loop stays the same from one turn to the next; [ new rhythm ] also changes it.</dd>
+    <dt>doom</dt><dd>Distortion of the rhythm alone, from 0 (off) to 12: the same machine as <b>death</b>, but only the bass goes through it. The two are independent, so the bass can be torn while the pixels stay clean, or the reverse.</dd>
+    <dt>death</dt><dd>Distortion of the sound of the pixels, from 0 (off) to 12. The rhythm has its own, <b>doom</b>. The deep bass stays clean; everything above it is driven through a tube-style saturation, then from 6 upwards through a stage that folds the wave over itself, then a speaker-like filter and a heavy compressor. The higher the value, the thicker and more torn the sound. It comes before the equalizer, and the overall level stays close to the level without it. The line turns red and shakes near the top.</dd>
     <dt>equalizer</dt><dd>Seven output faders, one per octave, each from −12 to +12 dB with a mark every 6 dB. The first one sets everything below 30 Hz. The last one sets everything above 2 kHz. The sliders stop at B6, just below, so it mostly shapes the harmonics that make the saw and square waves bright; only a pitch typed by hand can reach higher. The overall level is kept steady and never clips: cutting the lowest bands trades inaudible rumble for more level in the rest. [ flat ] sets all bands back to 0 dB.</dd>
     <dt>stereo</dt><dd>Stereo width. The left of the image plays in the left speaker.</dd>
     <dt>time sig., bars, tempo</dt><dd><b>time sig.</b> is the time signature (3/4, 4/4…) and <b>bars</b> the number of bars. Together with the tempo they set the loop length, so that samples line up on the beat: a slower tempo makes a longer loop. Choose free to set a length in seconds with <b>length</b>, from half a second up to 60 s, the length of an Instagram story; long loops take longer to compute and to export.</dd>
@@ -197,10 +196,10 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Type a value next to a slider to set it exactly. Double-click a name to reset it.</li>
     <li>Beyond the edges, the image is mirrored, so the window is never half empty.</li>
     <li>Video is recorded in real time: keep the page visible until it ends.</li>
-    <li>On a phone held upright, the settings are laid out as pages side by side: swipe sideways, or tap a section name under the image (source, function, sound, EQ, time, anim, settings).</li>
+    <li>On a phone held upright, the settings are laid out as pages side by side: swipe sideways, or tap a section name under the image (source, function, sound, drum, EQ, time, anim, settings).</li>
     <li>On an iPhone or iPad, the sound plays even when the silent switch is on, like a music app. Use the volume buttons.</li>
   </ul>
-  <p class="ver">version A · 391a48c</p>
+  <p class="ver">version A · 2ce1c65</p>
   </div>
   <div data-doc="fr" lang="fr">
   <p>image2saw : des pixels aux paysages sonores.</p>
@@ -221,7 +220,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
   </dl>
   <h2>réglages</h2>
   <dl>
-    <dt>caméra</dt><dd>Joue l'image en direct de la caméra du téléphone ou de l'ordinateur à la place d'une image fixe : bouge la caméra et le son suit aussitôt. [ retourner ] passe de la caméra arrière à la caméra avant. [ figer ] garde l'image en cours et revient au mode normal, où les boucles s'exportent. Tant que la caméra tourne, ce qui demande une boucle figée est grisé : <b>rythme</b>, <b>death sur</b> et les signes d'export. Tous les autres réglages agissent de la même façon. Choisir une image d'exemple ou en charger une quitte aussi la caméra. Le son en direct est tenu au même niveau que la boucle figée. La caméra ne fonctionne que si la page est ouverte dans un navigateur comme Safari ou Chrome, pas à l'intérieur de Claude.</dd>
+    <dt>caméra</dt><dd>Joue l'image en direct de la caméra du téléphone ou de l'ordinateur à la place d'une image fixe : bouge la caméra et le son suit aussitôt. [ retourner ] passe de la caméra arrière à la caméra avant. [ figer ] garde l'image en cours et revient au mode normal, où les boucles s'exportent. Tant que la caméra tourne, ce qui demande une boucle figée est grisé : toute la section <b>drum</b> (rythme, swing, doom) et les signes d'export. Tous les autres réglages agissent de la même façon. Choisir une image d'exemple ou en charger une quitte aussi la caméra. Le son en direct est tenu au même niveau que la boucle figée. La caméra ne fonctionne que si la page est ouverte dans un navigateur comme Safari ou Chrome, pas à l'intérieur de Claude.</dd>
     <dt>zoom</dt><dd>Avec la caméra, grossit jusqu'à 8×. Le zoom de l'objectif est utilisé quand le navigateur y donne accès ; au-delà, ou sans lui, l'image est recadrée autour de son centre.</dd>
     <dt>images/s</dt><dd>Avec la caméra, nombre de fois par seconde où le son et l'image sont rafraîchis, de 1 à 30. Les valeurs basses donnent un résultat saccadé, stroboscopique.</dd>
     <dt>résolution</dt><dd>Nombre de pixels sur le grand côté de la zone, de 1 à 64. Chaque pixel est visité : plus il y en a, plus le parcours est rapide et le calcul long. h-snake et v-snake ajoutent au besoin un pixel pour que leur trajet puisse se refermer. Avec la caméra, elle est plafonnée à 32.</dd>
@@ -235,9 +234,10 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <dt>grave, aigu</dt><dd>Note la plus basse et la plus haute. Les curseurs avancent par demi-tons de C0 à B6, et le nom de la note s'affiche à côté de la valeur. Pour toute autre fréquence, tape-la en hertz : par exemple 5 pour des grondements et des battements.</dd>
     <dt>échelle</dt><dd>Répartition linéaire ou logarithmique (log) des hauteurs entre ces deux limites.</dd>
     <dt>accord</dt><dd>Laisse les hauteurs libres, ou les cale sur la gamme chromatique ou pentatonique.</dd>
-    <dt>rythme</dt><dd>Ligne de basse optionnelle, coupée à 0. Le réglage est son volume, ajouté par-dessus le son principal ; quand le total saturerait, l'ensemble est baissé d'un bloc, si bien qu'aux valeurs hautes (jusqu'à 200 %) la basse domine. Un motif rythmique est lu dans l'image : on suit une ligne de pixels, un pixel par double croche ; les pas où l'image change le plus sont frappés, et la couleur du pixel choisit la note. C'est une basse « sub » accordée d'après <b>grave</b>, qui boucle exactement avec le son principal et part dans les exports. Ses harmoniques nourrissent <b>death</b>. Pendant la lecture, chaque pixel frappé s'allume sur l'image et reste marqué jusqu'à la fin de la mesure. Dans l'image animée, donc dans la vidéo exportée, chaque pixel frappé gonfle aussi le temps de sa frappe, par-dessus l'onde (il suit <b>wobble</b>). [ autre rythme ] lit l'image autrement et donne un autre motif. Grisé en mode caméra, où elle ne joue pas.</dd>
-    <dt>death</dt><dd>Distorsion de sortie, de 0 (coupée) à 12. Le grave profond reste propre ; tout ce qui est au-dessus passe dans une saturation de type lampe, puis à partir de 6 dans un étage qui replie l'onde sur elle-même, puis dans un filtre façon haut-parleur et un compresseur lourd. Plus la valeur est haute, plus le son est épais et déchiré. Elle agit avant l'égaliseur, et le niveau d'ensemble reste proche du niveau sans elle. La ligne passe au rouge et tremble vers le haut de la course.</dd>
-    <dt>death sur</dt><dd>Quand <b>rythme</b> joue, dose ce que la distorsion traite. Tout à gauche (0, affiché <b>son</b>) : les pixels seuls, la basse reste propre. Au milieu (50, <b>tout</b>) : tout, par défaut. Tout à droite (100, <b>rythme</b>) : la basse seule, les pixels restent propres. Entre deux, la part libérée sort progressivement de la distorsion.</dd>
+    <dt>rythme</dt><dd>Ligne de basse optionnelle, coupée à 0. Le réglage est son volume, ajouté par-dessus le son principal ; quand le total saturerait, l'ensemble est baissé d'un bloc, si bien qu'aux valeurs hautes (jusqu'à 200 %) la basse domine. Un motif rythmique est lu dans l'image : on suit une ligne de pixels, un pixel par double croche ; les pas où l'image change le plus sont frappés, et la couleur du pixel choisit la note. C'est une basse « sub » accordée d'après <b>grave</b>, qui boucle exactement avec le son principal et part dans les exports. Ses harmoniques nourrissent <b>doom</b>. Pendant la lecture, chaque pixel frappé s'allume sur l'image et reste marqué jusqu'à la fin de la mesure. Dans l'image animée, donc dans la vidéo exportée, chaque pixel frappé gonfle aussi le temps de sa frappe, par-dessus l'onde (il suit <b>wobble</b>). [ autre rythme ] lit l'image autrement et donne un autre motif. Grisé en mode caméra, où elle ne joue pas.</dd>
+    <dt>swing</dt><dd>Ajoute du hasard au <b>rythme</b> pour qu'il sonne moins mécanique : chaque frappe arrive un peu en avance ou en retard, tape plus ou moins fort, et de temps en temps manque. À 0 le rythme est strictement sur la grille. Le tirage est fixe : la boucle reste la même d'un tour à l'autre ; [ autre rythme ] le change aussi.</dd>
+    <dt>doom</dt><dd>Distorsion du rythme seul, de 0 (coupée) à 12 : la même machine que <b>death</b>, mais seule la basse y passe. Les deux sont indépendantes : la basse peut être déchirée pendant que les pixels restent propres, ou l'inverse.</dd>
+    <dt>death</dt><dd>Distorsion du son des pixels, de 0 (coupée) à 12. Le rythme a la sienne, <b>doom</b>. Le grave profond reste propre ; tout ce qui est au-dessus passe dans une saturation de type lampe, puis à partir de 6 dans un étage qui replie l'onde sur elle-même, puis dans un filtre façon haut-parleur et un compresseur lourd. Plus la valeur est haute, plus le son est épais et déchiré. Elle agit avant l'égaliseur, et le niveau d'ensemble reste proche du niveau sans elle. La ligne passe au rouge et tremble vers le haut de la course.</dd>
     <dt>égaliseur</dt><dd>Sept faders de sortie, un par octave, chacun de −12 à +12 dB avec un repère tous les 6 dB. Le premier règle tout ce qui est sous 30 Hz. Le dernier règle tout ce qui est au-dessus de 2 kHz. Les curseurs de note s'arrêtent à B6, juste en dessous : il façonne donc surtout les harmoniques qui rendent brillantes les ondes scie et carré ; seule une hauteur tapée à la main peut monter plus haut. Le niveau d'ensemble est tenu stable et ne sature jamais : couper les bandes les plus graves échange un grondement inaudible contre du niveau pour le reste. [ plat ] remet toutes les bandes à 0 dB.</dd>
     <dt>stéréo</dt><dd>Largeur stéréo. La gauche de l'image joue dans le haut-parleur gauche.</dd>
     <dt>mesure, mesures, tempo</dt><dd>Durée de la boucle en mesures, pour que les échantillons tombent sur le temps : un tempo plus lent donne une boucle plus longue. Choisis libre pour fixer une durée en secondes avec <b>durée</b>, d'une demi-seconde à 60 s, la durée d'une story Instagram ; une longue boucle demande plus de temps de calcul et d'export.</dd>
@@ -252,10 +252,10 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Tape une valeur à côté d'un curseur pour la régler exactement. Double-clique sur un nom pour le remettre à sa valeur de départ.</li>
     <li>Au-delà des bords, l'image est prolongée en miroir : la fenêtre n'est jamais à moitié vide.</li>
     <li>La vidéo s'enregistre en temps réel : garde la page affichée jusqu'à la fin.</li>
-    <li>Sur un téléphone tenu debout, les réglages sont des pages côte à côte : glisse de côté, ou touche le nom d'une section sous l'image (source, fonction, son, EQ, temps, animation, réglages).</li>
+    <li>Sur un téléphone tenu debout, les réglages sont des pages côte à côte : glisse de côté, ou touche le nom d'une section sous l'image (source, fonction, son, drum, EQ, temps, animation, réglages).</li>
     <li>Sur iPhone ou iPad, le son joue même avec le bouton silencieux, comme une application de musique. Utilise les boutons de volume.</li>
   </ul>
-  <p class="ver">version A · 391a48c</p>
+  <p class="ver">version A · 2ce1c65</p>
   </div>
 </article>
 <main>
@@ -309,10 +309,14 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
       <div class="row wide"><span>échelle</span><div class="seg" data-seg="scale"></div></div>
       <div class="row wide"><span>accord</span><div class="seg" data-seg="tune"></div></div>
       <div data-s="stereo"></div>
+      <div data-s="death"></div>
+    </section>
+    <section>
+      <h2>drum</h2>
       <div data-s="rhythm"></div>
       <div class="row wide" id="row_rnew"><span></span><div class="seg"><button id="rnew" class="cmd">autre rythme</button></div></div>
-      <div data-s="death"></div>
-      <div data-s="dmix"></div>
+      <div data-s="swing"></div>
+      <div data-s="doom"></div>
     </section>
     <section>
       <h2>EQ</h2>
@@ -353,7 +357,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
       <div class="row wide" id="row_lang"><span>langue</span><div class="seg" id="langseg"><button type="button" data-lang="fr" aria-pressed="false">français</button><button type="button" data-lang="en" aria-pressed="false">english</button></div></div>
     </section>
     </div>
-    <p class="ver">pixels to soundscape patterns · A · 391a48c</p>
+    <p class="ver">pixels to soundscape patterns · A · 2ce1c65</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>
@@ -795,12 +799,18 @@ function rhythmPattern(an, seed, n) {
 }
 /* Rend le motif en basse « sub » sur toute la boucle : sinus un peu saturé (ses harmoniques nourrissent death),
    léger coup d'attaque, extinction naturelle. Les notes qui débordent reviennent au début : la boucle reste parfaite. */
-function bassRender(Ls, sr, pat, reps, root) {
+function bassRender(Ls, sr, pat, reps, root, swing, seed) {
   const out = new Float32Array(Ls), n = pat.vel.length, total = n * reps, stepLen = Ls / total, TAU = 6.283185307179586;
+  /* Swing : un peu de hasard dans le jeu, pour qu'il sonne moins mécanique. Chaque frappe arrive un peu en avance
+     ou en retard, tape plus ou moins fort, et de temps en temps manque. Le tirage est fixe : la boucle reste la même. */
+  const sw = Math.min(1, Math.max(0, swing || 0)); let rs = ((seed || 1) * 2246822519) >>> 0;
+  const rnd = () => { rs = (rs + 0x6D2B79F5) | 0; let t = Math.imul(rs ^ (rs >>> 15), 1 | rs); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
   for (let q = 0; q < total; q++) {
-    const k = q % n, v = pat.vel[k]; if (!v) continue;
+    const k = q % n; let v = pat.vel[k]; if (!v) continue;
+    const late = (rnd() - 0.5) * 0.9 * sw, soft = rnd(), miss = rnd();
+    if (sw > 0) { if (k !== 0 && miss < 0.18 * sw) continue; v *= 1 - 0.55 * sw * soft; }
     let gap = 1; while (gap < n && !pat.vel[(k + gap) % n]) gap++;
-    const f = root * Math.pow(2, pat.deg[k] / 12), start = Math.round(q * stepLen);
+    const f = root * Math.pow(2, pat.deg[k] / 12), start = ((Math.round((q + late) * stepLen) % Ls) + Ls) % Ls;
     const len = Math.max(64, Math.round(Math.min(gap * stepLen, 0.9 * sr))), tau = Math.min(0.28, 0.6 * gap * stepLen / sr) * sr;
     const att = Math.max(8, Math.round(0.004 * sr)), rel = Math.max(8, Math.round(0.012 * sr)), kick = 0.022 * sr;
     let ph = 0;
@@ -943,7 +953,7 @@ const FIXED = { shape: 2.5, disc: 1, dyn: 0.6 };
 
 const P = { relief: 0, silence: 0, grid: 16, path: "cycleH", sigma: 15, ring: 0.25, infl: 60,
   wave: "sine", fmin: noteHz(0), fmax: noteHz(59), scale: "lin", tune: "libre", stereo: 80,
-  sig: "4/4", bpm: 120, bars: "4", freeDur: 8, wobble: 50, seed: 1, death: 0, fps: 12, zoom: 1, rhythm: 0, rseed: 1, dmix: 50,
+  sig: "4/4", bpm: 120, bars: "4", freeDur: 8, wobble: 50, seed: 1, death: 0, fps: 12, zoom: 1, rhythm: 0, rseed: 1, doom: 0, swing: 0,
   eq0: 0, eq1: 0, eq2: 0, eq3: 0, eq4: 0, eq5: 0, eq6: 0 };
 if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) P.wobble = 0;
 
@@ -960,7 +970,8 @@ const SLIDERS = {
   fmax:    { label: "aigu", min: 0.5, max: 4000, step: 0.01, unit: "Hz", note: true },
   stereo:  { label: "stéréo", min: 0, max: 100, step: 1, unit: "%" },
   rhythm:  { label: "rythme", min: 0, max: 200, step: 1, unit: "%", rh: true },
-  dmix:    { label: "death sur", min: 0, max: 100, step: 1, unit: "", dmx: true },
+  doom:    { label: "doom", min: 0, max: 12, step: 1, unit: "/12", dth: true },
+  swing:   { label: "swing", min: 0, max: 100, step: 1, unit: "%", rh: true },
   death:   { label: "death", min: 0, max: 12, step: 1, unit: "/12", dth: true },
   bpm:     { label: "tempo", min: 40, max: 240, step: 1, unit: "bpm" },
   freeDur: { label: "durée", min: 0.5, max: 60, step: 0.5, unit: "s" },
@@ -1027,14 +1038,13 @@ function buildControls() {
       if (from !== "range") ri.value = toPos(v);
       if (from !== "num") ni.value = show(v);
       if (d.note) un.textContent = noteName(v) || "Hz";   /* une valeur tapée à la main hors des notes reste en hertz */
-      if (d.dmx) setText(un, v < 50 ? "son" : v > 50 ? "rythme" : "tout");
-      paint(); if (!quiet) { if (d.dth) deathChanged(); else if (d.dmx) dmixChanged(); else if (d.fx) eqChanged(); else if (d.rh) rhythmChanged(); else changed(d.live); }
+      paint(); if (!quiet) { if (d.dth) deathChanged(); else if (d.fx) eqChanged(); else if (d.rh) rhythmChanged(); else changed(d.live); }
     };
     SETTERS[id] = v => set(Number(v), "any", true);
     ri.addEventListener("input", () => set(fromPos(ri.value), "range"));
     ni.addEventListener("change", () => set(parseFloat(String(ni.value).replace(",", ".")), "any"));
     lab.addEventListener("dblclick", () => set(DEFAULTS[id], "any"));
-    ri.value = toPos(P[id]); ni.value = show(P[id]); if (d.note) un.textContent = noteName(P[id]) || "Hz"; if (d.dmx) setText(un, "tout"); paint();
+    ri.value = toPos(P[id]); ni.value = show(P[id]); if (d.note) un.textContent = noteName(P[id]) || "Hz"; paint();
   });
   document.querySelectorAll("[data-seg]").forEach(host => {
     const id = host.dataset.seg;
@@ -1051,7 +1061,7 @@ const DEFAULTS = Object.assign({}, P);
 
 function changed(liveOnly) {
   const free = P.sig === "libre";
-  $("row_bpm").classList.toggle("off", free); $("row_bars").classList.toggle("off", free); $("row_freeDur").classList.toggle("off", !free); $("row_rnew").classList.toggle("off", !(P.rhythm > 0)); $("row_dmix").classList.toggle("off", !(P.death > 0 && P.rhythm > 0));
+  $("row_bpm").classList.toggle("off", free); $("row_bars").classList.toggle("off", free); $("row_freeDur").classList.toggle("off", !free); for (const id of ["row_rnew", "row_swing", "row_doom"]) $(id).classList.toggle("off", !(P.rhythm > 0));
   if (cam) camTimer();
   if (liveOnly) return;
   if (cam) { refreshPixels(); camCfg(); return; }   /* en direct, rien à recalculer : le moteur reçoit les nouveaux réglages */
@@ -1144,7 +1154,6 @@ const EN = {
   "stéréo": "stereo",
   "rythme": "rhythm",
   "autre rythme": "new rhythm",
-  "death sur": "death on",
   "son": "sound",
   "tout": "all",
   "égaliseur": "equalizer",
@@ -1215,7 +1224,7 @@ function tr(t) {
 function setText(el, fr) { el._fr = fr; const n = [...el.childNodes].find(x => x.nodeType === 3); if (n) n.nodeValue = tr(fr); else el.prepend(tr(fr)); }
 function applyLang() {
   document.documentElement.lang = LANG;
-  document.querySelectorAll(".row > label, .row.wide > span:first-child, .seg button, .filebtn, button.cmd:not(#help), #tabs button, section h2, .ver.copy, #pathname, #row_dmix .num i").forEach(el => {
+  document.querySelectorAll(".row > label, .row.wide > span:first-child, .seg button, .filebtn, button.cmd:not(#help), #tabs button, section h2, .ver.copy, #pathname").forEach(el => {
     const n = [...el.childNodes].find(x => x.nodeType === 3); if (!n) return;
     if (el._fr === undefined) el._fr = n.nodeValue;
     n.nodeValue = tr(el._fr);
@@ -1315,7 +1324,7 @@ function mixRhythm(res) {
   const lvl = P.rhythm / 100, a = res.an || an; if (!(lvl > 0) || !a || !(res.peak > 0)) return;
   const { n, reps } = rhythmSteps(), pat = rhythmPattern(a, P.rseed, n), sr = res.sr || SR, Ls = res.dryL.length;
   let root = Math.max(1, P.fmin); while (root < 38) root *= 2; while (root >= 76) root /= 2;   /* fondamentale ramenée entre 38 et 76 Hz */
-  const b = bassRender(Ls, sr, pat, reps, root), amp = 0.75 * lvl, L = new Float32Array(Ls), R2 = new Float32Array(Ls);
+  const b = bassRender(Ls, sr, pat, reps, root, P.swing / 100, P.rseed), amp = 0.75 * lvl, L = new Float32Array(Ls), R2 = new Float32Array(Ls);
   let peak = 0;
   for (let j = 0; j < Ls; j++) { const x = b[j] * amp, l = res.dryL[j] + x, r = res.dryR[j] + x; L[j] = l; R2[j] = r; const m = Math.max(Math.abs(l), Math.abs(r)); if (m > peak) peak = m; }
   /* L'image respire aussi avec la basse. */
@@ -1331,7 +1340,7 @@ function mixRhythm(res) {
 }
 let rhTimer = 0;
 function rhythmChanged() {
-  $("row_rnew").classList.toggle("off", !(P.rhythm > 0)); $("row_dmix").classList.toggle("off", !(P.death > 0 && P.rhythm > 0));
+  for (const id of ["row_rnew", "row_swing", "row_doom"]) $(id).classList.toggle("off", !(P.rhythm > 0));
   if (cam || !R) return;
   clearTimeout(rhTimer); rhTimer = setTimeout(() => {
     if (cam || !R) return;
@@ -1390,15 +1399,10 @@ function makeBuffer(ctx, res) {
   }
   return buf;
 }
-/* « death sur » : quand le rythme joue, un curseur dose ce que death traite. À gauche le son seul, au milieu tout,
-   à droite le rythme seul. Le son et la basse partent alors en deux flux synchrones ; chacun se partage entre death
-   et un chemin direct, retardé du temps que met death à répondre pour que les deux moitiés restent en phase. */
-function routeKey(res) { return P.death > 0 && res && res.bass ? "split" : ""; }
-/* Parts envoyées dans death (w) et sur le chemin direct (d). */
-function dmixShares() {
-  const x = P.dmix / 100, m = Math.min(1, 2 * (1 - x)), b = Math.min(1, 2 * x);
-  return { main: { w: m, d: 1 - m }, bass: { w: b, d: 1 - b } };
-}
+/* Deux distorsions indépendantes : death traite le son des pixels, doom la basse du rythme. Quand le rythme joue,
+   la boucle part en deux flux synchrones, chacun dans sa chaîne ; ils se rejoignent à l'égaliseur. */
+function routeKey(res) { return res && res.bass ? "split" : ""; }
+function fxOn(res) { return P.death > 0 || (!!(res && res.bass) && P.doom > 0); }
 /* Niveau après death : la cible habituelle, mais sans dépasser le son sans death de plus de 2 dB en niveau perçu
    ni de plus de 1 dB en énergie. Sans ce garde-fou, la saturation (qui tasse les crêtes, ajoute des harmoniques et
    remplit le grave) sonnait nettement plus fort dès qu'on l'enclenchait. */
@@ -1410,60 +1414,33 @@ function fxGain(res, e) {
   if (v1.loud > 1e-9 && v0.loud > 1e-9) g = Math.min(g, 1.26 * v0.loud / v1.loud);
   return g;
 }
-let fxLat = 0.006, fxLatDone = null;
-function fxLatency() {
-  if (fxLatDone) return fxLatDone;
-  return fxLatDone = (async () => {
-    try {
-      const OC = window.OfflineAudioContext || window.webkitOfflineAudioContext, oc = new OC(2, 4096, SR), f = buildFx(oc), b = oc.createBuffer(2, 4096, SR), src0 = oc.createBufferSource();
-      /* Un court grain à 1 kHz, faible, traverse death : son retard à la sortie est celui de la chaîne. */
-      const d = b.getChannelData(0), e = b.getChannelData(1); for (let j = 0; j < 220; j++) d[200 + j] = e[200 + j] = 0.002 * Math.sin(6.283185307179586 * 1000 * j / SR) * Math.sin(Math.PI * j / 220) ** 2;
-      src0.buffer = b; f.set(1); src0.connect(f.input); f.output.connect(oc.destination); src0.start();
-      const out = await new Promise((ok, no) => { oc.oncomplete = ev => ok(ev.renderedBuffer); const p = oc.startRendering(); if (p && p.then) p.then(ok, no); });
-      const y = out.getChannelData(0); let best = 0, bv = -1;
-      for (let lag = 0; lag < 1500; lag++) { let a = 0; for (let j = 0; j < 220; j++) a += d[200 + j] * y[200 + j + lag]; a = Math.abs(a); if (a > bv) { bv = a; best = lag; } }
-      fxLat = best / SR;
-    } catch (e) {}
-    if (dryBus) dryBus.delayTime.value = fxLat;
-    return fxLat;
-  })();
-}
-let dryBus = null;
 function startSource(offset, opt) {
-  const now = actx.currentTime, once = !!(opt && opt.once), list = [], key = routeKey(R), sh = dmixShares(), mix = {};
-  const mk = (part, name) => {
-    const buf = makeBuffer(actx, part), s = actx.createBufferSource(), g = actx.createGain();
-    s.buffer = buf; s.loop = !once; s.connect(g);
-    if (name) { const k = part.k || 1, w = actx.createGain(), d = actx.createGain(); w.gain.value = sh[name].w * k; d.gain.value = sh[name].d * k; g.connect(w); w.connect(fx.input); g.connect(d); d.connect(dryBus); mix[name] = { w, d, k }; }
-    else g.connect(fx.input);
+  const now = actx.currentTime, once = !!(opt && opt.once), list = [], key = routeKey(R);
+  const mk = (part, to, k) => {
+    const buf = makeBuffer(actx, part), s = actx.createBufferSource(), g = actx.createGain(), lv = actx.createGain();
+    s.buffer = buf; s.loop = !once; s.connect(g); g.connect(lv); lv.gain.value = k; lv.connect(to);
     g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(1, now + 0.04);
     s.start(now, Math.max(0, Math.min(offset, buf.duration - 0.001)));
     list.push({ s, g }); return s;
   };
   let s;
-  if (key) { s = mk({ L: R.dryL, R: R.dryR, sr: R.sr, k: R.mg }, "main"); mk({ L: R.bass, R: R.bass, sr: R.sr }, "bass"); } else s = mk(R, "");
+  if (key) { s = mk({ L: R.dryL, R: R.dryR, sr: R.sr }, fx.input, R.mg || 1); mk({ L: R.bass, R: R.bass, sr: R.sr }, fx2.input, 1); } else s = mk(R, fx.input, 1);
   stopSource(0.04);
-  cur = { s, list, key, mix }; startAt = now - offset; clkInit = false;
+  cur = { s, list, key }; startAt = now - offset; clkInit = false;
 }
 function stopSource(fade) {
   if (!cur) return;
   const now = actx.currentTime, list = cur.list; cur = null;
   for (const { s, g } of list) try { g.gain.cancelScheduledValues(now); g.gain.setValueAtTime(g.gain.value, now); g.gain.linearRampToValueAtTime(0, now + fade); s.stop(now + fade + 0.02); } catch (e) {}
 }
-/* Le curseur « death sur » agit tout de suite sur les deux flux ; le niveau d'ensemble suit juste après. */
-function dmixChanged() {
-  if (cur && cur.key && actx) { const sh = dmixShares(), t = actx.currentTime; for (const k of ["main", "bass"]) { cur.mix[k].w.gain.setTargetAtTime(sh[k].w * cur.mix[k].k, t, 0.02); cur.mix[k].d.gain.setTargetAtTime(sh[k].d * cur.mix[k].k, t, 0.02); } }
-  clearTimeout(eqTimer); eqTimer = setTimeout(setTrim, 180);
-}
-SETTERS.dtarget = v => { if (SETTERS.dmix) SETTERS.dmix(v === "son" ? 0 : v === "rythme" ? 100 : 50); };   /* anciens fichiers de réglages */
 /* Le routage a changé pendant l'écoute (death passé de 0 à plus, autre cible) : on relance au même endroit. */
 function reroute() {
-  $("row_dmix").classList.toggle("off", !(P.death > 0 && P.rhythm > 0));
+ 
   if (cam || rec || !playing || !cur || !R || cur.key === routeKey(R)) return;
   startSource((((playTime() % R.dur) + R.dur) % R.dur));
 }
 /* ── Sortie : death (distorsion), puis égaliseur, puis mise à niveau ── */
-let eqNodes = [], fx = null, trimNode = null, trim = 1, eqTimer = 0, fxJob = 0;
+let eqNodes = [], fx = null, fx2 = null, trimNode = null, trim = 1, eqTimer = 0, fxJob = 0;
 const eqGains = () => EQ_BANDS.map((b, i) => P["eq" + i]);
 const eqFlat = () => eqGains().every(v => Math.abs(v) < 0.01);
 function buildEq(ctx) {
@@ -1533,12 +1510,10 @@ async function renderFx(res, brief) {
   const n = Math.round(v.dur * SR), lead = Math.min(v.dur * 0.999, 1.5), pre = Math.round(lead * SR), oc = new OC(2, pre + n, SR), s = oc.createBufferSource(), f = buildFx(oc), eq = buildEq(oc);
   f.set(P.death); f.output.connect(eq[0]); eq[eq.length - 1].connect(oc.destination);
   if (routeKey(v)) {
-    /* Même partage qu'à l'écoute entre death et le chemin direct retardé. */
-    const lat = await fxLatency(), sh = dmixShares(), bus = oc.createDelay(0.1); bus.delayTime.value = lat; bus.connect(eq[0]);
-    for (const [name, part, k] of [["main", { L: v.dryL, R: v.dryR, sr: v.sr }, v.mg || 1], ["bass", { L: v.bass, R: v.bass, sr: v.sr }, 1]]) {
-      const q = name === "main" ? s : oc.createBufferSource(), w = oc.createGain(), d = oc.createGain();
-      q.buffer = makeBuffer(oc, part); q.loop = true; w.gain.value = sh[name].w * k; d.gain.value = sh[name].d * k;
-      q.connect(w); w.connect(f.input); q.connect(d); d.connect(bus); q.start(0, v.dur - lead);
+    const f2 = buildFx(oc); f2.set(P.doom); f2.output.connect(eq[0]);
+    for (const [part, to, k] of [[{ L: v.dryL, R: v.dryR, sr: v.sr }, f.input, v.mg || 1], [{ L: v.bass, R: v.bass, sr: v.sr }, f2.input, 1]]) {
+      const q = to === f.input ? s : oc.createBufferSource(), lv = oc.createGain();
+      q.buffer = makeBuffer(oc, part); q.loop = true; lv.gain.value = k; q.connect(lv); lv.connect(to); q.start(0, v.dur - lead);
     }
   } else { s.buffer = makeBuffer(oc, v); s.loop = true; s.connect(f.input); s.start(0, v.dur - lead); }
   const out = await new Promise((ok, no) => { oc.oncomplete = e => ok(e.renderedBuffer); const p = oc.startRendering(); if (p && p.then) p.then(ok, no); });
@@ -1551,17 +1526,18 @@ function eqChanged() {
 }
 /* Couleur et tremblement de la ligne death. */
 function paintDeath() {
-  const v = P.death, k = Math.min(1, Math.max(0, (v - 6) / 6)), row = $("row_death"), amp = v >= 9 ? (0.4 * (v - 8)).toFixed(1) + "px" : "0px";
-  row.style.setProperty("--ink", "rgb(" + Math.round(232 + 23 * k) + "," + Math.round(232 - 200 * k) + "," + Math.round(232 - 208 * k) + ")");
-  row.querySelectorAll("label, .num").forEach(el => { el.style.setProperty("--amp", amp); el.classList.toggle("shake", v >= 9); });
+  for (const id of ["death", "doom"]) {
+    const v = P[id], k = Math.min(1, Math.max(0, (v - 6) / 6)), row = $("row_" + id), amp = v >= 9 ? (0.4 * (v - 8)).toFixed(1) + "px" : "0px";
+    row.style.setProperty("--ink", "rgb(" + Math.round(232 + 23 * k) + "," + Math.round(232 - 200 * k) + "," + Math.round(232 - 208 * k) + ")");
+    row.querySelectorAll("label, .num").forEach(el => { el.style.setProperty("--amp", amp); el.classList.toggle("shake", v >= 9); });
+  }
 }
 function deathChanged() {
   paintDeath(); reroute();
-  if (cur && cur.key && actx) { const sh = dmixShares(), t = actx.currentTime; for (const k of ["main", "bass"]) { cur.mix[k].w.gain.setTargetAtTime(sh[k].w * cur.mix[k].k, t, 0.02); cur.mix[k].d.gain.setTargetAtTime(sh[k].d * cur.mix[k].k, t, 0.02); } }
   if (actx) {
-    fx.set(P.death, actx.currentTime);
+    fx.set(P.death, actx.currentTime); fx2.set(P.doom, actx.currentTime);
     /* En attendant le niveau exact, on baisse tout de suite : une saturation à plein niveau surprendrait. */
-    if (P.death > 0) trimNode.gain.setTargetAtTime(Math.min(trim, 0.45), actx.currentTime, 0.02);
+    if (fxOn(R)) trimNode.gain.setTargetAtTime(Math.min(trim, 0.45), actx.currentTime, 0.02);
   }
   clearTimeout(eqTimer); eqTimer = setTimeout(setTrim, 180);
 }
@@ -1572,7 +1548,7 @@ async function setTrim() {
   }
   if (!R) return;
   const my = ++fxJob, res = R; let g = 1;
-  if (P.death > 0) {
+  if (fxOn(res)) {
     /* Un seul rendu à la fois : des réglages enchaînés ne doivent pas empiler des calculs lourds en mémoire. */
     if (fxBusy) { fxAgain = true; return; }
     fxBusy = true; let e = null;
@@ -1609,7 +1585,7 @@ function wakeAudio() {
       trimNode = actx.createGain(); trimNode.gain.value = trim; trimNode.connect(master);
       eqNodes = buildEq(actx); eqNodes[eqNodes.length - 1].connect(trimNode);
       fx = buildFx(actx); fx.set(P.death); fx.output.connect(eqNodes[0]);
-      dryBus = actx.createDelay(0.1); dryBus.delayTime.value = fxLat; dryBus.connect(eqNodes[0]); fxLatency();
+      fx2 = buildFx(actx); fx2.set(P.doom); fx2.output.connect(eqNodes[0]);
     }
     if (actx.state !== "running") actx.resume();
     return true;
@@ -1651,7 +1627,7 @@ async function exportWav() {
   if (!R || R.preview || busy) { say("Le calcul complet n'est pas terminé : attends la fin de la barre."); return; }
   const base = baseName();
   let L = R.L, Rr = R.R;
-  if (P.death > 0) {
+  if (fxOn(R)) {
     /* Même distorsion, même égaliseur et même mise à niveau qu'à l'écoute. */
     const e = await renderFx(R).catch(() => null);
     if (!e) { say("Ce navigateur ne sait pas appliquer death à l'export. Remets death à 0 pour exporter."); return; }
@@ -1712,7 +1688,7 @@ function applyParams(data) {
   for (const k in SETTERS) if (k in p && (typeof p[k] === "number" || typeof p[k] === "string")) SETTERS[k](p[k]);
   const s = data.selection;
   if (s && [s.x, s.y, s.w, s.h].every(v => typeof v === "number" && v >= 0 && v <= 1) && s.w >= 0.04 && s.h >= 0.04) sel = { x: Math.min(s.x, 1 - s.w), y: Math.min(s.y, 1 - s.h), w: s.w, h: s.h };
-  say("Réglages chargés."); eqChanged(); deathChanged(); $("row_rnew").classList.toggle("off", !(P.rhythm > 0));
+  say("Réglages chargés."); eqChanged(); deathChanged(); paintDeath(); for (const id of ["row_rnew", "row_swing", "row_doom"]) $(id).classList.toggle("off", !(P.rhythm > 0));
   if (typeof data.image === "string" && DEMOS[data.image] && data.image !== imgName) { const keep = sel; loadURL("data:image/jpeg;base64," + DEMOS[data.image], data.image, keep); }
   else changed(false);
 }

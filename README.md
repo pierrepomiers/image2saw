@@ -50,6 +50,7 @@ La version exacte est affichée en bas de la page (`A · numéro de commit`). L'
 - `stéréo` : largeur de la scène. La gauche de l'image sonne à gauche.
 
 **death**
+- `rythme` : ligne de basse optionnelle, coupée à 0. Un motif rythmique est lu dans l'image : on suit une ligne de pixels, un pixel par double croche ; les pas où l'image change le plus sont frappés, et la couleur du pixel choisit la note. C'est une basse « sub » accordée d'après `grave`, qui boucle exactement avec le son principal et part dans les exports. Ses harmoniques nourrissent `death`. `[ autre rythme ]` lit l'image autrement et donne un autre motif. Elle ne joue pas en mode caméra.
 - `death` : distorsion de sortie, de 0 (coupée) à 12. Le grave profond reste propre ; tout le reste passe par une saturation « à lampe », puis à partir de 6 par un étage qui replie l'onde sur elle-même, puis par un filtre de baffle et un compresseur lourd. Plus la valeur monte, plus le son est épais et déchiré.
 - Elle agit avant l'égaliseur, et le niveau d'ensemble reste maîtrisé. La ligne rougit et tremble en approchant de 12.
 

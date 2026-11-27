@@ -139,6 +139,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <dt>grave, aigu</dt><dd>Lowest and highest pitch. The sliders move by semitones from C0 to B6, and the note name is shown next to the value. To set any other frequency, type it in hertz: for example 5 for rumbles and beats.</dd>
     <dt>échelle</dt><dd>Linear or logarithmic spread of the pitches between those two limits.</dd>
     <dt>accord</dt><dd>Leaves pitches free, or snaps them to the chromatic or pentatonic scale.</dd>
+    <dt>rythme</dt><dd>Optional bass line, off at 0. A rhythmic pattern is read from the image: one line of pixels is followed, one pixel per sixteenth note; the steps where the picture changes most are struck, and the colour of the pixel picks the note. It is a sub bass tuned from <b>grave</b>, it loops exactly with the main sound and goes into the exports. Its harmonics feed <b>death</b>. [ autre rythme ] reads the image another way and gives another pattern. Not played in camera mode.</dd>
     <dt>death</dt><dd>Output distortion, from 0 (off) to 12. The deep bass stays clean; everything above it is driven through a tube-style saturation, then from 6 upwards through a stage that folds the wave over itself, then a speaker-like filter and a heavy compressor. The higher the value, the thicker and more torn the sound. It comes before the equaliser, and the overall level stays under control. The line turns red and shakes near the top.</dd>
     <dt>égaliseur</dt><dd>Seven output faders, one per octave, each from −12 to +12 dB with a mark every 6 dB. The first one sets everything below 30 Hz. The last one sets everything above 2 kHz. The sliders stop at B6, just below, so it mostly shapes the harmonics that make the saw and square waves bright; only a pitch typed by hand can reach higher. The overall level is kept steady and never clips: cutting the lowest bands trades inaudible rumble for more level in the rest. [ plat ] sets all bands back to 0 dB.</dd>
     <dt>stéréo</dt><dd>Stereo width. The left of the image plays in the left speaker.</dd>
@@ -154,7 +155,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Video is recorded in real time: keep the page visible until it ends.</li>
     <li>On an iPhone, the silent switch mutes the sound.</li>
   </ul>
-  <p class="ver">version A · d14a277</p>
+  <p class="ver">version A · 314f97e</p>
 </article>
 <main>
   <div class="stage">
@@ -200,6 +201,8 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
       <div class="row wide"><span>échelle</span><div class="seg" data-seg="scale"></div></div>
       <div class="row wide"><span>accord</span><div class="seg" data-seg="tune"></div></div>
       <div data-s="stereo"></div>
+      <div data-s="rhythm"></div>
+      <div class="row wide" id="row_rnew"><span></span><div class="seg"><button id="rnew" class="cmd">autre rythme</button></div></div>
       <div data-s="death"></div>
     </section>
     <section>
@@ -239,7 +242,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
         <button id="reset" class="cmd">défauts</button>
       </div>
     </section>
-    <p class="ver">pixels to soundscape patterns · A · d14a277</p>
+    <p class="ver">pixels to soundscape patterns · A · 314f97e</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>
@@ -586,6 +589,58 @@ function levelGain(L, R, sr) {
   return { peak, loud, g: Math.min(0.89 / peak, loud > 1e-9 ? LOUD / loud : 1e9) };
 }
 
+/* Rythme : un motif de basse lu dans l'image. On suit une ligne de pixels (rangée, colonne ou diagonale, selon le
+   tirage), un pixel par pas : les pas où l'image change le plus sont frappés, la couleur du pixel choisit la note.
+   Renvoie, pour n pas, la force de frappe (0 = silence) et le degré joué. */
+const BASS_DEG = [0, 0, 0, 7, 12, 5, 3, 10];
+function rhythmPattern(an, seed, n) {
+  let s = (seed * 2654435761) >>> 0;
+  const rnd = () => { s = (s + 0x6D2B79F5) | 0; let t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  const { gw, gh } = an, mode = Math.floor(rnd() * 3), line = rnd(), shift = Math.floor(rnd() * n), dens = 0.28 + 0.3 * rnd(), flip = rnd() < 0.5;
+  const at = k => {
+    let u = (((k + shift) % n) + 0.5) / n; if (flip) u = 1 - u;
+    let x, y;
+    if (mode === 0) { x = u * gw; y = line * gh; } else if (mode === 1) { x = line * gw; y = u * gh; } else { x = u * gw; y = ((u + line) % 1) * gh; }
+    return Math.min(gh - 1, Math.floor(y)) * gw + Math.min(gw - 1, Math.floor(x));
+  };
+  const str = new Float32Array(n), deg = new Int8Array(n);
+  for (let k = 0; k < n; k++) {
+    const i = at(k), j = at((k + n - 1) % n);
+    let pp = an.lum[i]; if (an.colour) { const cw = smoothstep(0.05, 0.2, an.chr[i]); pp = an.lum[i] * (1 - cw) + hueToPitch(an.hue[i]) * cw; }
+    str[k] = Math.abs(an.lum[i] - an.lum[j]) + 0.5 * an.con[i] + 0.25 * an.lum[i] + 0.12 * rnd();   /* le tirage départage les zones unies */
+    deg[k] = BASS_DEG[Math.min(BASS_DEG.length - 1, Math.floor(pp * BASS_DEG.length))];
+  }
+  /* On frappe les pas les plus marqués, en évitant les paquets de pas voisins : un rythme a besoin de silences. */
+  const hits = Math.max(2, Math.round(dens * n)), vel = new Float32Array(n), w = Float32Array.from(str); let top = 0;
+  for (let k = 0; k < n; k++) if (str[k] > top) top = str[k]; top = top || 1;
+  w[0] = 9; 
+  for (let r = 0; r < hits && r < n; r++) {
+    let b = -1; for (let k = 0; k < n; k++) if (!vel[k] && (b < 0 || w[k] > w[b])) b = k;
+    vel[b] = 0.6 + 0.4 * Math.min(1, str[b] / top); w[(b + 1) % n] *= 0.45; w[(b + n - 1) % n] *= 0.45;
+  }
+  vel[0] = 1; deg[0] = 0;   /* le premier temps est toujours frappé, sur la fondamentale */
+  return { vel, deg };
+}
+/* Rend le motif en basse « sub » sur toute la boucle : sinus un peu saturé (ses harmoniques nourrissent death),
+   léger coup d'attaque, extinction naturelle. Les notes qui débordent reviennent au début : la boucle reste parfaite. */
+function bassRender(Ls, sr, pat, reps, root) {
+  const out = new Float32Array(Ls), n = pat.vel.length, total = n * reps, stepLen = Ls / total, TAU = 6.283185307179586;
+  for (let q = 0; q < total; q++) {
+    const k = q % n, v = pat.vel[k]; if (!v) continue;
+    let gap = 1; while (gap < n && !pat.vel[(k + gap) % n]) gap++;
+    const f = root * Math.pow(2, pat.deg[k] / 12), start = Math.round(q * stepLen);
+    const len = Math.max(64, Math.round(Math.min(gap * stepLen, 0.9 * sr))), tau = Math.min(0.28, 0.6 * gap * stepLen / sr) * sr;
+    const att = Math.max(8, Math.round(0.004 * sr)), rel = Math.max(8, Math.round(0.012 * sr)), kick = 0.022 * sr;
+    let ph = 0;
+    for (let j = 0; j < len; j++) {
+      ph += TAU * f * (1 + 1.6 * Math.exp(-j / kick)) / sr;
+      let e = v * Math.exp(-j / tau); if (j < att) e *= j / att; if (j > len - rel) e *= (len - j) / rel;
+      out[(start + j) % Ls] += e * Math.tanh(1.7 * (Math.sin(ph) + 0.22 * Math.sin(2 * ph))) * 0.78;
+    }
+  }
+  return out;
+}
+
 /* Égaliseur de sortie à 7 bandes, resserrées dans le grave : type de filtre, fréquence, finesse.
    La première règle tout ce qui est sous 30 Hz, les cinq suivantes sont des cloches d'une octave qui couvrent les notes
    jouables (C0 à B6, soit 16 Hz à 2 kHz), la dernière règle tout ce qui est au-dessus de 2 kHz : il n'y a là que les
@@ -716,7 +771,7 @@ const FIXED = { shape: 2.5, disc: 1, dyn: 0.6 };
 
 const P = { grid: 16, path: "cycleH", sigma: 15, ring: 0.25, infl: 60,
   wave: "sine", fmin: noteHz(0), fmax: noteHz(59), scale: "lin", tune: "libre", stereo: 80,
-  sig: "4/4", bpm: 120, bars: "4", freeDur: 8, wobble: 50, seed: 1, death: 0, fps: 12, zoom: 1,
+  sig: "4/4", bpm: 120, bars: "4", freeDur: 8, wobble: 50, seed: 1, death: 0, fps: 12, zoom: 1, rhythm: 0, rseed: 1,
   eq0: 0, eq1: 0, eq2: 0, eq3: 0, eq4: 0, eq5: 0, eq6: 0 };
 if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) P.wobble = 0;
 
@@ -730,6 +785,7 @@ const SLIDERS = {
   fmin:    { label: "grave", min: 0.5, max: 4000, step: 0.01, unit: "Hz", note: true },
   fmax:    { label: "aigu", min: 0.5, max: 4000, step: 0.01, unit: "Hz", note: true },
   stereo:  { label: "stéréo", min: 0, max: 100, step: 1, unit: "%" },
+  rhythm:  { label: "rythme", min: 0, max: 100, step: 1, unit: "%", rh: true },
   death:   { label: "death", min: 0, max: 12, step: 1, unit: "/12", dth: true },
   bpm:     { label: "tempo", min: 40, max: 240, step: 1, unit: "bpm" },
   freeDur: { label: "durée", min: 0.5, max: 30, step: 0.1, unit: "s" },
@@ -796,7 +852,7 @@ function buildControls() {
       if (from !== "range") ri.value = toPos(v);
       if (from !== "num") ni.value = show(v);
       if (d.note) un.textContent = noteName(v) || "Hz";   /* une valeur tapée à la main hors des notes reste en hertz */
-      paint(); if (!quiet) { if (d.dth) deathChanged(); else if (d.fx) eqChanged(); else changed(d.live); }
+      paint(); if (!quiet) { if (d.dth) deathChanged(); else if (d.fx) eqChanged(); else if (d.rh) rhythmChanged(); else changed(d.live); }
     };
     SETTERS[id] = v => set(Number(v), "any", true);
     ri.addEventListener("input", () => set(fromPos(ri.value), "range"));
@@ -819,7 +875,7 @@ const DEFAULTS = Object.assign({}, P);
 
 function changed(liveOnly) {
   const free = P.sig === "libre";
-  $("row_bpm").classList.toggle("off", free); $("row_bars").classList.toggle("off", free); $("row_freeDur").classList.toggle("off", !free);
+  $("row_bpm").classList.toggle("off", free); $("row_bars").classList.toggle("off", free); $("row_freeDur").classList.toggle("off", !free); $("row_rnew").classList.toggle("off", !(P.rhythm > 0));
   if (cam) camTimer();
   if (liveOnly) return;
   if (cam) { refreshPixels(); camCfg(); return; }   /* en direct, rien à recalculer : le moteur reçoit les nouveaux réglages */
@@ -843,6 +899,7 @@ function setPath(v, quiet) {
 function stepPath(d) { const i = SEGS.path.findIndex(x => x[0] === P.path), n = SEGS.path.length; setPath(SEGS.path[(i + d + n) % n][0]); }
 SETTERS.path = v => setPath(String(v), true);
 SETTERS.seed = v => { P.seed = (Number(v) >>> 0) || 1; };
+SETTERS.rseed = v => { P.rseed = (Number(v) >>> 0) || 1; };
 
 /* ── Image et pixels ── */
 function setImage(image, name, keepSel) {
@@ -953,8 +1010,42 @@ function previewParams(p, est) {
   while (div > 2 && SR / div < 5 * hi) div /= 2;
   return Object.assign({}, p, { sr: SR / div });
 }
+/* Rythme : la basse est ajoutée par-dessus la boucle déjà calculée. Changer son niveau ou tirer un autre motif
+   ne recalcule donc pas les pixels : c'est immédiat. */
+function rhythmSteps() {
+  if (P.sig === "libre") return { n: 16, reps: Math.max(1, Math.round(getDur() / 2)) };
+  const [a, b] = P.sig.split("/").map(Number), bars = Number(P.bars);
+  return { n: Math.round(a * 16 / b), reps: bars };
+}
+function mixRhythm(res) {
+  if (!res.dryL) { res.dryL = res.L; res.dryR = res.R; res.dryEnv = res.env; }
+  res.L = res.dryL; res.R = res.dryR; res.env = res.dryEnv; res.steps = null;
+  const lvl = P.rhythm / 100, a = res.an || an; if (!(lvl > 0) || !a || !(res.peak > 0)) return;
+  const { n, reps } = rhythmSteps(), pat = rhythmPattern(a, P.rseed, n), sr = res.sr || SR, Ls = res.dryL.length;
+  let root = Math.max(1, P.fmin); while (root < 38) root *= 2; while (root >= 76) root /= 2;   /* fondamentale ramenée entre 38 et 76 Hz */
+  const b = bassRender(Ls, sr, pat, reps, root), amp = 0.75 * lvl, L = new Float32Array(Ls), R2 = new Float32Array(Ls);
+  let peak = 0;
+  for (let j = 0; j < Ls; j++) { const x = b[j] * amp, l = res.dryL[j] + x, r = res.dryR[j] + x; L[j] = l; R2[j] = r; const m = Math.max(Math.abs(l), Math.abs(r)); if (m > peak) peak = m; }
+  if (peak > 0.89) { const g = 0.89 / peak; for (let j = 0; j < Ls; j++) { L[j] *= g; R2[j] *= g; } }
+  /* L'image respire aussi avec la basse. */
+  const K = res.K, env = new Float32Array(K), hop = Ls / K;
+  for (let k = 0; k < K; k++) { let m = 0; const j1 = Math.min(Ls, Math.round((k + 1) * hop)); for (let j = Math.round(k * hop); j < j1; j += 8) { const v = Math.abs(b[j]); if (v > m) m = v; } env[k] = Math.min(1.5, res.dryEnv[k] + 0.9 * lvl * m); }
+  res.L = L; res.R = R2; res.env = env; res.steps = { n, reps, vel: pat.vel };
+}
+let rhTimer = 0;
+function rhythmChanged() {
+  $("row_rnew").classList.toggle("off", !(P.rhythm > 0));
+  if (cam || !R) return;
+  clearTimeout(rhTimer); rhTimer = setTimeout(() => {
+    if (cam || !R) return;
+    const u = playing && actx ? (((playTime() % R.dur) + R.dur) % R.dur) / R.dur : 0;
+    mixRhythm(R); setTrim();
+    if (playing && !rec) startSource(u * R.dur);
+  }, 90);
+}
 function applyResult(res) {
   const u = playing && R && actx ? (((playTime() % R.dur) + R.dur) % R.dur) / R.dur : 0;
+  res.an = res.an || an; mixRhythm(res);
   R = res; R.name = imgName; setTrim();
   if (!res.preview) say(res.peak > 0 ? "" : "Cette sélection ne produit aucun son : augmente la largeur ou baisse la dynamique.");
   if (playing && !rec) startSource(u * R.dur);
@@ -963,6 +1054,7 @@ async function rerender() {
   if (!an || cam) return;
   killWorkers();
   const my = ++job, a = an;
+  const tag = r => { if (r) r.an = a; return r; };
   const p = { dur: getDur(), path: P.path, pts: P.path === "chaos" ? pathPoints(a.gw, a.gh) : null, sigma: P.sigma / 100 * Math.max(a.gw, a.gh), autoSigma: P.infl / 100, shape: FIXED.shape, disc: FIXED.disc, ring: P.ring, autoRing: P.infl / 100,
     wave: P.wave, fmin: P.fmin, fmax: P.fmax, scale: P.scale, tune: P.tune, dyn: FIXED.dyn, stereo: P.stereo / 100 };
   const show = v => { if (my === job) { prog = v; paintLine(); } };
@@ -978,13 +1070,13 @@ async function rerender() {
         killWorkers();
         const pv = await runJob(a, previewParams(p, est), () => {});
         if (my !== job) return;
-        pv.preview = true; applyResult(pv); prog = 0; paintLine();
+        pv.preview = true; applyResult(tag(pv)); prog = 0; paintLine();
         full = runJob(a, p, show);
       }
       res = await full;
     }
     if (my !== job) return;
-    busy = false; applyResult(res); paintLine();
+    busy = false; applyResult(tag(res)); paintLine();
   } catch (e) {
     if (my === job) { busy = false; paintLine(); say("Le calcul n'a pas abouti. Change un réglage pour le relancer."); }
   }
@@ -1219,7 +1311,7 @@ function applyParams(data) {
   for (const k in SETTERS) if (k in p && (typeof p[k] === "number" || typeof p[k] === "string")) SETTERS[k](p[k]);
   const s = data.selection;
   if (s && [s.x, s.y, s.w, s.h].every(v => typeof v === "number" && v >= 0 && v <= 1) && s.w >= 0.04 && s.h >= 0.04) sel = { x: Math.min(s.x, 1 - s.w), y: Math.min(s.y, 1 - s.h), w: s.w, h: s.h };
-  say("Réglages chargés."); eqChanged(); deathChanged();
+  say("Réglages chargés."); eqChanged(); deathChanged(); $("row_rnew").classList.toggle("off", !(P.rhythm > 0));
   if (typeof data.image === "string" && DEMOS[data.image] && data.image !== imgName) { const keep = sel; loadURL("data:image/jpeg;base64," + DEMOS[data.image], data.image, keep); }
   else changed(false);
 }
@@ -1579,6 +1671,7 @@ $("video").addEventListener("click", exportVideo);
 $("save").addEventListener("click", saveParams);
 $("pathprev").addEventListener("click", () => stepPath(-1));
 $("pathnext").addEventListener("click", () => stepPath(1));
+$("rnew").addEventListener("click", () => { P.rseed = P.rseed % 9999 + 1; rhythmChanged(); });   /* un autre motif tiré de la même image */
 $("reroll").addEventListener("click", () => { P.seed = P.seed % 9999 + 1; changed(false); });   /* un autre tirage du chaos */
 setPath(P.path, true); paintDeath();
 $("row_fps").hidden = true; $("row_zoom").hidden = true;

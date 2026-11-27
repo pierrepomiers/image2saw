@@ -180,7 +180,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>On a phone held upright, the settings are laid out as pages side by side: swipe sideways, or tap a section name under the image.</li>
     <li>On an iPhone or iPad, the sound plays even when the silent switch is on, like a music app. Use the volume buttons.</li>
   </ul>
-  <p class="ver">version A · 78525d0</p>
+  <p class="ver">version A · b2090ec</p>
 </article>
 <main>
   <div class="stage">
@@ -271,7 +271,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
       </div>
     </section>
     </div>
-    <p class="ver">pixels to soundscape patterns · A · 78525d0</p>
+    <p class="ver">pixels to soundscape patterns · A · b2090ec</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>
@@ -963,8 +963,8 @@ function refreshPixels() {
   cols = new Array(gw * gh); for (let i = 0; i < gw * gh; i++) cols[i] = "rgb(" + data[4 * i] + "," + data[4 * i + 1] + "," + data[4 * i + 2] + ")";
   pathPts = pathPoints(gw, gh);
   let len = 0; for (let i = 1; i < pathPts.length; i++) len += Math.hypot(pathPts[i][0] - pathPts[i - 1][0], pathPts[i][1] - pathPts[i - 1][1]);
-  statShort = (cam ? P.fps + " img/s" : getDur().toFixed(2) + " s") + " · " + gw * gh + " px";
-  statTxt = (cam ? "caméra " + (cam.facing === "user" ? "avant" : "arrière") + " · " + P.fps + " img/s · " : "") + getDur().toFixed(2) + " s · " + gw * gh + " px · " + Math.round(1000 * getDur() / Math.max(1, len)) + " ms/px";
+  statShort = (cam ? P.fps + " img/s" : getDur().toFixed(2) + " s") + " · " + gw + "×" + gh + " px";
+  statTxt = (cam ? "caméra " + (cam.facing === "user" ? "avant" : "arrière") + " · " + P.fps + " img/s · " : "") + getDur().toFixed(2) + " s · " + gw + "×" + gh + " px · " + Math.round(1000 * getDur() / Math.max(1, len)) + " ms/px";
   paintLine();
 }
 

@@ -151,7 +151,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
   <ol>
     <li>Load an image with [ load ], or pick one of the three examples.</li>
     <li>Drag on the image to select the area to play. Drag inside the frame to move it, drag a corner to resize it.</li>
-    <li>The four signs in the bottom left corner of the image: [ ▶ ] plays (it becomes [ || ] to pause; the space bar does the same), [ .wav ] exports, [ ● ] films, [ 1:1 ] films in square format.</li>
+    <li>The four signs in the bottom left corner of the image: [ ▶ ] plays (it becomes [ ▮▮ ] to pause; the space bar does the same), [ .wav ] exports, [ ● ] films, [ 1:1 ] films in square format.</li>
     <li>Change the settings. The sound is recomputed after each change, and a bar shows progress. When a loop takes long to compute, a rough preview plays first and the full-quality loop replaces it.</li>
     <li>[ .wav ] exports the loop as a 16-bit stereo wav file. [ ● ] records one loop of the moving image with its sound; it turns red while recording, and pressing it again cancels. [ 1:1 ] does the same in a 1080 × 1080 square, for the networks that expect it. If the selection is not square, it is first trimmed to a square on its short side, centred; the sound is recomputed for it, then the recording starts by itself.</li>
   </ol>
@@ -195,7 +195,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>On a phone held upright, the settings are laid out as pages side by side: swipe sideways, or tap a section name under the image (source, function, sound, EQ, time, anim, settings).</li>
     <li>On an iPhone or iPad, the sound plays even when the silent switch is on, like a music app. Use the volume buttons.</li>
   </ul>
-  <p class="ver">version A · c6fe533</p>
+  <p class="ver">version A · 5525364</p>
   </div>
   <div data-doc="fr" lang="fr">
   <p>image2saw : des pixels aux paysages sonores.</p>
@@ -204,7 +204,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
   <ol>
     <li>Charge une image avec [ charger ], ou choisis un des trois exemples.</li>
     <li>Glisse sur l'image pour sélectionner la zone à jouer. Glisse à l'intérieur du cadre pour le déplacer, tire un coin pour le redimensionner.</li>
-    <li>Les quatre signes dans le coin bas gauche de l'image : [ ▶ ] lance l'écoute (il devient [ || ] pour mettre en pause ; la barre d'espace fait de même), [ .wav ] exporte, [ ● ] filme, [ 1:1 ] filme au format carré.</li>
+    <li>Les quatre signes dans le coin bas gauche de l'image : [ ▶ ] lance l'écoute (il devient [ ▮▮ ] pour mettre en pause ; la barre d'espace fait de même), [ .wav ] exporte, [ ● ] filme, [ 1:1 ] filme au format carré.</li>
     <li>Change les réglages. Le son est recalculé à chaque changement, et une barre montre l'avancement. Quand le calcul est long, un aperçu est joué d'abord, puis remplacé par le son complet.</li>
     <li>[ .wav ] exporte la boucle en fichier wav 16 bits stéréo. [ ● ] filme un tour de boucle, l'image qui ondule avec le son ; il passe au rouge pendant l'enregistrement, et un nouvel appui annule. [ 1:1 ] fait de même dans un carré de 1080 × 1080, pour les réseaux qui l'attendent. Si la sélection n'est pas carrée, elle est d'abord ramenée au carré de son petit côté, centré ; le son est recalculé pour elle, puis l'enregistrement démarre tout seul.</li>
   </ol>
@@ -248,7 +248,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Sur un téléphone tenu debout, les réglages sont des pages côte à côte : glisse de côté, ou touche le nom d'une section sous l'image (source, fonction, son, EQ, temps, animation, réglages).</li>
     <li>Sur iPhone ou iPad, le son joue même avec le bouton silencieux, comme une application de musique. Utilise les boutons de volume.</li>
   </ul>
-  <p class="ver">version A · c6fe533</p>
+  <p class="ver">version A · 5525364</p>
   </div>
 </article>
 <main>
@@ -257,7 +257,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <div class="frame" id="frame">
       <canvas id="cv" aria-label="Image et sélection. Glisser pour sélectionner la zone à jouer."></canvas>
       <div class="transport" id="transport">
-        <button id="play" aria-pressed="false" aria-label="lecture" title="lecture / pause"><span class="i-play" aria-hidden="true">&#x25B6;&#xFE0E;</span><span class="i-pause" aria-hidden="true">||</span></button>
+        <button id="play" aria-pressed="false" aria-label="lecture" title="lecture / pause"><span class="i-play" aria-hidden="true">&#x25B6;&#xFE0E;</span><span class="i-pause" aria-hidden="true">&#x25AE;&#x25AE;</span></button>
         <button id="export" aria-label="exporter en wav" title="wav"><span aria-hidden="true">.wav</span></button>
         <button id="video" aria-pressed="false" aria-label="enregistrer la vidéo" title="vidéo"><span aria-hidden="true">&#x25CF;</span></button>
         <button id="square" aria-pressed="false" aria-label="enregistrer la vidéo au format carré" title="vidéo carrée"><span aria-hidden="true">1:1</span></button>
@@ -344,7 +344,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
       <div class="row wide" id="row_lang"><span>langue</span><div class="seg" id="langseg"><button type="button" data-lang="fr" aria-pressed="false">français</button><button type="button" data-lang="en" aria-pressed="false">english</button></div></div>
     </section>
     </div>
-    <p class="ver">pixels to soundscape patterns · A · c6fe533</p>
+    <p class="ver">pixels to soundscape patterns · A · 5525364</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>

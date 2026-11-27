@@ -141,7 +141,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <dt>grave, aigu</dt><dd>Lowest and highest pitch. The sliders move by semitones from C0 to B6, and the note name is shown next to the value. To set any other frequency, type it in hertz: for example 5 for rumbles and beats.</dd>
     <dt>échelle</dt><dd>Linear or logarithmic spread of the pitches between those two limits.</dd>
     <dt>accord</dt><dd>Leaves pitches free, or snaps them to the chromatic or pentatonic scale.</dd>
-    <dt>rythme</dt><dd>Optional bass line, off at 0. The setting is its volume, added on top of the main sound; past the point where the total would clip, everything is turned down together, so high values (up to 200 %) make the bass dominate. A rhythmic pattern is read from the image: one line of pixels is followed, one pixel per sixteenth note; the steps where the picture changes most are struck, and the colour of the pixel picks the note. It is a sub bass tuned from <b>grave</b>, it loops exactly with the main sound and goes into the exports. Its harmonics feed <b>death</b>. While it plays, each pixel that is struck lights up on the image and stays marked until the bar ends. [ autre rythme ] reads the image another way and gives another pattern. Not played in camera mode.</dd>
+    <dt>rythme</dt><dd>Optional bass line, off at 0. The setting is its volume, added on top of the main sound; past the point where the total would clip, everything is turned down together, so high values (up to 200 %) make the bass dominate. A rhythmic pattern is read from the image: one line of pixels is followed, one pixel per sixteenth note; the steps where the picture changes most are struck, and the colour of the pixel picks the note. It is a sub bass tuned from <b>grave</b>, it loops exactly with the main sound and goes into the exports. Its harmonics feed <b>death</b>. While it plays, each pixel that is struck lights up on the image and stays marked until the bar ends. In the animated image, and so in the exported video, each struck pixel also swells for the length of its hit, on top of the ripple (it follows <b>wobble</b>). [ autre rythme ] reads the image another way and gives another pattern. Not played in camera mode.</dd>
     <dt>death</dt><dd>Output distortion, from 0 (off) to 12. The deep bass stays clean; everything above it is driven through a tube-style saturation, then from 6 upwards through a stage that folds the wave over itself, then a speaker-like filter and a heavy compressor. The higher the value, the thicker and more torn the sound. It comes before the equaliser, and the overall level stays under control. The line turns red and shakes near the top.</dd>
     <dt>death sur</dt><dd>When <b>rythme</b> plays, doses what the distortion treats. Fully left (0, shown as <b>son</b>): the pixels only, the bass stays clean. In the middle (50, <b>tout</b>): everything, the default. Fully right (100, <b>rythme</b>): the bass only, the pixels stay clean. In between, the part being released slides gradually out of the distortion.</dd>
     <dt>égaliseur</dt><dd>Seven output faders, one per octave, each from −12 to +12 dB with a mark every 6 dB. The first one sets everything below 30 Hz. The last one sets everything above 2 kHz. The sliders stop at B6, just below, so it mostly shapes the harmonics that make the saw and square waves bright; only a pitch typed by hand can reach higher. The overall level is kept steady and never clips: cutting the lowest bands trades inaudible rumble for more level in the rest. [ plat ] sets all bands back to 0 dB.</dd>
@@ -158,7 +158,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Video is recorded in real time: keep the page visible until it ends.</li>
     <li>On an iPhone, the silent switch mutes the sound.</li>
   </ul>
-  <p class="ver">version A · 4f62a09</p>
+  <p class="ver">version A · 05e4b1a</p>
 </article>
 <main>
   <div class="stage">
@@ -246,7 +246,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
         <button id="reset" class="cmd">défauts</button>
       </div>
     </section>
-    <p class="ver">pixels to soundscape patterns · A · 4f62a09</p>
+    <p class="ver">pixels to soundscape patterns · A · 05e4b1a</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>
@@ -1634,6 +1634,7 @@ function draw() {
   }
   const wavy = live && amp > 0 && moving;
   if (wavy) {
+    punches(fkNow, amp);
     ripple(hx, hy, sg, amp, rw, rh, fkNow, rec ? 480 : Math.min(256, Math.round(Math.max(rw, rh) * Math.min(2, window.devicePixelRatio || 1))));
     ctx.imageSmoothingEnabled = true; ctx.drawImage(wcan, rx, ry, rw, rh);
   } else { ctx.imageSmoothingEnabled = false; ctx.drawImage(off, rx, ry, rw, rh); }
@@ -1681,6 +1682,17 @@ function draw() {
    sa couleur un peu plus loin selon la pente (réfraction). Les couleurs ne sont pas modifiées. */
 const wcan = document.createElement("canvas"); let wimg = null, WXc = new Float32Array(0), WYc = new Float32Array(0);
 let RS = null;   /* ce qui anime l'image : la boucle calculée, ou la mémoire du moteur en direct */
+let PUNCH = [];   /* frappes du rythme en cours : centre x, centre y, force, 1 / rayon² */
+function punches(fk, amp) {
+  PUNCH = [];
+  const st = R && R.steps; if (cam || !st || st.gw !== gw || st.gh !== gh) return;
+  const pos = fk / R.K * st.n * st.reps % st.n, stepSec = R.dur / (st.n * st.reps), rad = Math.max(1.6, 0.11 * Math.max(gw, gh)), boost = Math.min(1, Math.sqrt(amp));
+  for (let k = 0; k < st.n; k++) {
+    if (!st.vel[k]) continue;
+    const age = ((pos - k + st.n) % st.n) * stepSec, f = 0.8 * boost * st.vel[k] * Math.exp(-age / 0.13) * Math.min(1, age / 0.02);
+    if (f > 0.02) PUNCH.push((st.idx[k] % gw) + 0.5, Math.floor(st.idx[k] / gw) + 0.5, f, 1 / (rad * rad));
+  }
+}
 function ripple(hx, hy, sg, amp, rw, rh, fk, side) {
   const kd0 = Math.min(RS.K - 1, Math.floor(fk)), wkU = RS.dir.ux[kd0], wkV = RS.dir.uy[kd0], wkOn = RS.disc < 0.999, wo = [0, 0, 0];
   wakeShape(sg, RS.disc, RS.dir.st[kd0], wo); const wkF = 1 / (2 * wo[0] * wo[0]), wkB = 1 / (2 * wo[1] * wo[1]), wkL = 1 / (2 * wo[2] * wo[2]);
@@ -1692,7 +1704,7 @@ function ripple(hx, hy, sg, amp, rw, rh, fk, side) {
   const A = amp * Math.min(2.5, Math.max(0.7, 0.22 * sg)), c2 = lam * lam, kx = gw / ww, ky = gh / wh;
   for (let x = 0; x < ww; x++) WXc[x] = mirrorW(hx, (x + 0.5) * kx, gw, inv);
   for (let y = 0; y < wh; y++) WYc[y] = mirrorW(hy, (y + 0.5) * ky, gh, inv);
-  let o = 0;
+  let o = 0; const nP = PUNCH.length;
   for (let y = 0; y < wh; y++) {
     const gy = (y + 0.5) * ky, dy = gy - hy, wy = WYc[y];
     for (let x = 0; x < ww; x++, o += 4) {
@@ -1706,6 +1718,11 @@ function ripple(hx, hy, sg, amp, rw, rh, fk, side) {
         const E = env[ei], soft = d * d / (d * d + c2), dp = A * w * E * sn * soft; sx += ux * dp; sy += uy * dp;
         if (sx < 0) sx = -sx; else if (sx >= gw) sx = 2 * gw - sx - 0.001;
         if (sy < 0) sy = -sy; else if (sy >= gh) sy = 2 * gh - sy - 0.001;
+      }
+      /* Coup de poing du rythme : le pixel frappé gonfle vers l'œil, puis retombe. Se superpose à l'onde. */
+      for (let q = 0; q < nP; q += 4) {
+        const ex = sx - PUNCH[q], ey = sy - PUNCH[q + 1], d2 = (ex * ex + ey * ey) * PUNCH[q + 3];
+        if (d2 < 1) { const m = 1 - PUNCH[q + 2] * (1 - d2) * (1 - d2); sx = PUNCH[q] + ex * m; sy = PUNCH[q + 1] + ey * m; }
       }
       let ix = sx | 0, iy = sy | 0; if (ix < 0) ix = 0; else if (ix >= gw) ix = gw - 1; if (iy < 0) iy = 0; else if (iy >= gh) iy = gh - 1;
       const i = 4 * (iy * gw + ix);

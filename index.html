@@ -141,7 +141,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <dt>grave, aigu</dt><dd>Lowest and highest pitch. The sliders move by semitones from C0 to B6, and the note name is shown next to the value. To set any other frequency, type it in hertz: for example 5 for rumbles and beats.</dd>
     <dt>échelle</dt><dd>Linear or logarithmic spread of the pitches between those two limits.</dd>
     <dt>accord</dt><dd>Leaves pitches free, or snaps them to the chromatic or pentatonic scale.</dd>
-    <dt>rythme</dt><dd>Optional bass line, off at 0. The setting is its volume, added on top of the main sound; past the point where the total would clip, everything is turned down together, so high values (up to 200 %) make the bass dominate. A rhythmic pattern is read from the image: one line of pixels is followed, one pixel per sixteenth note; the steps where the picture changes most are struck, and the colour of the pixel picks the note. It is a sub bass tuned from <b>grave</b>, it loops exactly with the main sound and goes into the exports. Its harmonics feed <b>death</b>. [ autre rythme ] reads the image another way and gives another pattern. Not played in camera mode.</dd>
+    <dt>rythme</dt><dd>Optional bass line, off at 0. The setting is its volume, added on top of the main sound; past the point where the total would clip, everything is turned down together, so high values (up to 200 %) make the bass dominate. A rhythmic pattern is read from the image: one line of pixels is followed, one pixel per sixteenth note; the steps where the picture changes most are struck, and the colour of the pixel picks the note. It is a sub bass tuned from <b>grave</b>, it loops exactly with the main sound and goes into the exports. Its harmonics feed <b>death</b>. While it plays, each pixel that is struck lights up on the image and stays marked until the bar ends. [ autre rythme ] reads the image another way and gives another pattern. Not played in camera mode.</dd>
     <dt>death</dt><dd>Output distortion, from 0 (off) to 12. The deep bass stays clean; everything above it is driven through a tube-style saturation, then from 6 upwards through a stage that folds the wave over itself, then a speaker-like filter and a heavy compressor. The higher the value, the thicker and more torn the sound. It comes before the equaliser, and the overall level stays under control. The line turns red and shakes near the top.</dd>
     <dt>death sur</dt><dd>When <b>rythme</b> plays, doses what the distortion treats. Fully left (0, shown as <b>son</b>): the pixels only, the bass stays clean. In the middle (50, <b>tout</b>): everything, the default. Fully right (100, <b>rythme</b>): the bass only, the pixels stay clean. In between, the part being released slides gradually out of the distortion.</dd>
     <dt>égaliseur</dt><dd>Seven output faders, one per octave, each from −12 to +12 dB with a mark every 6 dB. The first one sets everything below 30 Hz. The last one sets everything above 2 kHz. The sliders stop at B6, just below, so it mostly shapes the harmonics that make the saw and square waves bright; only a pitch typed by hand can reach higher. The overall level is kept steady and never clips: cutting the lowest bands trades inaudible rumble for more level in the rest. [ plat ] sets all bands back to 0 dB.</dd>
@@ -158,7 +158,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Video is recorded in real time: keep the page visible until it ends.</li>
     <li>On an iPhone, the silent switch mutes the sound.</li>
   </ul>
-  <p class="ver">version A · a27c12a</p>
+  <p class="ver">version A · fd504da</p>
 </article>
 <main>
   <div class="stage">
@@ -246,7 +246,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
         <button id="reset" class="cmd">défauts</button>
       </div>
     </section>
-    <p class="ver">pixels to soundscape patterns · A · a27c12a</p>
+    <p class="ver">pixels to soundscape patterns · A · fd504da</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>
@@ -607,9 +607,9 @@ function rhythmPattern(an, seed, n) {
     if (mode === 0) { x = u * gw; y = line * gh; } else if (mode === 1) { x = line * gw; y = u * gh; } else { x = u * gw; y = ((u + line) % 1) * gh; }
     return Math.min(gh - 1, Math.floor(y)) * gw + Math.min(gw - 1, Math.floor(x));
   };
-  const str = new Float32Array(n), deg = new Int8Array(n);
+  const str = new Float32Array(n), deg = new Int8Array(n), idx = new Int32Array(n);
   for (let k = 0; k < n; k++) {
-    const i = at(k), j = at((k + n - 1) % n);
+    const i = at(k), j = at((k + n - 1) % n); idx[k] = i;
     let pp = an.lum[i]; if (an.colour) { const cw = smoothstep(0.05, 0.2, an.chr[i]); pp = an.lum[i] * (1 - cw) + hueToPitch(an.hue[i]) * cw; }
     str[k] = Math.abs(an.lum[i] - an.lum[j]) + 0.5 * an.con[i] + 0.25 * an.lum[i] + 0.12 * rnd();   /* le tirage départage les zones unies */
     deg[k] = BASS_DEG[Math.min(BASS_DEG.length - 1, Math.floor(pp * BASS_DEG.length))];
@@ -623,7 +623,7 @@ function rhythmPattern(an, seed, n) {
     vel[b] = 0.6 + 0.4 * Math.min(1, str[b] / top); w[(b + 1) % n] *= 0.45; w[(b + n - 1) % n] *= 0.45;
   }
   vel[0] = 1; deg[0] = 0;   /* le premier temps est toujours frappé, sur la fondamentale */
-  return { vel, deg };
+  return { vel, deg, idx };
 }
 /* Rend le motif en basse « sub » sur toute la boucle : sinus un peu saturé (ses harmoniques nourrissent death),
    léger coup d'attaque, extinction naturelle. Les notes qui débordent reviennent au début : la boucle reste parfaite. */
@@ -1041,7 +1041,7 @@ function mixRhythm(res) {
   const mL = new Float32Array(Ls), mR = new Float32Array(Ls), ga = g * amp;
   for (let j = 0; j < Ls; j++) { mL[j] = res.dryL[j] * g; mR[j] = res.dryR[j] * g; b[j] *= ga; }
   res.mainL = mL; res.mainR = mR; res.bass = b;
-  res.L = L; res.R = R2; res.env = env; res.steps = { n, reps, vel: pat.vel };
+  res.L = L; res.R = R2; res.env = env; res.steps = { n, reps, vel: pat.vel, idx: pat.idx, gw: a.gw, gh: a.gh };
 }
 let rhTimer = 0;
 function rhythmChanged() {
@@ -1646,6 +1646,16 @@ function draw() {
     ctx.beginPath();
     for (let i = 0; i < pathPts.length; i++) { const x = rx + pathPts[i][0] * cw, y = ry + pathPts[i][1] * ch; if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); }
     ctx.strokeStyle = "rgba(255,255,255,.12)"; ctx.lineWidth = 1; ctx.stroke();
+  }
+  if (!cam && live && playing && R.steps && R.steps.gw === gw && R.steps.gh === gh) {
+    /* Rythme : chaque pixel frappé s'allume à l'instant où il joue, puis reste marqué jusqu'à la fin de la mesure. */
+    const st = R.steps, pos = fkNow / R.K * st.n * st.reps % st.n, stepSec = R.dur / (st.n * st.reps);
+    for (let k = 0; k < st.n; k++) {
+      if (!st.vel[k] || k > pos) continue;
+      const a = 0.22 + 0.7 * st.vel[k] * Math.exp(-(pos - k) * stepSec / 0.22), x = rx + (st.idx[k] % gw) * cw, y = ry + Math.floor(st.idx[k] / gw) * ch;
+      ctx.fillStyle = "rgba(255,255,255," + a.toFixed(3) + ")"; ctx.fillRect(x, y, cw, ch);
+      ctx.strokeStyle = "rgba(255,255,255,.9)"; ctx.lineWidth = 1; ctx.strokeRect(x + 0.5, y + 0.5, cw - 1, ch - 1);
+    }
   }
   if (live) {
     ctx.beginPath();

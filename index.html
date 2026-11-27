@@ -148,7 +148,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
   <ol>
     <li>Load an image with [ charger ], or pick one of the three examples.</li>
     <li>Drag on the image to select the area to play. Drag inside the frame to move it, drag a corner to resize it.</li>
-    <li>The three signs in the bottom left corner of the image: [ ► ] plays (it becomes [ ║║ ] to pause; the space bar does the same), [ ∿ ] exports, [ ● ] films.</li>
+    <li>The three signs in the bottom left corner of the image: [ ► ] plays (it becomes [ || ] to pause; the space bar does the same), [ ∿ ] exports, [ ● ] films.</li>
     <li>Change the settings. The sound is recomputed after each change, and the bar under the image shows progress. When a loop takes long to compute, a rough preview plays first and the full-quality loop replaces it.</li>
     <li>[ ∿ ] exports the loop as a 16-bit stereo wav file. [ ● ] records one loop of the moving image with its sound; it turns red while recording, and pressing it again cancels.</li>
   </ol>
@@ -190,7 +190,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>On a phone held upright, the settings are laid out as pages side by side: swipe sideways, or tap a section name under the image.</li>
     <li>On an iPhone or iPad, the sound plays even when the silent switch is on, like a music app. Use the volume buttons.</li>
   </ul>
-  <p class="ver">version A · 4537664</p>
+  <p class="ver">version A · dc60c81</p>
 </article>
 <main>
   <div class="stage">
@@ -198,7 +198,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <div class="frame" id="frame">
       <canvas id="cv" aria-label="Image et sélection. Glisser pour sélectionner la zone à jouer."></canvas>
       <div class="transport" id="transport">
-        <button id="play" aria-pressed="false" aria-label="lecture" title="lecture / pause"><span class="i-play" aria-hidden="true">&#x25BA;</span><span class="i-pause" aria-hidden="true">&#x2551;&#x2551;</span></button>
+        <button id="play" aria-pressed="false" aria-label="lecture" title="lecture / pause"><span class="i-play" aria-hidden="true">&#x25BA;</span><span class="i-pause" aria-hidden="true">||</span></button>
         <button id="export" aria-label="exporter en wav" title="wav"><span aria-hidden="true">&#x223F;</span></button>
         <button id="video" aria-pressed="false" aria-label="enregistrer la vidéo" title="vidéo"><span aria-hidden="true">&#x25CF;</span></button>
       </div>
@@ -283,7 +283,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
       </div>
     </section>
     </div>
-    <p class="ver">pixels to soundscape patterns · A · 4537664</p>
+    <p class="ver">pixels to soundscape patterns · A · dc60c81</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>

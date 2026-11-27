@@ -49,9 +49,9 @@ canvas{display:block;width:100%;height:min(calc(100vw - 32px),44vh);touch-action
 #msg:empty{display:none}
 /* Commandes en surimpression, dans le coin bas gauche de l'image : lecture / pause, export wav, vidéo. */
 .frame{position:relative;justify-self:center;width:100%}
-.transport{position:absolute;left:0;bottom:0;display:flex;background:rgba(0,0,0,.62)}
+.transport{position:absolute;left:0;bottom:0;display:flex;background:rgba(0,0,0,.3);text-shadow:0 0 3px rgba(0,0,0,.9)}
 .transport button{font:inherit;min-width:44px;height:38px;padding:0 2px;border:0;background:none;color:#fff;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent}
-.transport button::before{content:"[ ";color:#9a9a9a} .transport button::after{content:" ]";color:#9a9a9a}
+.transport button::before{content:"[ ";color:#cfcfcf} .transport button::after{content:" ]";color:#cfcfcf}
 .transport button:focus-visible{outline:1px solid #fff;outline-offset:-3px}
 #play .i-pause,#play[aria-pressed=true] .i-play{display:none}
 #play[aria-pressed=true] .i-pause{display:inline}
@@ -190,7 +190,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>On a phone held upright, the settings are laid out as pages side by side: swipe sideways, or tap a section name under the image.</li>
     <li>On an iPhone or iPad, the sound plays even when the silent switch is on, like a music app. Use the volume buttons.</li>
   </ul>
-  <p class="ver">version A · c89ca08</p>
+  <p class="ver">version A · 9545dce</p>
 </article>
 <main>
   <div class="stage">
@@ -283,7 +283,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
       </div>
     </section>
     </div>
-    <p class="ver">pixels to soundscape patterns · A · c89ca08</p>
+    <p class="ver">pixels to soundscape patterns · A · 9545dce</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>

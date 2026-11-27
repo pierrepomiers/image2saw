@@ -139,7 +139,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <dt>grave, aigu</dt><dd>Lowest and highest pitch. The sliders move by semitones from C0 to B6, and the note name is shown next to the value. To set any other frequency, type it in hertz: for example 5 for rumbles and beats.</dd>
     <dt>échelle</dt><dd>Linear or logarithmic spread of the pitches between those two limits.</dd>
     <dt>accord</dt><dd>Leaves pitches free, or snaps them to the chromatic or pentatonic scale.</dd>
-    <dt>rythme</dt><dd>Optional bass line, off at 0. A rhythmic pattern is read from the image: one line of pixels is followed, one pixel per sixteenth note; the steps where the picture changes most are struck, and the colour of the pixel picks the note. It is a sub bass tuned from <b>grave</b>, it loops exactly with the main sound and goes into the exports. Its harmonics feed <b>death</b>. [ autre rythme ] reads the image another way and gives another pattern. Not played in camera mode.</dd>
+    <dt>rythme</dt><dd>Optional bass line, off at 0. The setting is its volume, added on top of the main sound; past the point where the total would clip, everything is turned down together, so high values (up to 200 %) make the bass dominate. A rhythmic pattern is read from the image: one line of pixels is followed, one pixel per sixteenth note; the steps where the picture changes most are struck, and the colour of the pixel picks the note. It is a sub bass tuned from <b>grave</b>, it loops exactly with the main sound and goes into the exports. Its harmonics feed <b>death</b>. [ autre rythme ] reads the image another way and gives another pattern. Not played in camera mode.</dd>
     <dt>death</dt><dd>Output distortion, from 0 (off) to 12. The deep bass stays clean; everything above it is driven through a tube-style saturation, then from 6 upwards through a stage that folds the wave over itself, then a speaker-like filter and a heavy compressor. The higher the value, the thicker and more torn the sound. It comes before the equaliser, and the overall level stays under control. The line turns red and shakes near the top.</dd>
     <dt>égaliseur</dt><dd>Seven output faders, one per octave, each from −12 to +12 dB with a mark every 6 dB. The first one sets everything below 30 Hz. The last one sets everything above 2 kHz. The sliders stop at B6, just below, so it mostly shapes the harmonics that make the saw and square waves bright; only a pitch typed by hand can reach higher. The overall level is kept steady and never clips: cutting the lowest bands trades inaudible rumble for more level in the rest. [ plat ] sets all bands back to 0 dB.</dd>
     <dt>stéréo</dt><dd>Stereo width. The left of the image plays in the left speaker.</dd>
@@ -155,7 +155,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Video is recorded in real time: keep the page visible until it ends.</li>
     <li>On an iPhone, the silent switch mutes the sound.</li>
   </ul>
-  <p class="ver">version A · a0e23d8</p>
+  <p class="ver">version A · bb0a6ee</p>
 </article>
 <main>
   <div class="stage">
@@ -242,7 +242,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
         <button id="reset" class="cmd">défauts</button>
       </div>
     </section>
-    <p class="ver">pixels to soundscape patterns · A · a0e23d8</p>
+    <p class="ver">pixels to soundscape patterns · A · bb0a6ee</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>
@@ -785,7 +785,7 @@ const SLIDERS = {
   fmin:    { label: "grave", min: 0.5, max: 4000, step: 0.01, unit: "Hz", note: true },
   fmax:    { label: "aigu", min: 0.5, max: 4000, step: 0.01, unit: "Hz", note: true },
   stereo:  { label: "stéréo", min: 0, max: 100, step: 1, unit: "%" },
-  rhythm:  { label: "rythme", min: 0, max: 100, step: 1, unit: "%", rh: true },
+  rhythm:  { label: "rythme", min: 0, max: 200, step: 1, unit: "%", rh: true },
   death:   { label: "death", min: 0, max: 12, step: 1, unit: "/12", dth: true },
   bpm:     { label: "tempo", min: 40, max: 240, step: 1, unit: "bpm" },
   freeDur: { label: "durée", min: 0.5, max: 30, step: 0.1, unit: "s" },
@@ -1029,7 +1029,7 @@ function mixRhythm(res) {
   if (peak > 0.89) { const g = 0.89 / peak; for (let j = 0; j < Ls; j++) { L[j] *= g; R2[j] *= g; } }
   /* L'image respire aussi avec la basse. */
   const K = res.K, env = new Float32Array(K), hop = Ls / K;
-  for (let k = 0; k < K; k++) { let m = 0; const j1 = Math.min(Ls, Math.round((k + 1) * hop)); for (let j = Math.round(k * hop); j < j1; j += 8) { const v = Math.abs(b[j]); if (v > m) m = v; } env[k] = Math.min(1.5, res.dryEnv[k] + 0.9 * lvl * m); }
+  for (let k = 0; k < K; k++) { let m = 0; const j1 = Math.min(Ls, Math.round((k + 1) * hop)); for (let j = Math.round(k * hop); j < j1; j += 8) { const v = Math.abs(b[j]); if (v > m) m = v; } env[k] = Math.min(1.5, res.dryEnv[k] + 0.9 * Math.min(1, lvl) * m); }
   res.L = L; res.R = R2; res.env = env; res.steps = { n, reps, vel: pat.vel };
 }
 let rhTimer = 0;

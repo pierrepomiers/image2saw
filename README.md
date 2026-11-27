@@ -61,7 +61,7 @@ Sur un téléphone tenu debout, les sections de réglages sont des pages côte �
 
 **drum**
 - `rythme` : ligne de basse optionnelle, coupée à 0. Le réglage est son volume, ajouté par-dessus le son principal ; quand le total saturerait, l'ensemble est baissé d'un bloc, si bien qu'aux valeurs hautes la basse passe devant. Un motif rythmique est lu dans l'image : on suit une ligne de pixels, un pixel par double croche ; les pas où l'image change le plus sont frappés, et la couleur du pixel choisit la note, comparée aux autres pixels de cette ligne : même une image d'une seule teinte donne une petite mélodie. C'est une basse « sub » accordée d'après `grave`, qui boucle exactement avec le son principal et part dans les exports. Ses harmoniques nourrissent `doom`. Pendant la lecture, chaque pixel frappé s'allume sur l'image et reste marqué jusqu'à la fin de la mesure. Dans l'image animée, donc dans la vidéo exportée, chaque pixel frappé gonfle aussi le temps de sa frappe, par-dessus l'onde (il suit `wobble`). `[ autre rythme ]` lit l'image autrement et donne un autre motif. Grisé en mode caméra, où elle ne joue pas.
-- `doom` : distorsion du rythme seul, de 0 à 12 : la même machine que `death`, mais seule la basse y passe. Les deux sont indépendantes.
+- `doom` : distorsion du rythme seul, de 0 à 12. Une cousine de `death` faite pour la basse : chaque note est saturée à la source, à force constante, si bien que son grain reste le même du début à la fin pendant qu'elle s'éteint naturellement. Les deux sont indépendantes.
 
 **EQ** (égaliseur)
 - Sept curseurs verticaux, un par octave, de −12 à +12 dB avec une graduation tous les 6 dB : sous 30 Hz, puis 60, 120, 250, 500 Hz et 1 kHz, enfin tout ce qui est au-dessus de 2 kHz.

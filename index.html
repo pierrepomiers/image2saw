@@ -174,7 +174,8 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <dt>width</dt><dd>Width of the window, as a share of the area. Around 50 %, nearly every pixel sings at once.</dd>
     <dt>resonance</dt><dd>How long a voice keeps ringing after the window has passed.</dd>
     <dt>influence</dt><dd>How much the image drives width and resonance. Flat areas widen the window, busy areas narrow it, vivid colours ring longer.</dd>
-    <dt>relief</dt><dd>Breaks the steady flow. The window rolls over the image like a marble on a roller coaster, where the height of the ground is the pitch of the pixels: climbing towards high notes costs it speed, going down it speeds up. Three things follow its speed. The window breathes: slow on a peak, it tightens onto a few pixels and single notes stand out; launched, it opens into a wash. The notes bend: they rise as the marble speeds up and sink as it slows. And there are silences: at the height of its run the marble touches nothing, and only the resonances remain, for up to a third of the loop. At 0 it moves at a steady pace; at 100 % it is a hundred times slower on the highest note than on the lowest. The loop keeps its length and still closes seamlessly. With the camera, the ground follows the live picture.</dd>
+    <dt>relief</dt><dd>Breaks the steady flow. The window rolls over the image like a marble on a roller coaster, where the height of the ground is the pitch of the pixels: climbing towards high notes costs it speed, going down it speeds up. Two things follow its speed. The window breathes: slow on a peak, it tightens onto a few pixels and single notes stand out; launched, it opens into a wash. The notes bend: they rise as the marble speeds up and sink as it slows. At 0 it moves at a steady pace; at 100 % it is a hundred times slower on the highest note than on the lowest. The loop keeps its length and still closes seamlessly. With the camera, the ground follows the live picture.</dd>
+    <dt>silence</dt><dd>Share of the loop, from 0 to 90 %, during which the window touches nothing: it happens over the lowest notes of its path, where the marble of <b>relief</b> runs fastest. Only the resonances remain, so <b>resonance</b> decides whether these gaps are clean or haunted. Works with or without relief.</dd>
     <dt>wave</dt><dd>Waveform of every voice: sine, triangle, saw or square.</dd>
     <dt>low, high</dt><dd>Lowest and highest pitch. The sliders move by semitones from C0 to B6, and the note name is shown next to the value. To set any other frequency, type it in hertz: for example 5 for rumbles and beats.</dd>
     <dt>scale</dt><dd>Linear or logarithmic (log) spread of the pitches between those two limits.</dd>
@@ -199,7 +200,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>On a phone held upright, the settings are laid out as pages side by side: swipe sideways, or tap a section name under the image (source, function, sound, EQ, time, anim, settings).</li>
     <li>On an iPhone or iPad, the sound plays even when the silent switch is on, like a music app. Use the volume buttons.</li>
   </ul>
-  <p class="ver">version A · c8b610b</p>
+  <p class="ver">version A · ee0f679</p>
   </div>
   <div data-doc="fr" lang="fr">
   <p>image2saw : des pixels aux paysages sonores.</p>
@@ -228,7 +229,8 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <dt>largeur</dt><dd>Largeur de la fenêtre, en part de la zone. Vers 50 %, presque tous les pixels chantent en même temps.</dd>
     <dt>résonance</dt><dd>Durée pendant laquelle une voix continue de sonner après le passage de la fenêtre.</dd>
     <dt>influence</dt><dd>Part que prend l'image dans la largeur et la résonance. Les zones unies élargissent la fenêtre, les zones chargées la resserrent, les couleurs vives résonnent plus longtemps.</dd>
-    <dt>relief</dt><dd>Casse le défilement régulier. La fenêtre roule sur l'image comme une bille sur des montagnes russes, où la hauteur du terrain est la hauteur de note des pixels : monter vers les notes aiguës lui coûte de la vitesse, en descente elle accélère. Trois choses suivent sa vitesse. La fenêtre respire : lente sur un point haut, elle se resserre sur quelques pixels et des notes isolées ressortent ; lancée, elle s'ouvre en nappe. Les notes glissent : elles montent quand la bille accélère et redescendent quand elle ralentit. Et il y a des silences : au plus fort de sa course la bille ne touche plus rien, seules les résonances restent, jusqu'à un tiers de la boucle. À 0 elle avance à pas régulier ; à 100 % elle est cent fois plus lente sur la note la plus haute que sur la plus basse. La boucle garde sa durée et se referme toujours sans clic. Avec la caméra, le terrain suit l'image en direct.</dd>
+    <dt>relief</dt><dd>Casse le défilement régulier. La fenêtre roule sur l'image comme une bille sur des montagnes russes, où la hauteur du terrain est la hauteur de note des pixels : monter vers les notes aiguës lui coûte de la vitesse, en descente elle accélère. Deux choses suivent sa vitesse. La fenêtre respire : lente sur un point haut, elle se resserre sur quelques pixels et des notes isolées ressortent ; lancée, elle s'ouvre en nappe. Les notes glissent : elles montent quand la bille accélère et redescendent quand elle ralentit. À 0 elle avance à pas régulier ; à 100 % elle est cent fois plus lente sur la note la plus haute que sur la plus basse. La boucle garde sa durée et se referme toujours sans clic. Avec la caméra, le terrain suit l'image en direct.</dd>
+    <dt>silence</dt><dd>Part de la boucle, de 0 à 90 %, pendant laquelle la fenêtre ne touche plus rien : cela tombe sur les notes les plus graves de son trajet, là où la bille du <b>relief</b> va le plus vite. Seules les résonances restent : c'est <b>résonance</b> qui décide si ces trous sont nets ou habités. Agit avec ou sans relief.</dd>
     <dt>onde</dt><dd>Forme d'onde de chaque voix : sinus, triangle, scie ou carré.</dd>
     <dt>grave, aigu</dt><dd>Note la plus basse et la plus haute. Les curseurs avancent par demi-tons de C0 à B6, et le nom de la note s'affiche à côté de la valeur. Pour toute autre fréquence, tape-la en hertz : par exemple 5 pour des grondements et des battements.</dd>
     <dt>échelle</dt><dd>Répartition linéaire ou logarithmique (log) des hauteurs entre ces deux limites.</dd>
@@ -253,7 +255,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Sur un téléphone tenu debout, les réglages sont des pages côte à côte : glisse de côté, ou touche le nom d'une section sous l'image (source, fonction, son, EQ, temps, animation, réglages).</li>
     <li>Sur iPhone ou iPad, le son joue même avec le bouton silencieux, comme une application de musique. Utilise les boutons de volume.</li>
   </ul>
-  <p class="ver">version A · c8b610b</p>
+  <p class="ver">version A · ee0f679</p>
   </div>
 </article>
 <main>
@@ -297,6 +299,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
       <div data-s="ring"></div>
       <div data-s="infl"></div>
       <div data-s="relief"></div>
+      <div data-s="silence"></div>
     </section>
     <section>
       <h2>son</h2>
@@ -350,7 +353,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
       <div class="row wide" id="row_lang"><span>langue</span><div class="seg" id="langseg"><button type="button" data-lang="fr" aria-pressed="false">français</button><button type="button" data-lang="en" aria-pressed="false">english</button></div></div>
     </section>
     </div>
-    <p class="ver">pixels to soundscape patterns · A · c8b610b</p>
+    <p class="ver">pixels to soundscape patterns · A · ee0f679</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>
@@ -468,7 +471,7 @@ function chaosPath(gw, gh, seed) {
    hauteur de note des pixels traversés. En montée la bille perd de la vitesse, en descente elle en reprend et
    accélère : elle s'attarde sur les sommets (notes aiguës) et file dans les creux. L'énergie se conserve, donc le
    mouvement se referme exactement sur lui-même, et la boucle garde sa durée.
-   Renvoie, pour K instants réguliers, la fraction de trajet parcourue. */
+   Renvoie, pour K instants réguliers, la fraction de trajet parcourue (et, dans .h, la hauteur du terrain). */
 function reliefWarp(an, pts, K, amount) {
   const M = 2048, flat = samplePath(pts, M), h = new Float32Array(M), { gw, gh } = an;
   for (let m = 0; m < M; m++) {
@@ -479,34 +482,38 @@ function reliefWarp(an, pts, K, amount) {
   /* Le terrain est adouci sur à peu près un pixel de trajet, en tournant : pas de marche d'escalier, pas de couture. */
   const w = Math.max(1, Math.round(M / Math.max(2, pts.length) * 0.75)), sm = new Float32Array(M); let lo = Infinity, hi = -Infinity;
   for (let m = 0; m < M; m++) { let a = 0; for (let d = -w; d <= w; d++) a += h[(m + d + M * 8) % M]; sm[m] = a / (2 * w + 1); if (sm[m] < lo) lo = sm[m]; if (sm[m] > hi) hi = sm[m]; }
-  const span = hi - lo, out = new Float64Array(K); if (!(span > 1e-6)) { for (let k = 0; k < K; k++) out[k] = k / K; return out; }
+  const span = hi - lo, out = new Float64Array(K), hk = new Float32Array(K); out.h = hk; if (!(span > 1e-6)) { for (let k = 0; k < K; k++) out[k] = k / K; return out; }
   /* Vitesse = racine de l'énergie restante : au plus haut, la bille garde un peu d'élan pour ne jamais s'arrêter. */
   const T = new Float64Array(M + 1), ratio = Math.pow(100, Math.min(1, Math.max(0, amount))), a = 1 - 1 / (ratio * ratio);   /* à 100 %, cent fois plus lent au plus haut qu'au plus bas */
   for (let m = 0; m < M; m++) T[m + 1] = T[m] + 1 / Math.sqrt(1 - a * (sm[m] - lo) / span);
   let j = 0;
-  for (let k = 0; k < K; k++) { const t = T[M] * k / K; while (j < M - 1 && T[j + 1] <= t) j++; out[k] = (j + (t - T[j]) / (T[j + 1] - T[j])) / M; }
-  return out;
+  for (let k = 0; k < K; k++) { const t = T[M] * k / K; while (j < M - 1 && T[j + 1] <= t) j++; out[k] = (j + (t - T[j]) / (T[j + 1] - T[j])) / M; hk[k] = (sm[j] - lo) / span; }
+  return out;   /* out.h : hauteur du terrain sous la bille, de 0 (creux) à 1 (point haut), à chaque instant */
 }
 /* Ce que le relief fait au son, instant par instant, d'après la vitesse de la bille (warp = fraction de trajet
    parcourue à chacun des K instants) :
    - wmul : la fenêtre respire. Lente sur un point haut, elle se resserre sur quelques pixels (des notes nettes) ;
      lancée, elle s'ouvre en nappe.
    - bend : les notes glissent. Elles montent quand la bille accélère, redescendent quand elle ralentit.
-   - gate : des silences. Au plus fort de sa course, la bille ne touche plus rien ; seules les résonances restent. */
-function reliefShape(warp, K, amount, hopSec) {
-  const v = new Float64Array(K), wmul = new Float32Array(K).fill(1), gate = new Float32Array(K).fill(1), bend = new Float64Array(K).fill(1);
+   Le silence est un réglage à part : pendant la part choisie de la boucle, là où le terrain est le plus bas (donc là
+   où la bille va le plus vite), la fenêtre ne touche plus rien ; seules les résonances restent (gate). */
+function reliefShape(warp, K, amount, silence, hopSec) {
+  const v = new Float64Array(K), wmul = new Float32Array(K).fill(1), gate = new Float32Array(K).fill(1), bend = new Float64Array(K).fill(1), h = warp.h;
+  if (silence > 0 && h) {
+    const sorted = Float32Array.from(h).sort(), thr = sorted[Math.min(K - 1, Math.floor(K * Math.min(0.95, silence)))];
+    if (sorted[K - 1] > sorted[0]) {
+      for (let k = 0; k < K; k++) gate[k] = h[k] < thr ? 0 : 1;
+      const al = 1 - Math.exp(-hopSec / 0.025); let g = gate[K - 1];
+      for (let pass = 0; pass < 2; pass++) for (let k = 0; k < K; k++) { g += al * (gate[k] - g); if (pass) gate[k] = g; }
+      g = gate[0]; for (let pass = 0; pass < 2; pass++) for (let k = K - 1; k >= 0; k--) { g += al * (gate[k] - g); if (pass) gate[k] = g; }
+    }
+  }
   let lo = Infinity, hi = 0, mean = 0;
   for (let k = 0; k < K; k++) { v[k] = (k + 1 < K ? warp[k + 1] : 1) - warp[k]; if (v[k] < lo) lo = v[k]; if (v[k] > hi) hi = v[k]; }
-  const span = hi - lo; if (!(span > 1e-12) || !(amount > 0)) return { wmul, gate, bend };
+  const span = hi - lo; if (!(span > 1e-12) || !(amount > 0)) return { wmul, gate, bend, flat: true };
   for (let k = 0; k < K; k++) { v[k] = (v[k] - lo) / span; mean += v[k] / K; }   /* 0 = au plus lent, 1 = au plus rapide */
-  /* Silence sur la part du temps où la bille va le plus vite : jusqu'à 30 % de la boucle. */
-  const sorted = Float64Array.from(v).sort(), thr = sorted[Math.min(K - 1, Math.floor(K * (1 - 0.3 * amount)))];
-  for (let k = 0; k < K; k++) gate[k] = v[k] > thr ? 0 : 1;
-  const al = 1 - Math.exp(-hopSec / 0.025); let g = gate[K - 1];
-  for (let pass = 0; pass < 2; pass++) for (let k = 0; k < K; k++) { g += al * (gate[k] - g); if (pass) gate[k] = g; }
-  g = gate[0]; for (let pass = 0; pass < 2; pass++) for (let k = K - 1; k >= 0; k--) { g += al * (gate[k] - g); if (pass) gate[k] = g; }
   for (let k = 0; k < K; k++) { wmul[k] = Math.pow(3, amount * (2 * v[k] - 1)); bend[k] = 1 + 0.5 * amount * (v[k] - mean); }
-  return { wmul, gate, bend };
+  return { wmul, gate, bend, flat: false };
 }
 function samplePath(pts, K, warp) {
   const cum = new Float64Array(pts.length);
@@ -581,7 +588,7 @@ function prep(an, p) {
   const Ls = Math.max(hop * 8, Math.round(p.dur * sr)), D = Ls / sr;
   const K = Math.max(8, Math.round(Ls / hop)), hopSec = D / K;
   const pts = p.pts || buildPath(p.path, gw, gh);   /* p.pts : parcours déjà tracé (chaos) */
-  const warp = p.relief > 0 ? reliefWarp(an, pts, K, p.relief) : null, rs = warp ? reliefShape(warp, K, p.relief, hopSec) : null;
+  const warp = p.relief > 0 || p.silence > 0 ? reliefWarp(an, pts, K, p.relief || 0) : null, rs = warp ? reliefShape(warp, K, p.relief || 0, p.silence || 0, hopSec) : null;
   const { hx, hy } = samplePath(pts, K, warp);
 
   /* Largeur de la gaussienne le long du trajet : zone unie → large, zone contrastée → étroite. */
@@ -618,8 +625,8 @@ function prep(an, p) {
   /* Relief : silences, et glissement des notes. Le glissement est ramené à une moyenne nulle sur la boucle, si bien
      que chaque voix fait toujours un nombre entier de cycles : phi donne, à chaque instant, où en est sa phase. */
   let bend = null, phi = null;
-  if (rs) {
-    for (let k = 0; k < K; k++) gn[k] *= rs.gate[k];
+  if (rs) for (let k = 0; k < K; k++) gn[k] *= rs.gate[k];
+  if (rs && !rs.flat) {
     let tot = 0; for (let k = 0; k < K; k++) tot += rs.bend[k] * (bound[k + 1] - bound[k]);
     bend = new Float64Array(K); phi = new Float64Array(K + 1);
     for (let k = 0; k < K; k++) { bend[k] = rs.bend[k] * Ls / tot; phi[k + 1] = phi[k] + bend[k] * (bound[k + 1] - bound[k]); }
@@ -934,7 +941,7 @@ const fmtHz = v => String(Number(v.toFixed(v < 100 ? 2 : v < 1000 ? 1 : 0)));
 /* Réglages retirés de l'interface et figés à leur ancienne valeur par défaut : sommet 50 %, découverte 100 %, dynamique 60 %. */
 const FIXED = { shape: 2.5, disc: 1, dyn: 0.6 };
 
-const P = { relief: 0, grid: 16, path: "cycleH", sigma: 15, ring: 0.25, infl: 60,
+const P = { relief: 0, silence: 0, grid: 16, path: "cycleH", sigma: 15, ring: 0.25, infl: 60,
   wave: "sine", fmin: noteHz(0), fmax: noteHz(59), scale: "lin", tune: "libre", stereo: 80,
   sig: "4/4", bpm: 120, bars: "4", freeDur: 8, wobble: 50, seed: 1, death: 0, fps: 12, zoom: 1, rhythm: 0, rseed: 1, dmix: 50,
   eq0: 0, eq1: 0, eq2: 0, eq3: 0, eq4: 0, eq5: 0, eq6: 0 };
@@ -948,6 +955,7 @@ const SLIDERS = {
   ring:    { label: "résonance", min: 0, max: 2, step: 0.01, unit: "s" },
   infl:    { label: "influence", min: 0, max: 100, step: 1, unit: "%" },
   relief:  { label: "relief", min: 0, max: 100, step: 1, unit: "%" },
+  silence: { label: "silence", min: 0, max: 90, step: 1, unit: "%" },
   fmin:    { label: "grave", min: 0.5, max: 4000, step: 0.01, unit: "Hz", note: true },
   fmax:    { label: "aigu", min: 0.5, max: 4000, step: 0.01, unit: "Hz", note: true },
   stereo:  { label: "stéréo", min: 0, max: 100, step: 1, unit: "%" },
@@ -1342,7 +1350,7 @@ async function rerender() {
   killWorkers();
   const my = ++job, a = an;
   const tag = r => { if (r) r.an = a; return r; };
-  const p = { dur: getDur(), path: P.path, pts: P.path === "chaos" ? pathPoints(a.gw, a.gh) : null, sigma: P.sigma / 100 * Math.max(a.gw, a.gh), autoSigma: P.infl / 100, relief: P.relief / 100, shape: FIXED.shape, disc: FIXED.disc, ring: P.ring, autoRing: P.infl / 100,
+  const p = { dur: getDur(), path: P.path, pts: P.path === "chaos" ? pathPoints(a.gw, a.gh) : null, sigma: P.sigma / 100 * Math.max(a.gw, a.gh), autoSigma: P.infl / 100, relief: P.relief / 100, silence: P.silence / 100, shape: FIXED.shape, disc: FIXED.disc, ring: P.ring, autoRing: P.infl / 100,
     wave: P.wave, fmin: P.fmin, fmax: P.fmax, scale: P.scale, tune: P.tune, dyn: FIXED.dyn, stereo: P.stereo / 100 };
   const show = v => { if (my === job) { prog = v; paintLine(); } };
   busy = true; prog = 0; paintLine();
@@ -1857,9 +1865,9 @@ function camTick() {
   /* Relief en direct : le terrain change à chaque image. On glisse de l'ancien vers le nouveau en quelques images,
      pour que la fenêtre ne saute pas d'un endroit à l'autre. */
   const wkey = gw + "x" + gh + P.path + P.seed;
-  if (P.relief > 0 && pathPts && pathPts.length) {
+  if ((P.relief > 0 || P.silence > 0) && pathPts && pathPts.length) {
     const w = reliefWarp(an, pathPts, 2048, P.relief / 100);
-    if (c.warp && c.wkey === wkey) for (let k = 0; k < 2048; k++) c.warp[k] += 0.3 * (w[k] - c.warp[k]); else c.warp = w;
+    if (c.warp && c.wkey === wkey) for (let k = 0; k < 2048; k++) { c.warp[k] += 0.3 * (w[k] - c.warp[k]); c.warp.h[k] += 0.3 * (w.h[k] - c.warp.h[k]); } else c.warp = w;
     c.wkey = wkey; camCfg();
   } else if (c.warp) { c.warp = null; camCfg(); }
   if (c.dims !== gw + "x" + gh) camCfg();
@@ -1877,7 +1885,7 @@ function camCfg() {
   const c = cam; if (!c || !gw) return;
   const { hx, hy } = samplePath(pathPts, 2048, c.warp && c.warp.length === 2048 ? c.warp : null);
   c.dims = gw + "x" + gh;
-  const rs = c.warp && c.warp.length === 2048 && P.relief > 0 ? reliefShape(c.warp, 2048, P.relief / 100, getDur() / 2048) : null;
+  const rs = c.warp && c.warp.length === 2048 && (P.relief > 0 || P.silence > 0) ? reliefShape(c.warp, 2048, P.relief / 100, P.silence / 100, getDur() / 2048) : null;
   c.cfg = { rw: rs && rs.wmul, rg: rs && rs.gate, rb: rs && Float32Array.from(rs.bend), gw, gh, hx, hy, dur: getDur(), sigma: P.sigma / 100 * Math.max(gw, gh), infl: P.infl / 100, shape: FIXED.shape, stereo: P.stereo / 100, wv: { saw: 0, square: 1, triangle: 2, sine: 3 }[P.wave], on: c.on };
   c.node.port.postMessage({ cfg: c.cfg });
 }

@@ -42,6 +42,11 @@ main[hidden],#doc[hidden]{display:none}
 canvas{display:block;width:100%;justify-self:center;height:min(calc(100vw - 32px),44vh);touch-action:none;cursor:crosshair}
 #line{min-height:1.4em;white-space:pre;overflow:hidden;color:var(--dim);font-variant-numeric:tabular-nums}
 #line.busy{color:var(--ink)}
+/* Téléphone debout : la ligne d'état monte dans le bandeau du titre, ce qui libère une ligne sous l'image. */
+.stage #line{display:none}
+#hline{flex:1;min-width:0;text-align:right;white-space:pre;overflow:hidden;color:var(--dim);font-variant-numeric:tabular-nums}
+#hline.busy{color:var(--ink)}
+#msg:empty{display:none}
 .transport{display:flex;gap:4px 16px;flex-wrap:wrap;align-items:center}
 button,.filebtn{font:inherit;color:var(--ink);background:none;border:0;border-radius:0;padding:8px 0;min-height:36px;cursor:pointer;white-space:nowrap}
 .cmd::before{content:"[ ";color:var(--dim)} .cmd::after{content:" ]";color:var(--dim)}
@@ -116,6 +121,8 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
   canvas{height:max(130px,calc(100vh - 186px));height:max(130px,calc(100dvh - 186px))}
   section:first-child h2{margin-top:0}
   #tabs{display:none}
+  .stage #line{display:block}
+  #hline{display:none}
   .pages{display:grid;overflow:visible;margin:0;padding:0;gap:0}
   .pages > section h2{position:static;width:auto;height:auto;overflow:visible;clip-path:none;margin:26px 0 6px}
   .pages > section:first-child h2{margin-top:0}
@@ -123,7 +130,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
 </style>
 </head>
 <body>
-<header><span><h1>image2saw</h1> <span aria-hidden="true">╝║╝║╝║</span></span><button id="help" class="cmd" aria-expanded="false" aria-controls="doc" aria-label="Help">?</button></header>
+<header><span><h1>image2saw</h1> <span aria-hidden="true">╝║╝║╝║</span></span><span id="hline" aria-hidden="true"></span><button id="help" class="cmd" aria-expanded="false" aria-controls="doc" aria-label="Help">?</button></header>
 <article id="doc" lang="en" hidden>
   <p>image2saw: pixels to soundscape patterns.</p>
   <p>It turns an image into a seamless sound loop. Every pixel of the selected area is a voice. A soft window travels across the area and makes the pixels under it sing.</p>
@@ -173,7 +180,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>On a phone held upright, the settings are laid out as pages side by side: swipe sideways, or tap a section name under the image.</li>
     <li>On an iPhone or iPad, the sound plays even when the silent switch is on, like a music app. Use the volume buttons.</li>
   </ul>
-  <p class="ver">version A · 21e6be7</p>
+  <p class="ver">version A · d8f83ee</p>
 </article>
 <main>
   <div class="stage">
@@ -264,7 +271,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
       </div>
     </section>
     </div>
-    <p class="ver">pixels to soundscape patterns · A · 21e6be7</p>
+    <p class="ver">pixels to soundscape patterns · A · d8f83ee</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>
@@ -835,7 +842,7 @@ const cv = $("cv"), ctx = cv.getContext("2d");
 const src = document.createElement("canvas"), off = document.createElement("canvas");
 let imgName = "manekineko", sel = { x: 0.1, y: 0.1, w: 0.8, h: 0.8 };
 let an = null, gw = 0, gh = 0, pathPts = [];
-let R = null, job = 0, timer = 0, busy = false, prog = 0, statTxt = "";
+let R = null, job = 0, timer = 0, busy = false, prog = 0, statTxt = "", statShort = "";
 let actx = null, master = null, cur = null, startAt = 0, playing = false, dl = null;
 const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -956,6 +963,7 @@ function refreshPixels() {
   cols = new Array(gw * gh); for (let i = 0; i < gw * gh; i++) cols[i] = "rgb(" + data[4 * i] + "," + data[4 * i + 1] + "," + data[4 * i + 2] + ")";
   pathPts = pathPoints(gw, gh);
   let len = 0; for (let i = 1; i < pathPts.length; i++) len += Math.hypot(pathPts[i][0] - pathPts[i - 1][0], pathPts[i][1] - pathPts[i - 1][1]);
+  statShort = (cam ? P.fps + " img/s" : getDur().toFixed(2) + " s") + " · " + gw * gh + " px";
   statTxt = (cam ? "caméra " + (cam.facing === "user" ? "avant" : "arrière") + " · " + P.fps + " img/s · " : "") + getDur().toFixed(2) + " s · " + gw * gh + " px · " + Math.round(1000 * getDur() / Math.max(1, len)) + " ms/px";
   paintLine();
 }
@@ -970,6 +978,9 @@ function paintLine() {
     el.textContent = "calcul " + "▓".repeat(k) + "░".repeat(n - k) + " " + String(Math.round(prog * 100)).padStart(3) + " %" + (heard ? " · aperçu" : "");
   } else el.textContent = statTxt;
   el.classList.toggle("busy", busy);
+  const h = $("hline"), m = 8, q = Math.round(prog * m);
+  h.textContent = busy ? "▓".repeat(q) + "░".repeat(m - q) + String(Math.round(prog * 100)).padStart(4) + " %" : statShort;
+  h.classList.toggle("busy", busy);
 }
 /* Un réglage vient de changer : le calcul en cours ne vaut plus rien, on le dit tout de suite. */
 function markBusy() { ++job; killWorkers(); busy = true; prog = 0; paintLine(); }
@@ -1634,7 +1645,7 @@ function geom() {
 const WIDE = matchMedia("(orientation:landscape) and (min-width:560px), (min-width:900px)");
 function fitFrame() {
   if (WIDE.matches || !src.width) { cv.style.height = cv.style.width = ""; return; }
-  const full = $("line").clientWidth, r = src.height / src.width, h = Math.round(Math.max(120, Math.min(document.documentElement.clientHeight * 0.46, full * r)));
+  const full = $("play").parentElement.clientWidth, r = src.height / src.width, h = Math.round(Math.max(120, Math.min(document.documentElement.clientHeight * 0.46, full * r)));
   const w = Math.round(Math.min(full, Math.max(120, h / r)));   /* image haute : le cadre se resserre autour d'elle */
   if (cv.style.height !== h + "px") cv.style.height = h + "px";
   if (cv.style.width !== w + "px") cv.style.width = w + "px";

@@ -56,8 +56,8 @@ canvas{display:block;width:100%;height:min(calc(100vw - 32px),44vh);touch-action
 #play .i-pause,#play[aria-pressed=true] .i-play{display:none}
 #play .i-play{font-size:1.25em;line-height:1;font-variant-emoji:text}
 #play[aria-pressed=true] .i-pause{display:inline}
-#video[aria-pressed=true] span{color:#ff2a1f}
-@media (prefers-reduced-motion:no-preference){#video[aria-pressed=true] span{animation:recblink 1s steps(2,start) infinite}}
+#video[aria-pressed=true] span,#square[aria-pressed=true] span{color:#ff2a1f}
+@media (prefers-reduced-motion:no-preference){#video[aria-pressed=true] span,#square[aria-pressed=true] span{animation:recblink 1s steps(2,start) infinite}}
 @keyframes recblink{to{opacity:.35}}
 button,.filebtn{font:inherit;color:var(--ink);background:none;border:0;border-radius:0;padding:8px 0;min-height:36px;cursor:pointer;white-space:nowrap}
 .cmd::before{content:"[ ";color:var(--dim)} .cmd::after{content:" ]";color:var(--dim)}
@@ -149,9 +149,9 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
   <ol>
     <li>Load an image with [ charger ], or pick one of the three examples.</li>
     <li>Drag on the image to select the area to play. Drag inside the frame to move it, drag a corner to resize it.</li>
-    <li>The three signs in the bottom left corner of the image: [ ▶ ] plays (it becomes [ || ] to pause; the space bar does the same), [ .wav ] exports, [ ● ] films.</li>
+    <li>The three signs in the bottom left corner of the image: [ ▶ ] plays (it becomes [ || ] to pause; the space bar does the same), [ .wav ] exports, [ ● ] films, [ 1:1 ] films in square format.</li>
     <li>Change the settings. The sound is recomputed after each change, and the bar under the image shows progress. When a loop takes long to compute, a rough preview plays first and the full-quality loop replaces it.</li>
-    <li>[ .wav ] exports the loop as a 16-bit stereo wav file. [ ● ] records one loop of the moving image with its sound; it turns red while recording, and pressing it again cancels.</li>
+    <li>[ .wav ] exports the loop as a 16-bit stereo wav file. [ ● ] records one loop of the moving image with its sound; it turns red while recording, and pressing it again cancels. [ 1:1 ] does the same in a 1080 × 1080 square, for the networks that expect it: the whole selection, centred on a blurred backdrop of the image.</li>
   </ol>
   <h2>what the image does</h2>
   <dl>
@@ -191,7 +191,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>On a phone held upright, the settings are laid out as pages side by side: swipe sideways, or tap a section name under the image.</li>
     <li>On an iPhone or iPad, the sound plays even when the silent switch is on, like a music app. Use the volume buttons.</li>
   </ul>
-  <p class="ver">version A · d23d7c9</p>
+  <p class="ver">version A · f61e416</p>
 </article>
 <main>
   <div class="stage">
@@ -202,6 +202,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
         <button id="play" aria-pressed="false" aria-label="lecture" title="lecture / pause"><span class="i-play" aria-hidden="true">&#x25B6;&#xFE0E;</span><span class="i-pause" aria-hidden="true">||</span></button>
         <button id="export" aria-label="exporter en wav" title="wav"><span aria-hidden="true">.wav</span></button>
         <button id="video" aria-pressed="false" aria-label="enregistrer la vidéo" title="vidéo"><span aria-hidden="true">&#x25CF;</span></button>
+        <button id="square" aria-pressed="false" aria-label="enregistrer la vidéo au format carré" title="vidéo carrée"><span aria-hidden="true">1:1</span></button>
       </div>
     </div>
     <div id="line" role="status"></div>
@@ -284,7 +285,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
       </div>
     </section>
     </div>
-    <p class="ver">pixels to soundscape patterns · A · d23d7c9</p>
+    <p class="ver">pixels to soundscape patterns · A · f61e416</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>
@@ -1370,7 +1371,7 @@ function wakeAudio() {
     return true;
   } catch (e) { say("Le son n'a pas pu démarrer dans ce navigateur."); return false; }
 }
-function setPlayUI() { $("play").setAttribute("aria-pressed", String(playing)); $("video").setAttribute("aria-pressed", String(!!rec)); }
+function setPlayUI() { $("play").setAttribute("aria-pressed", String(playing)); $("video").setAttribute("aria-pressed", String(!!rec && !rec.square)); $("square").setAttribute("aria-pressed", String(!!rec && !!rec.square)); }
 function togglePlay() {
   if (rec) { rec.cancelled = true; try { rec.mr.stop(); } catch (e) {} return; }
   if (cam) { cam.on = playing = !cam.on; camCfg(); setPlayUI(); return; }
@@ -1424,7 +1425,8 @@ async function exportWav() {
 const xcan = document.createElement("canvas"), xctx = xcan.getContext("2d");
 xcan.style.cssText = "position:fixed;left:-9999px;top:0;width:8px;height:8px"; document.body.append(xcan);
 let rec = null;
-function exportVideo() {
+function exportVideo(square) {
+  square = square === true;
   if (rec) { togglePlay(); return; }
   if (cam) { say("En direct, il n'y a pas de boucle à filmer : fige d'abord l'image avec [ figer ]."); return; }
   if (!R || R.preview || busy || R.gw !== gw || R.gh !== gh) { say("Le calcul complet n'est pas terminé : attends la fin de la barre."); return; }
@@ -1435,20 +1437,21 @@ function exportVideo() {
   if (!wakeAudio()) return;
   if (playing) { playing = false; stopSource(0.03); }
   const aw = sel.w * src.width, ah = sel.h * src.height, ev = v => Math.max(2, 2 * Math.round(v / 2));
-  xcan.width = ev(aw >= ah ? 720 : 720 * aw / ah); xcan.height = ev(ah > aw ? 720 : 720 * ah / aw);
+  if (square) xcan.width = xcan.height = 1080;   /* format carré, pour les réseaux qui l'attendent */
+  else { xcan.width = ev(aw >= ah ? 720 : 720 * aw / ah); xcan.height = ev(ah > aw ? 720 : 720 * ah / aw); }
   let mr; const chunks = [], dest = actx.createMediaStreamDestination();
   try {
     const stream = xcan.captureStream(30); dest.stream.getAudioTracks().forEach(tr => stream.addTrack(tr));
     mr = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 6000000, audioBitsPerSecond: 192000 });
   } catch (e) { say("L'enregistrement vidéo n'a pas pu démarrer dans ce navigateur."); return; }
-  const base = baseName(), ext = mime.indexOf("mp4") >= 0 ? ".mp4" : ".webm";
+  const base = baseName() + (square ? "_1x1" : ""), ext = mime.indexOf("mp4") >= 0 ? ".mp4" : ".webm";
   mr.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
   mr.onstop = () => {
     const r = rec; rec = null; playing = false; stopSource(0.02); setPlayUI(); try { trimNode.disconnect(dest); } catch (e) {}
     if (r.cancelled) { say("Enregistrement annulé."); return; }
     deliver(base + ext, new Blob(chunks, { type: mime.split(";")[0] }), null);
   };
-  rec = { mr, cancelled: false, n: 0 };
+  rec = { mr, cancelled: false, n: 0, square, fit: aw / ah };
   trimNode.connect(dest);
   playing = true; startSource(0, { once: true }); mr.start(250);
   cur.s.onended = () => { setTimeout(() => { if (rec && rec.mr === mr && mr.state !== "inactive") mr.stop(); }, 120); };
@@ -1750,7 +1753,12 @@ function draw() {
   } else { ctx.imageSmoothingEnabled = false; ctx.drawImage(off, rx, ry, rw, rh); }
   if (rec) {
     /* Image filmée : la sélection seule, plein cadre. */
-    xctx.imageSmoothingEnabled = wavy; xctx.drawImage(wavy ? wcan : off, 0, 0, xcan.width, xcan.height);
+    if (rec.square) {
+      /* Carré : la sélection entière, centrée, sur le même fond flou que la page (l'image en tout petit, étirée). */
+      const S = xcan.width, f = rec.fit, dw = f >= 1 ? S : S * f, dh = f >= 1 ? S / f : S;
+      xctx.imageSmoothingEnabled = true; xctx.drawImage($("bg"), 0, 0, S, S); xctx.fillStyle = "rgba(0,0,0,.45)"; xctx.fillRect(0, 0, S, S);
+      xctx.imageSmoothingEnabled = wavy; xctx.drawImage(wavy ? wcan : off, (S - dw) / 2, (S - dh) / 2, dw, dh);
+    } else { xctx.imageSmoothingEnabled = wavy; xctx.drawImage(wavy ? wcan : off, 0, 0, xcan.width, xcan.height); }
     if (rec.n++ % 12 === 0 && live && actx) say("Enregistrement " + Math.min(R.dur, Math.max(0, playTime())).toFixed(1) + " / " + R.dur.toFixed(1) + " s. Garde la page affichée.");
   }
   if (pathPts.length) {
@@ -1883,7 +1891,8 @@ $("help").addEventListener("click", () => {
   const open = $("doc").hidden; $("doc").hidden = !open; document.querySelector("main").hidden = open;
   $("help").setAttribute("aria-expanded", String(open)); $("help").textContent = open ? "×" : "?"; window.scrollTo(0, 0);
 });
-$("video").addEventListener("click", exportVideo);
+$("video").addEventListener("click", () => exportVideo(false));
+$("square").addEventListener("click", () => exportVideo(true));
 $("save").addEventListener("click", saveParams);
 $("pathprev").addEventListener("click", () => stepPath(-1));
 $("pathnext").addEventListener("click", () => stepPath(1));

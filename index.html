@@ -89,7 +89,7 @@ section h2 i{font-style:normal;letter-spacing:0;order:3}
 .row > label,.row > span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .row.off{opacity:.3;pointer-events:none}
 /* En direct : ce qui n'a pas de sens sans boucle figée est grisé (la basse du rythme, les exports). */
-body.live #row_rhythm,body.live #row_rnew,body.live #row_swing,body.live #row_doom{opacity:.3;pointer-events:none}
+body.live #row_rhythm,body.live #row_rnew,body.live #row_doom{opacity:.3;pointer-events:none}
 body.live #export,body.live #video,body.live #square{opacity:.35}
 .num{display:flex;justify-content:flex-end;align-items:baseline;gap:5px;color:var(--dim)}
 .num input{font:inherit;width:5ch;text-align:right;background:none;color:var(--ink);border:0;border-bottom:1px solid var(--line);border-radius:0;padding:4px 0;font-variant-numeric:tabular-nums;-moz-appearance:textfield}
@@ -164,7 +164,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
   </dl>
   <h2>settings</h2>
   <dl>
-    <dt>camera</dt><dd>Plays the live picture of the phone or computer camera instead of a still image: move the camera and the sound follows at once. [ flip ] switches between the back and front cameras. [ freeze ] keeps the current picture and goes back to the normal mode, where loops can be exported. While the camera runs, what needs a frozen loop is greyed out: the whole <b>drum</b> section (rhythm, swing, doom) and the export signs. Every other setting works the same. Picking a demo image or loading one also leaves the camera. The live sound is held at the same loudness as the frozen loop. The camera only works when the page is opened in a browser such as Safari or Chrome, not inside Claude.</dd>
+    <dt>camera</dt><dd>Plays the live picture of the phone or computer camera instead of a still image: move the camera and the sound follows at once. [ flip ] switches between the back and front cameras. [ freeze ] keeps the current picture and goes back to the normal mode, where loops can be exported. While the camera runs, what needs a frozen loop is greyed out: the whole <b>drum</b> section (rhythm, doom) and the export signs. Every other setting works the same. Picking a demo image or loading one also leaves the camera. The live sound is held at the same loudness as the frozen loop. The camera only works when the page is opened in a browser such as Safari or Chrome, not inside Claude.</dd>
     <dt>zoom</dt><dd>With the camera, zooms in up to 8×. The lens zoom of the device is used when the browser gives access to it; beyond that, or without it, the picture is cropped around its centre.</dd>
     <dt>frames/s</dt><dd>With the camera, how many times per second the sound and the picture are refreshed, from 1 to 30. Low values give a stepped, stroboscopic result.</dd>
     <dt>resolution</dt><dd>Number of pixels on the long side of the area, from 1 to 64. Every pixel is visited, so more pixels means faster travel and a longer computation. h-snake and v-snake may add one pixel so that their path can close. With the camera it is capped at 32.</dd>
@@ -178,8 +178,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <dt>low, high</dt><dd>Lowest and highest pitch. The sliders move by semitones from C0 to B6, and the note name is shown next to the value. To set any other frequency, type it in hertz: for example 5 for rumbles and beats.</dd>
     <dt>scale</dt><dd>Linear or logarithmic (log) spread of the pitches between those two limits.</dd>
     <dt>tuning</dt><dd>Leaves pitches free, or snaps them to the chromatic or pentatonic scale.</dd>
-    <dt>rhythm</dt><dd>Optional bass line, off at 0. The setting is its volume, added on top of the main sound; past the point where the total would clip, everything is turned down together, so at high values the bass comes forward. A rhythmic pattern is read from the image: one line of pixels is followed, one pixel per sixteenth note; the steps where the picture changes most are struck, and the colour of the pixel picks the note. It is a sub bass tuned from <b>low</b>, it loops exactly with the main sound and goes into the exports. Its harmonics feed <b>doom</b>. While it plays, each pixel that is struck lights up on the image and stays marked until the bar ends. In the moving image, and so in the exported video, each struck pixel also swells for the length of its hit, on top of the ripple (it follows <b>wobble</b>). [ new rhythm ] reads the image another way and gives another pattern. Greyed out in camera mode, where it does not play.</dd>
-    <dt>swing</dt><dd>Adds chance to the <b>rhythm</b> so that it sounds less mechanical: each hit lands a little early or late, strikes harder or softer, and now and then is missed. At 0 the rhythm is strictly on the grid. The draw is fixed, so the loop stays the same from one turn to the next; [ new rhythm ] also changes it.</dd>
+    <dt>rhythm</dt><dd>Optional bass line, off at 0. The setting is its volume, added on top of the main sound; past the point where the total would clip, everything is turned down together, so at high values the bass comes forward. A rhythmic pattern is read from the image: one line of pixels is followed, one pixel per sixteenth note; the steps where the picture changes most are struck, and the colour of the pixel picks the note, compared with the other pixels of that line, so that even an image of a single hue gives a small melody. It is a sub bass tuned from <b>low</b>, it loops exactly with the main sound and goes into the exports. Its harmonics feed <b>doom</b>. While it plays, each pixel that is struck lights up on the image and stays marked until the bar ends. In the moving image, and so in the exported video, each struck pixel also swells for the length of its hit, on top of the ripple (it follows <b>wobble</b>). [ new rhythm ] reads the image another way and gives another pattern. Greyed out in camera mode, where it does not play.</dd>
     <dt>doom</dt><dd>Distortion of the rhythm alone, from 0 (off) to 12: the same machine as <b>death</b>, but only the bass goes through it. The two are independent, so the bass can be torn while the pixels stay clean, or the reverse.</dd>
     <dt>death</dt><dd>Distortion of the sound of the pixels, from 0 (off) to 12. The rhythm has its own, <b>doom</b>. The deep bass stays clean; everything above it is driven through a tube-style saturation, then from 6 upwards through a stage that folds the wave over itself, then a speaker-like filter and a heavy compressor. The higher the value, the thicker and more torn the sound. It comes before the equalizer, and the overall level stays close to the level without it. The line turns red and shakes near the top.</dd>
     <dt>equalizer</dt><dd>Seven output faders, one per octave, each from −12 to +12 dB with a mark every 6 dB. The first one sets everything below 30 Hz. The last one sets everything above 2 kHz. The sliders stop at B6, just below, so it mostly shapes the harmonics that make the saw and square waves bright; only a pitch typed by hand can reach higher. The overall level is kept steady and never clips: cutting the lowest bands trades inaudible rumble for more level in the rest. [ flat ] sets all bands back to 0 dB.</dd>
@@ -199,7 +198,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>On a phone held upright, the settings are laid out as pages side by side: swipe sideways, or tap a section name under the image (source, function, sound, drum, EQ, time, anim, settings).</li>
     <li>On an iPhone or iPad, the sound plays even when the silent switch is on, like a music app. Use the volume buttons.</li>
   </ul>
-  <p class="ver">version A · ba2d747</p>
+  <p class="ver">version A · 124f6eb</p>
   </div>
   <div data-doc="fr" lang="fr">
   <p>image2saw : des pixels aux paysages sonores.</p>
@@ -220,7 +219,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
   </dl>
   <h2>réglages</h2>
   <dl>
-    <dt>caméra</dt><dd>Joue l'image en direct de la caméra du téléphone ou de l'ordinateur à la place d'une image fixe : bouge la caméra et le son suit aussitôt. [ retourner ] passe de la caméra arrière à la caméra avant. [ figer ] garde l'image en cours et revient au mode normal, où les boucles s'exportent. Tant que la caméra tourne, ce qui demande une boucle figée est grisé : toute la section <b>drum</b> (rythme, swing, doom) et les signes d'export. Tous les autres réglages agissent de la même façon. Choisir une image d'exemple ou en charger une quitte aussi la caméra. Le son en direct est tenu au même niveau que la boucle figée. La caméra ne fonctionne que si la page est ouverte dans un navigateur comme Safari ou Chrome, pas à l'intérieur de Claude.</dd>
+    <dt>caméra</dt><dd>Joue l'image en direct de la caméra du téléphone ou de l'ordinateur à la place d'une image fixe : bouge la caméra et le son suit aussitôt. [ retourner ] passe de la caméra arrière à la caméra avant. [ figer ] garde l'image en cours et revient au mode normal, où les boucles s'exportent. Tant que la caméra tourne, ce qui demande une boucle figée est grisé : toute la section <b>drum</b> (rythme, doom) et les signes d'export. Tous les autres réglages agissent de la même façon. Choisir une image d'exemple ou en charger une quitte aussi la caméra. Le son en direct est tenu au même niveau que la boucle figée. La caméra ne fonctionne que si la page est ouverte dans un navigateur comme Safari ou Chrome, pas à l'intérieur de Claude.</dd>
     <dt>zoom</dt><dd>Avec la caméra, grossit jusqu'à 8×. Le zoom de l'objectif est utilisé quand le navigateur y donne accès ; au-delà, ou sans lui, l'image est recadrée autour de son centre.</dd>
     <dt>images/s</dt><dd>Avec la caméra, nombre de fois par seconde où le son et l'image sont rafraîchis, de 1 à 30. Les valeurs basses donnent un résultat saccadé, stroboscopique.</dd>
     <dt>résolution</dt><dd>Nombre de pixels sur le grand côté de la zone, de 1 à 64. Chaque pixel est visité : plus il y en a, plus le parcours est rapide et le calcul long. h-snake et v-snake ajoutent au besoin un pixel pour que leur trajet puisse se refermer. Avec la caméra, elle est plafonnée à 32.</dd>
@@ -234,8 +233,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <dt>grave, aigu</dt><dd>Note la plus basse et la plus haute. Les curseurs avancent par demi-tons de C0 à B6, et le nom de la note s'affiche à côté de la valeur. Pour toute autre fréquence, tape-la en hertz : par exemple 5 pour des grondements et des battements.</dd>
     <dt>échelle</dt><dd>Répartition linéaire ou logarithmique (log) des hauteurs entre ces deux limites.</dd>
     <dt>accord</dt><dd>Laisse les hauteurs libres, ou les cale sur la gamme chromatique ou pentatonique.</dd>
-    <dt>rythme</dt><dd>Ligne de basse optionnelle, coupée à 0. Le réglage est son volume, ajouté par-dessus le son principal ; quand le total saturerait, l'ensemble est baissé d'un bloc, si bien qu'aux valeurs hautes la basse passe devant. Un motif rythmique est lu dans l'image : on suit une ligne de pixels, un pixel par double croche ; les pas où l'image change le plus sont frappés, et la couleur du pixel choisit la note. C'est une basse « sub » accordée d'après <b>grave</b>, qui boucle exactement avec le son principal et part dans les exports. Ses harmoniques nourrissent <b>doom</b>. Pendant la lecture, chaque pixel frappé s'allume sur l'image et reste marqué jusqu'à la fin de la mesure. Dans l'image animée, donc dans la vidéo exportée, chaque pixel frappé gonfle aussi le temps de sa frappe, par-dessus l'onde (il suit <b>wobble</b>). [ autre rythme ] lit l'image autrement et donne un autre motif. Grisé en mode caméra, où elle ne joue pas.</dd>
-    <dt>swing</dt><dd>Ajoute du hasard au <b>rythme</b> pour qu'il sonne moins mécanique : chaque frappe arrive un peu en avance ou en retard, tape plus ou moins fort, et de temps en temps manque. À 0 le rythme est strictement sur la grille. Le tirage est fixe : la boucle reste la même d'un tour à l'autre ; [ autre rythme ] le change aussi.</dd>
+    <dt>rythme</dt><dd>Ligne de basse optionnelle, coupée à 0. Le réglage est son volume, ajouté par-dessus le son principal ; quand le total saturerait, l'ensemble est baissé d'un bloc, si bien qu'aux valeurs hautes la basse passe devant. Un motif rythmique est lu dans l'image : on suit une ligne de pixels, un pixel par double croche ; les pas où l'image change le plus sont frappés, et la couleur du pixel choisit la note, comparée aux autres pixels de cette ligne : même une image d'une seule teinte donne une petite mélodie. C'est une basse « sub » accordée d'après <b>grave</b>, qui boucle exactement avec le son principal et part dans les exports. Ses harmoniques nourrissent <b>doom</b>. Pendant la lecture, chaque pixel frappé s'allume sur l'image et reste marqué jusqu'à la fin de la mesure. Dans l'image animée, donc dans la vidéo exportée, chaque pixel frappé gonfle aussi le temps de sa frappe, par-dessus l'onde (il suit <b>wobble</b>). [ autre rythme ] lit l'image autrement et donne un autre motif. Grisé en mode caméra, où elle ne joue pas.</dd>
     <dt>doom</dt><dd>Distorsion du rythme seul, de 0 (coupée) à 12 : la même machine que <b>death</b>, mais seule la basse y passe. Les deux sont indépendantes : la basse peut être déchirée pendant que les pixels restent propres, ou l'inverse.</dd>
     <dt>death</dt><dd>Distorsion du son des pixels, de 0 (coupée) à 12. Le rythme a la sienne, <b>doom</b>. Le grave profond reste propre ; tout ce qui est au-dessus passe dans une saturation de type lampe, puis à partir de 6 dans un étage qui replie l'onde sur elle-même, puis dans un filtre façon haut-parleur et un compresseur lourd. Plus la valeur est haute, plus le son est épais et déchiré. Elle agit avant l'égaliseur, et le niveau d'ensemble reste proche du niveau sans elle. La ligne passe au rouge et tremble vers le haut de la course.</dd>
     <dt>égaliseur</dt><dd>Sept faders de sortie, un par octave, chacun de −12 à +12 dB avec un repère tous les 6 dB. Le premier règle tout ce qui est sous 30 Hz. Le dernier règle tout ce qui est au-dessus de 2 kHz. Les curseurs de note s'arrêtent à B6, juste en dessous : il façonne donc surtout les harmoniques qui rendent brillantes les ondes scie et carré ; seule une hauteur tapée à la main peut monter plus haut. Le niveau d'ensemble est tenu stable et ne sature jamais : couper les bandes les plus graves échange un grondement inaudible contre du niveau pour le reste. [ plat ] remet toutes les bandes à 0 dB.</dd>
@@ -255,7 +253,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Sur un téléphone tenu debout, les réglages sont des pages côte à côte : glisse de côté, ou touche le nom d'une section sous l'image (source, fonction, son, drum, EQ, temps, animation, réglages).</li>
     <li>Sur iPhone ou iPad, le son joue même avec le bouton silencieux, comme une application de musique. Utilise les boutons de volume.</li>
   </ul>
-  <p class="ver">version A · ba2d747</p>
+  <p class="ver">version A · 124f6eb</p>
   </div>
 </article>
 <main>
@@ -315,7 +313,6 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
       <h2>drum</h2>
       <div data-s="rhythm"></div>
       <div class="row wide" id="row_rnew"><span></span><div class="seg"><button id="rnew" class="cmd">autre rythme</button></div></div>
-      <div data-s="swing"></div>
       <div data-s="doom"></div>
     </section>
     <section>
@@ -357,7 +354,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
       <div class="row wide" id="row_lang"><span>langue</span><div class="seg" id="langseg"><button type="button" data-lang="fr" aria-pressed="false">français</button><button type="button" data-lang="en" aria-pressed="false">english</button></div></div>
     </section>
     </div>
-    <p class="ver">pixels to soundscape patterns · A · ba2d747</p>
+    <p class="ver">pixels to soundscape patterns · A · 124f6eb</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>
@@ -774,7 +771,7 @@ function levelGain(L, R, sr) {
 /* Rythme : un motif de basse lu dans l'image. On suit une ligne de pixels (rangée, colonne ou diagonale, selon le
    tirage), un pixel par pas : les pas où l'image change le plus sont frappés, la couleur du pixel choisit la note.
    Renvoie, pour n pas, la force de frappe (0 = silence) et le degré joué. */
-const BASS_DEG = [0, 0, 0, 7, 12, 5, 3, 10];
+const BASS_DEG = [0, 0, 3, 5, 7, 7, 10, 12];   /* du plus grave au plus aigu : fondamentale, tierce, quarte, quinte, septième, octave */
 function rhythmPattern(an, seed, n) {
   let s = (seed * 2654435761) >>> 0;
   const rnd = () => { s = (s + 0x6D2B79F5) | 0; let t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
@@ -785,13 +782,17 @@ function rhythmPattern(an, seed, n) {
     if (mode === 0) { x = u * gw; y = line * gh; } else if (mode === 1) { x = line * gw; y = u * gh; } else { x = u * gw; y = ((u + line) % 1) * gh; }
     return Math.min(gh - 1, Math.floor(y)) * gw + Math.min(gw - 1, Math.floor(x));
   };
-  const str = new Float32Array(n), deg = new Int8Array(n), idx = new Int32Array(n);
+  const str = new Float32Array(n), deg = new Int8Array(n), idx = new Int32Array(n), pit = new Float32Array(n);
   for (let k = 0; k < n; k++) {
     const i = at(k), j = at((k + n - 1) % n); idx[k] = i;
     let pp = an.lum[i]; if (an.colour) { const cw = smoothstep(0.05, 0.2, an.chr[i]); pp = an.lum[i] * (1 - cw) + hueToPitch(an.hue[i]) * cw; }
     str[k] = Math.abs(an.lum[i] - an.lum[j]) + 0.5 * an.con[i] + 0.25 * an.lum[i] + 0.12 * rnd();   /* le tirage départage les zones unies */
-    deg[k] = BASS_DEG[Math.min(BASS_DEG.length - 1, Math.floor(pp * BASS_DEG.length))];
+    pit[k] = pp;
   }
+  /* La note suit la couleur du pixel, comparée aux autres pixels de la ligne lue et non dans l'absolu : même une
+     image d'une seule teinte donne une petite mélodie, tirée de ses nuances. */
+  let p0 = Infinity, p1 = -Infinity; for (let k = 0; k < n; k++) { if (pit[k] < p0) p0 = pit[k]; if (pit[k] > p1) p1 = pit[k]; }
+  for (let k = 0; k < n; k++) deg[k] = p1 - p0 > 1e-4 ? BASS_DEG[Math.min(BASS_DEG.length - 1, Math.floor((pit[k] - p0) / (p1 - p0) * BASS_DEG.length))] : 0;
   /* On frappe les pas les plus marqués, en évitant les paquets de pas voisins : un rythme a besoin de silences. */
   const hits = Math.max(2, Math.round(dens * n)), vel = new Float32Array(n), w = Float32Array.from(str); let top = 0;
   for (let k = 0; k < n; k++) if (str[k] > top) top = str[k]; top = top || 1;
@@ -805,18 +806,12 @@ function rhythmPattern(an, seed, n) {
 }
 /* Rend le motif en basse « sub » sur toute la boucle : sinus un peu saturé (ses harmoniques nourrissent death),
    léger coup d'attaque, extinction naturelle. Les notes qui débordent reviennent au début : la boucle reste parfaite. */
-function bassRender(Ls, sr, pat, reps, root, swing, seed) {
+function bassRender(Ls, sr, pat, reps, root) {
   const out = new Float32Array(Ls), n = pat.vel.length, total = n * reps, stepLen = Ls / total, TAU = 6.283185307179586;
-  /* Swing : un peu de hasard dans le jeu, pour qu'il sonne moins mécanique. Chaque frappe arrive un peu en avance
-     ou en retard, tape plus ou moins fort, et de temps en temps manque. Le tirage est fixe : la boucle reste la même. */
-  const sw = Math.min(1, Math.max(0, swing || 0)); let rs = ((seed || 1) * 2246822519) >>> 0;
-  const rnd = () => { rs = (rs + 0x6D2B79F5) | 0; let t = Math.imul(rs ^ (rs >>> 15), 1 | rs); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
   for (let q = 0; q < total; q++) {
-    const k = q % n; let v = pat.vel[k]; if (!v) continue;
-    const late = (rnd() - 0.5) * 0.9 * sw, soft = rnd(), miss = rnd();
-    if (sw > 0) { if (k !== 0 && miss < 0.18 * sw) continue; v *= 1 - 0.55 * sw * soft; }
+    const k = q % n, v = pat.vel[k]; if (!v) continue;
     let gap = 1; while (gap < n && !pat.vel[(k + gap) % n]) gap++;
-    const f = root * Math.pow(2, pat.deg[k] / 12), start = ((Math.round((q + late) * stepLen) % Ls) + Ls) % Ls;
+    const f = root * Math.pow(2, pat.deg[k] / 12), start = Math.round(q * stepLen);
     const len = Math.max(64, Math.round(Math.min(gap * stepLen, 0.9 * sr))), tau = Math.min(0.28, 0.6 * gap * stepLen / sr) * sr;
     const att = Math.max(8, Math.round(0.004 * sr)), rel = Math.max(8, Math.round(0.012 * sr)), kick = 0.022 * sr;
     let ph = 0;
@@ -959,7 +954,7 @@ const FIXED = { shape: 2.5, disc: 1, dyn: 0.6 };
 
 const P = { relief: 0, silence: 0, grid: 16, path: "cycleH", sigma: 15, ring: 0.25, infl: 60,
   wave: "sine", fmin: noteHz(0), fmax: noteHz(59), scale: "lin", tune: "libre", stereo: 80,
-  sig: "4/4", bpm: 120, bars: "4", freeDur: 8, wobble: 50, seed: 1, death: 0, fps: 12, zoom: 1, rhythm: 0, rseed: 1, doom: 0, swing: 0,
+  sig: "4/4", bpm: 120, bars: "4", freeDur: 8, wobble: 50, seed: 1, death: 0, fps: 12, zoom: 1, rhythm: 0, rseed: 1, doom: 0,
   eq0: 0, eq1: 0, eq2: 0, eq3: 0, eq4: 0, eq5: 0, eq6: 0 };
 if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) P.wobble = 0;
 
@@ -977,7 +972,6 @@ const SLIDERS = {
   stereo:  { label: "stéréo", min: 0, max: 100, step: 1, unit: "%" },
   rhythm:  { label: "rythme", min: 0, max: 100, step: 1, unit: "%", rh: true },
   doom:    { label: "doom", min: 0, max: 12, step: 1, unit: "/12", dth: true },
-  swing:   { label: "swing", min: 0, max: 100, step: 1, unit: "%", rh: true },
   death:   { label: "death", min: 0, max: 12, step: 1, unit: "/12", dth: true },
   bpm:     { label: "tempo", min: 40, max: 240, step: 1, unit: "bpm" },
   freeDur: { label: "durée", min: 0.5, max: 60, step: 0.5, unit: "s" },
@@ -1067,7 +1061,7 @@ const DEFAULTS = Object.assign({}, P);
 
 function changed(liveOnly) {
   const free = P.sig === "libre";
-  $("row_bpm").classList.toggle("off", free); $("row_bars").classList.toggle("off", free); $("row_freeDur").classList.toggle("off", !free); for (const id of ["row_rnew", "row_swing", "row_doom"]) $(id).classList.toggle("off", !(P.rhythm > 0));
+  $("row_bpm").classList.toggle("off", free); $("row_bars").classList.toggle("off", free); $("row_freeDur").classList.toggle("off", !free); for (const id of ["row_rnew", "row_doom"]) $(id).classList.toggle("off", !(P.rhythm > 0));
   if (cam) camTimer();
   if (liveOnly) return;
   if (cam) { refreshPixels(); camCfg(); return; }   /* en direct, rien à recalculer : le moteur reçoit les nouveaux réglages */
@@ -1330,7 +1324,7 @@ function mixRhythm(res) {
   const lvl = P.rhythm / 100, a = res.an || an; if (!(lvl > 0) || !a || !(res.peak > 0)) return;
   const { n, reps } = rhythmSteps(), pat = rhythmPattern(a, P.rseed, n), sr = res.sr || SR, Ls = res.dryL.length;
   let root = Math.max(1, P.fmin); while (root < 38) root *= 2; while (root >= 76) root /= 2;   /* fondamentale ramenée entre 38 et 76 Hz */
-  const b = bassRender(Ls, sr, pat, reps, root, P.swing / 100, P.rseed), amp = 0.75 * lvl, L = new Float32Array(Ls), R2 = new Float32Array(Ls);
+  const b = bassRender(Ls, sr, pat, reps, root), amp = 0.75 * lvl, L = new Float32Array(Ls), R2 = new Float32Array(Ls);
   let peak = 0;
   for (let j = 0; j < Ls; j++) { const x = b[j] * amp, l = res.dryL[j] + x, r = res.dryR[j] + x; L[j] = l; R2[j] = r; const m = Math.max(Math.abs(l), Math.abs(r)); if (m > peak) peak = m; }
   /* L'image respire aussi avec la basse. */
@@ -1346,7 +1340,7 @@ function mixRhythm(res) {
 }
 let rhTimer = 0;
 function rhythmChanged() {
-  for (const id of ["row_rnew", "row_swing", "row_doom"]) $(id).classList.toggle("off", !(P.rhythm > 0));
+  for (const id of ["row_rnew", "row_doom"]) $(id).classList.toggle("off", !(P.rhythm > 0));
   if (cam || !R) return;
   clearTimeout(rhTimer); rhTimer = setTimeout(() => {
     if (cam || !R) return;
@@ -1717,7 +1711,7 @@ function applyParams(data) {
   for (const k in SETTERS) if (k in p && (typeof p[k] === "number" || typeof p[k] === "string")) SETTERS[k](p[k]);
   const s = data.selection;
   if (s && [s.x, s.y, s.w, s.h].every(v => typeof v === "number" && v >= 0 && v <= 1) && s.w >= 0.04 && s.h >= 0.04) sel = { x: Math.min(s.x, 1 - s.w), y: Math.min(s.y, 1 - s.h), w: s.w, h: s.h };
-  say("Réglages chargés."); eqChanged(); deathChanged(); paintDeath(); for (const id of ["row_rnew", "row_swing", "row_doom"]) $(id).classList.toggle("off", !(P.rhythm > 0));
+  say("Réglages chargés."); eqChanged(); deathChanged(); paintDeath(); for (const id of ["row_rnew", "row_doom"]) $(id).classList.toggle("off", !(P.rhythm > 0));
   if (typeof data.image === "string" && DEMOS[data.image] && data.image !== imgName) { const keep = sel; loadURL("data:image/jpeg;base64," + DEMOS[data.image], data.image, keep); }
   else changed(false);
 }

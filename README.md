@@ -45,7 +45,7 @@ Sur un téléphone tenu debout, les sections de réglages sont des pages côte �
 - `largeur` : taille de la fenêtre, en proportion de la zone. Vers 50 %, presque tous les pixels chantent en même temps.
 - `résonance` : temps pendant lequel une voix sonne encore après le passage de la fenêtre.
 - `influence` : poids de l'image sur la largeur et la résonance. Zone unie : fenêtre plus large. Zone chargée : plus étroite. Couleur vive : résonance plus longue.
-- `relief` : fait rouler la fenêtre sur l'image comme une bille sur des montagnes russes, où la hauteur du terrain est la hauteur de note des pixels. Monter vers les notes aiguës lui coûte de la vitesse : elle s'attarde sur les points hauts ; en descente elle accélère et file dans les notes graves. À 0 elle avance à pas régulier ; à 100 % elle est vingt fois plus lente sur la note la plus haute que sur la plus basse. La boucle garde sa durée et se referme sans clic. Avec la caméra, le terrain suit l'image en direct.
+- `relief` : fait rouler la fenêtre sur l'image comme une bille sur des montagnes russes, où la hauteur du terrain est la hauteur de note des pixels. Monter vers les notes aiguës lui coûte de la vitesse : elle s'attarde sur les points hauts ; en descente elle accélère et file dans les notes graves. À 0 elle avance à pas régulier ; à 100 % elle est cent fois plus lente sur la note la plus haute que sur la plus basse : elle s'arrête presque sur les points hauts et traverse le reste en un éclair. La boucle garde sa durée et se referme sans clic. Avec la caméra, le terrain suit l'image en direct.
 
 **son**
 - `onde` : sinus, triangle, scie ou carré.

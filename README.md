@@ -27,6 +27,8 @@ La version exacte est affichée en bas de la page (`A · numéro de commit`). L'
 ## Réglages
 
 **image**
+Sur un téléphone tenu debout, les sections de réglages sont des pages côte à côte : on les feuillette en glissant de côté, ou en touchant leur nom sous l'image.
+
 - `[ caméra ]` : joue en direct l'image de la caméra du téléphone ou de l'ordinateur à la place d'une image fixe. On bouge la caméra, le son suit aussitôt. `[ retourner ]` passe de la caméra arrière à la caméra avant. `[ figer ]` garde l'image du moment et revient au mode normal, où les boucles s'exportent. Choisir une image d'exemple ou en charger une quitte aussi la caméra. Le son en direct est tenu au même niveau que la boucle figée. La caméra ne fonctionne que si la page est ouverte dans un navigateur (Safari, Chrome), pas à l'intérieur de Claude.
 - `zoom` : avec la caméra, grossit jusqu'à 8×. Le zoom de l'objectif est utilisé quand le navigateur y donne accès ; au-delà, ou sans lui, l'image est recadrée autour de son centre.
 - `images/s` : avec la caméra, nombre de rafraîchissements du son et de l'image par seconde, de 1 à 30. Une valeur basse donne un résultat saccadé, stroboscopique.

@@ -20,8 +20,8 @@ header{padding:6px 0;color:var(--ink);white-space:nowrap;display:flex;justify-co
 #doc{max-width:1100px;margin:0 auto;padding-bottom:24px}
 #doc p,#doc li,#doc dd{max-width:68ch}
 #doc h2{margin:22px 0 8px;font-size:13px;font-weight:400;color:var(--ink);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;display:flex;min-width:0}
-#doc h2::before{content:"═══";letter-spacing:0;margin-right:1ch}
-#doc h2::after{content:"════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════";letter-spacing:0;flex:1;min-width:0;overflow:hidden;order:2;margin-left:1ch;direction:rtl}
+#doc h2::before{content:"▒▒▒";letter-spacing:0;margin-right:1ch}
+#doc h2::after{content:"▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒";letter-spacing:0;flex:1;min-width:0;overflow:hidden;order:2;margin-left:1ch;direction:rtl}
 #doc h2 i{font-style:normal;letter-spacing:0;order:3}
 #doc ol,#doc ul{margin:0;padding-left:3ch}
 #doc li{margin:4px 0}
@@ -53,9 +53,18 @@ button:focus-visible,.filebtn:focus-within,input:focus-visible{outline:1px solid
 #msg:empty{display:none}
 .panel{display:grid;min-width:0;align-content:start}
 section{display:grid}
+/* Téléphone debout : les sections se feuillettent de gauche à droite, la suivante dépasse un peu pour le montrer. */
+#tabs{display:flex;gap:14px;overflow-x:auto;margin:0 -16px -6px;padding:0 16px 3px;scrollbar-width:none;white-space:nowrap}
+#tabs::-webkit-scrollbar,.pages::-webkit-scrollbar{display:none}
+#tabs button{font:inherit;background:none;border:0;padding:6px 0;color:#909090;text-transform:uppercase;letter-spacing:.08em;cursor:pointer}
+#tabs button[aria-current=true]{color:var(--ink);box-shadow:0 1px 0 var(--ink)}
+.pages{display:flex;gap:20px;align-items:start;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 -16px;padding:0 16px;scroll-padding:0 16px;scrollbar-width:none;overscroll-behavior-x:contain}
+.pages > section{flex:0 0 92%;min-width:0;scroll-snap-align:start}
+.pages > section h2{margin-top:10px}
+.row input[type=range]{touch-action:pan-y}
 section h2{margin:26px 0 6px;font-size:13px;font-weight:400;color:var(--ink);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;display:flex;min-width:0}
-section h2::before{content:"═══";letter-spacing:0;margin-right:1ch}
-section h2::after{content:"════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════";letter-spacing:0;flex:1;min-width:0;overflow:hidden;order:2;margin-left:1ch;direction:rtl}
+section h2::before{content:"▒▒▒";letter-spacing:0;margin-right:1ch}
+section h2::after{content:"▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒";letter-spacing:0;flex:1;min-width:0;overflow:hidden;order:2;margin-left:1ch;direction:rtl}
 section h2 i{font-style:normal;letter-spacing:0;order:3}
 .row{display:grid;grid-template-columns:10ch minmax(0,1fr) 9ch;gap:10px;align-items:center;min-height:36px}
 .row.wide{grid-template-columns:10ch minmax(0,1fr)}
@@ -105,6 +114,10 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
   .stage{top:calc(var(--hh,0px) + 4px);margin:0;border:1px solid var(--line)}
   canvas{height:max(130px,calc(100vh - 186px));height:max(130px,calc(100dvh - 186px))}
   section:first-child h2{margin-top:0}
+  #tabs{display:none}
+  .pages{display:grid;overflow:visible;margin:0;padding:0;gap:0}
+  .pages > section h2{margin-top:26px}
+  .pages > section:first-child h2{margin-top:0}
 }
 </style>
 </head>
@@ -156,9 +169,10 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Type a value next to a slider to set it exactly. Double-click a name to reset it.</li>
     <li>Beyond the edges, the image is mirrored, so the window is never half empty.</li>
     <li>Video is recorded in real time: keep the page visible until it ends.</li>
+    <li>On a phone held upright, the settings are laid out as pages side by side: swipe sideways, or tap a section name under the image.</li>
     <li>On an iPhone or iPad, the sound plays even when the silent switch is on, like a music app. Use the volume buttons.</li>
   </ul>
-  <p class="ver">version A · 2b330f1</p>
+  <p class="ver">version A · dd15bad</p>
 </article>
 <main>
   <div class="stage">
@@ -171,9 +185,11 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
       <button id="video" class="cmd">vidéo</button>
     </div>
     <p id="msg" role="status"></p>
+    <nav id="tabs" aria-label="sections"></nav>
   </div>
 
   <div class="panel" id="panel">
+    <div class="pages" id="pages">
     <section>
       <h2>image</h2>
       <div class="seg">
@@ -246,7 +262,8 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
         <button id="reset" class="cmd">défauts</button>
       </div>
     </section>
-    <p class="ver">pixels to soundscape patterns · A · 2b330f1</p>
+    </div>
+    <p class="ver">pixels to soundscape patterns · A · dd15bad</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>
@@ -1625,6 +1642,24 @@ addEventListener("resize", fitFrame);
 /* Le bandeau du titre reste en haut ; la zone d'écoute se cale juste dessous. */
 const setHH = () => document.documentElement.style.setProperty("--hh", document.querySelector("header").offsetHeight + "px");
 addEventListener("resize", setHH); setHH();
+/* Onglets des sections (téléphone debout) : un toucher y mène, et l'onglet suit le feuilletage. */
+(() => {
+  const pages = $("pages"), tabs = $("tabs"), secs = [...pages.children], btns = secs.map((sec, i) => {
+    const b = document.createElement("button"); b.type = "button"; b.textContent = sec.querySelector("h2").textContent;
+    b.addEventListener("click", () => { pages.scrollTo({ left: sec.offsetLeft - pages.offsetLeft - 16, behavior: "smooth" }); scrollTo({ top: 0, behavior: "smooth" }); });
+    tabs.append(b); return b;
+  });
+  let now = -1;
+  const mark = () => {
+    const x = pages.scrollLeft + pages.clientWidth * 0.4; let k = 0;
+    secs.forEach((sec, i) => { if (sec.offsetLeft - pages.offsetLeft <= x) k = i; });
+    if (pages.scrollLeft + pages.clientWidth >= pages.scrollWidth - 4) k = secs.length - 1;
+    if (k === now) return; now = k;
+    btns.forEach((b, i) => b.setAttribute("aria-current", String(i === k)));
+    const b = btns[k]; tabs.scrollTo({ left: b.offsetLeft - tabs.offsetLeft - 16, behavior: "smooth" });
+  };
+  pages.addEventListener("scroll", mark, { passive: true }); mark();
+})();
 function resize() {
   const d = Math.min(2, window.devicePixelRatio || 1);
   cv.width = Math.round(cv.clientWidth * d); cv.height = Math.round(cv.clientHeight * d);
@@ -1822,7 +1857,6 @@ document.addEventListener("keydown", e => { if (e.code === "Space" && !/INPUT|BU
 new ResizeObserver(resize).observe(cv); resize();
 if (window.claude && window.claude.use) window.claude.use("downloads").then(d => { dl = d; }).catch(() => {});
 loadURL("data:image/jpeg;base64," + DEMOS.manekineko, "manekineko");
-document.querySelectorAll("section h2, #doc h2").forEach(h => { const i = document.createElement("i"); i.setAttribute("aria-hidden", "true"); i.textContent = "╝║╝║╝║"; h.appendChild(i); });   /* fin de titre : le motif du logo */
 requestAnimationFrame(draw);
 </script>
 </body>

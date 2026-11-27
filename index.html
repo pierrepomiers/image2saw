@@ -49,23 +49,21 @@ canvas{display:block;width:100%;height:min(calc(100vw - 32px),44vh);touch-action
 #msg:empty{display:none}
 /* Commandes en surimpression, dans le coin bas gauche de l'image : lecture / pause, export wav, vidéo. */
 .frame{position:relative;justify-self:center;width:100%}
-.transport{position:absolute;left:8px;bottom:8px;display:flex;gap:8px}
-.transport button{width:38px;height:38px;padding:0;border:0;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;display:grid;place-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.transport button:hover{background:rgba(0,0,0,.75)}
-.transport button:focus-visible{outline:2px solid #fff;outline-offset:2px}
-.transport svg{width:20px;height:20px;fill:currentColor}
-.transport .i-line{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+.transport{position:absolute;left:8px;bottom:8px;display:flex;background:rgba(0,0,0,.62)}
+.transport button{font:inherit;min-width:44px;height:38px;padding:0 2px;border:0;background:none;color:#fff;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent}
+.transport button::before{content:"[ ";color:#9a9a9a} .transport button::after{content:" ]";color:#9a9a9a}
+.transport button:focus-visible{outline:1px solid #fff;outline-offset:-3px}
 #play .i-pause,#play[aria-pressed=true] .i-play{display:none}
-#play[aria-pressed=true] .i-pause{display:block}
-#video[aria-pressed=true]{color:#ff2a1f}
-@media (prefers-reduced-motion:no-preference){#video[aria-pressed=true] svg{animation:recblink 1s steps(2,start) infinite}}
+#play[aria-pressed=true] .i-pause{display:inline}
+#video[aria-pressed=true] span{color:#ff2a1f}
+@media (prefers-reduced-motion:no-preference){#video[aria-pressed=true] span{animation:recblink 1s steps(2,start) infinite}}
 @keyframes recblink{to{opacity:.35}}
 button,.filebtn{font:inherit;color:var(--ink);background:none;border:0;border-radius:0;padding:8px 0;min-height:36px;cursor:pointer;white-space:nowrap}
 .cmd::before{content:"[ ";color:var(--dim)} .cmd::after{content:" ]";color:var(--dim)}
 button:hover,.filebtn:hover{text-decoration:underline}
 button:focus-visible,.filebtn:focus-within,input:focus-visible{outline:1px solid var(--ink);outline-offset:2px}
 .seg button[aria-pressed="true"]{background:var(--ink);color:#000;padding:2px 6px;min-height:0}
-#play[aria-pressed="true"]{color:var(--ink);text-decoration:underline}
+.transport button,.transport button:hover{text-decoration:none}
 #msg{color:var(--ink);margin:0}
 #msg:empty{display:none}
 .panel{display:grid;min-width:0;align-content:start}
@@ -150,9 +148,9 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
   <ol>
     <li>Load an image with [ charger ], or pick one of the three examples.</li>
     <li>Drag on the image to select the area to play. Drag inside the frame to move it, drag a corner to resize it.</li>
-    <li>The three round buttons in the bottom left corner of the image: the arrow plays (it becomes a double bar to pause; the space bar does the same), the wave exports, the dot films.</li>
+    <li>The three signs in the bottom left corner of the image: [ ► ] plays (it becomes [ ║║ ] to pause; the space bar does the same), [ ∿ ] exports, [ ● ] films.</li>
     <li>Change the settings. The sound is recomputed after each change, and the bar under the image shows progress. When a loop takes long to compute, a rough preview plays first and the full-quality loop replaces it.</li>
-    <li>The wave button exports the loop as a 16-bit stereo wav file. The dot records one loop of the moving image with its sound; it turns red while recording, and pressing it again cancels.</li>
+    <li>[ ∿ ] exports the loop as a 16-bit stereo wav file. [ ● ] records one loop of the moving image with its sound; it turns red while recording, and pressing it again cancels.</li>
   </ol>
   <h2>what the image does</h2>
   <dl>
@@ -192,7 +190,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>On a phone held upright, the settings are laid out as pages side by side: swipe sideways, or tap a section name under the image.</li>
     <li>On an iPhone or iPad, the sound plays even when the silent switch is on, like a music app. Use the volume buttons.</li>
   </ul>
-  <p class="ver">version A · 55a030c</p>
+  <p class="ver">version A · 83ed05c</p>
 </article>
 <main>
   <div class="stage">
@@ -200,16 +198,9 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <div class="frame" id="frame">
       <canvas id="cv" aria-label="Image et sélection. Glisser pour sélectionner la zone à jouer."></canvas>
       <div class="transport" id="transport">
-        <button id="play" aria-pressed="false" aria-label="lecture" title="lecture / pause">
-          <svg class="i-play" viewBox="0 0 20 20" aria-hidden="true"><path d="M6 3.5v13l11-6.5z"/></svg>
-          <svg class="i-pause" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 3.5h3.6v13H5zM11.4 3.5H15v13h-3.6z"/></svg>
-        </button>
-        <button id="export" aria-label="exporter en wav" title="wav">
-          <svg class="i-line" viewBox="0 0 20 20" aria-hidden="true"><path d="M2 10c2-8.5 4.5-8.5 8 0s6 8.500 8 0"/></svg>
-        </button>
-        <button id="video" aria-pressed="false" aria-label="enregistrer la vidéo" title="vidéo">
-          <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="6"/></svg>
-        </button>
+        <button id="play" aria-pressed="false" aria-label="lecture" title="lecture / pause"><span class="i-play" aria-hidden="true">&#x25BA;</span><span class="i-pause" aria-hidden="true">&#x2551;&#x2551;</span></button>
+        <button id="export" aria-label="exporter en wav" title="wav"><span aria-hidden="true">&#x223F;</span></button>
+        <button id="video" aria-pressed="false" aria-label="enregistrer la vidéo" title="vidéo"><span aria-hidden="true">&#x25CF;</span></button>
       </div>
     </div>
     <div id="line" role="status"></div>
@@ -292,7 +283,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
       </div>
     </section>
     </div>
-    <p class="ver">pixels to soundscape patterns · A · 55a030c</p>
+    <p class="ver">pixels to soundscape patterns · A · 83ed05c</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>

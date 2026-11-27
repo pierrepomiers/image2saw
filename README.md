@@ -20,9 +20,9 @@ La version exacte est affichée en bas de la page (`A · numéro de commit`). L'
 
 1. Charger une image avec `[ charger ]`, ou choisir un des trois exemples.
 2. Glisser sur l'image pour sélectionner la zone à jouer. Glisser à l'intérieur du cadre le déplace, tirer un coin le redimensionne.
-3. Les trois boutons ronds dans le coin bas gauche de l'image : la flèche lance l'écoute (elle devient une double barre pour mettre en pause ; la barre d'espace fait de même), l'onde exporte, le rond filme.
+3. Les trois signes dans le coin bas gauche de l'image : `[ ► ]` lance l'écoute (il devient `[ ║║ ]` pour mettre en pause ; la barre d'espace fait de même), `[ ∿ ]` exporte, `[ ● ]` filme.
 4. Changer les réglages : le son est recalculé à chaque changement, et la ligne sous l'image montre l'avancement. Quand le calcul est long, un aperçu est joué d'abord, puis remplacé par le son complet.
-5. Le bouton à l'onde exporte la boucle en WAV 16 bits stéréo. Le rond filme un tour de boucle, l'image qui ondule avec le son ; il passe au rouge pendant l'enregistrement, et un nouvel appui annule.
+5. `[ ∿ ]` exporte la boucle en WAV 16 bits stéréo. `[ ● ]` filme un tour de boucle, l'image qui ondule avec le son ; il passe au rouge pendant l'enregistrement, et un nouvel appui annule.
 
 ## Réglages
 

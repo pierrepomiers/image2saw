@@ -158,7 +158,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Video is recorded in real time: keep the page visible until it ends.</li>
     <li>On an iPhone, the silent switch mutes the sound.</li>
   </ul>
-  <p class="ver">version A · d33d0d7</p>
+  <p class="ver">version A · f9c9eed</p>
 </article>
 <main>
   <div class="stage">
@@ -246,7 +246,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
         <button id="reset" class="cmd">défauts</button>
       </div>
     </section>
-    <p class="ver">pixels to soundscape patterns · A · d33d0d7</p>
+    <p class="ver">pixels to soundscape patterns · A · f9c9eed</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>
@@ -1107,7 +1107,22 @@ function makeBuffer(ctx, res) {
    à droite le rythme seul. Le son et la basse partent alors en deux flux synchrones ; chacun se partage entre death
    et un chemin direct, retardé du temps que met death à répondre pour que les deux moitiés restent en phase. */
 function routeKey(res) { return P.death > 0 && res && res.bass ? "split" : ""; }
-function dmixShares() { const x = P.dmix / 100; return { main: Math.min(1, 2 * (1 - x)), bass: Math.min(1, 2 * x) }; }
+/* Parts envoyées dans death (w) et sur le chemin direct (d). */
+function dmixShares() {
+  const x = P.dmix / 100, m = Math.min(1, 2 * (1 - x)), b = Math.min(1, 2 * x);
+  return { main: { w: m, d: 1 - m }, bass: { w: b, d: 1 - b } };
+}
+/* Niveau après death : la cible habituelle, mais sans dépasser le son sans death de plus de 2 dB en niveau perçu
+   ni de plus de 1 dB en énergie. Sans ce garde-fou, la saturation (qui tasse les crêtes, ajoute des harmoniques et
+   remplit le grave) sonnait nettement plus fort dès qu'on l'enclenchait. */
+function rmsOf(L, R) { let a = 0; for (let j = 0; j < L.length; j++) a += L[j] * L[j] + R[j] * R[j]; return Math.sqrt(a / (2 * L.length)); }
+function fxGain(res, e) {
+  const v1 = levelGain(e.L, e.R, SR), v0 = levelGain(res.L, res.R, res.sr || SR), r0 = rmsOf(res.L, res.R), r1 = rmsOf(e.L, e.R);
+  let g = v1.g;
+  if (r1 > 1e-9 && r0 > 1e-9) g = Math.min(g, 1.12 * r0 / r1);
+  if (v1.loud > 1e-9 && v0.loud > 1e-9) g = Math.min(g, 1.26 * v0.loud / v1.loud);
+  return g;
+}
 let fxLat = 0.006, fxLatDone = null;
 function fxLatency() {
   if (fxLatDone) return fxLatDone;
@@ -1132,7 +1147,7 @@ function startSource(offset, opt) {
   const mk = (part, name) => {
     const buf = makeBuffer(actx, part), s = actx.createBufferSource(), g = actx.createGain();
     s.buffer = buf; s.loop = !once; s.connect(g);
-    if (name) { const w = actx.createGain(), d = actx.createGain(); w.gain.value = sh[name]; d.gain.value = 1 - sh[name]; g.connect(w); w.connect(fx.input); g.connect(d); d.connect(dryBus); mix[name] = { w, d }; }
+    if (name) { const w = actx.createGain(), d = actx.createGain(); w.gain.value = sh[name].w; d.gain.value = sh[name].d; g.connect(w); w.connect(fx.input); g.connect(d); d.connect(dryBus); mix[name] = { w, d }; }
     else g.connect(fx.input);
     g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(1, now + 0.04);
     s.start(now, Math.max(0, Math.min(offset, buf.duration - 0.001)));
@@ -1150,7 +1165,7 @@ function stopSource(fade) {
 }
 /* Le curseur « death sur » agit tout de suite sur les deux flux ; le niveau d'ensemble suit juste après. */
 function dmixChanged() {
-  if (cur && cur.key && actx) { const sh = dmixShares(), t = actx.currentTime; for (const k of ["main", "bass"]) { cur.mix[k].w.gain.setTargetAtTime(sh[k], t, 0.02); cur.mix[k].d.gain.setTargetAtTime(1 - sh[k], t, 0.02); } }
+  if (cur && cur.key && actx) { const sh = dmixShares(), t = actx.currentTime; for (const k of ["main", "bass"]) { cur.mix[k].w.gain.setTargetAtTime(sh[k].w, t, 0.02); cur.mix[k].d.gain.setTargetAtTime(sh[k].d, t, 0.02); } }
   clearTimeout(eqTimer); eqTimer = setTimeout(setTrim, 180);
 }
 SETTERS.dtarget = v => { if (SETTERS.dmix) SETTERS.dmix(v === "son" ? 0 : v === "rythme" ? 100 : 50); };   /* anciens fichiers de réglages */
@@ -1224,7 +1239,7 @@ async function renderFx(res) {
     const lat = await fxLatency(), sh = dmixShares(), bus = oc.createDelay(0.1); bus.delayTime.value = lat; bus.connect(eq[0]);
     for (const [name, part] of [["main", { L: res.mainL, R: res.mainR, sr: res.sr }], ["bass", { L: res.bass, R: res.bass, sr: res.sr }]]) {
       const q = name === "main" ? s : oc.createBufferSource(), w = oc.createGain(), d = oc.createGain();
-      q.buffer = makeBuffer(oc, part); q.loop = true; w.gain.value = sh[name]; d.gain.value = 1 - sh[name];
+      q.buffer = makeBuffer(oc, part); q.loop = true; w.gain.value = sh[name].w; d.gain.value = sh[name].d;
       q.connect(w); w.connect(f.input); q.connect(d); d.connect(bus); q.start();
     }
   } else { s.buffer = makeBuffer(oc, res); s.loop = true; s.connect(f.input); s.start(); }
@@ -1244,6 +1259,7 @@ function paintDeath() {
 }
 function deathChanged() {
   paintDeath(); reroute();
+  if (cur && cur.key && actx) { const sh = dmixShares(), t = actx.currentTime; for (const k of ["main", "bass"]) { cur.mix[k].w.gain.setTargetAtTime(sh[k].w, t, 0.02); cur.mix[k].d.gain.setTargetAtTime(sh[k].d, t, 0.02); } }
   if (actx) {
     fx.set(P.death, actx.currentTime);
     /* En attendant le niveau exact, on baisse tout de suite : une saturation à plein niveau surprendrait. */
@@ -1260,7 +1276,7 @@ async function setTrim() {
   if (P.death > 0) {
     const e = await renderFx(res).catch(() => null);
     if (my !== fxJob || res !== R) return;
-    g = e ? levelGain(e.L, e.R, SR).g : 0.45;
+    g = e ? fxGain(res, e) : 0.45;
   } else if (!eqFlat()) { const e = eqApply(res.L, res.R, res.sr || SR, eqGains()); g = levelGain(e.L, e.R, res.sr || SR).g; }
   trim = g;
   if (trimNode) trimNode.gain.setTargetAtTime(trim, actx.currentTime, 0.03);
@@ -1319,7 +1335,7 @@ async function exportWav() {
     /* Même distorsion, même égaliseur et même mise à niveau qu'à l'écoute. */
     const e = await renderFx(R).catch(() => null);
     if (!e) { say("Ce navigateur ne sait pas appliquer death à l'export. Remets death à 0 pour exporter."); return; }
-    const g = levelGain(e.L, e.R, SR).g; L = e.L; Rr = e.R;
+    const g = fxGain(R, e); L = e.L; Rr = e.R;
     for (let j = 0; j < L.length; j++) { L[j] *= g; Rr[j] *= g; }
   } else if (!eqFlat()) {
     /* Même égaliseur et même mise à niveau qu'à l'écoute. */

@@ -6,6 +6,8 @@ Version A. Transforme une image en boucle sonore. Chaque pixel de la zone sélec
 
 **Essayer en ligne :** https://pierrepomiers.github.io/image2saw/
 
+*English speakers: the page and its built-in help `[ ? ]` are available in English. It follows your device language; you can switch under settings → language.*
+
 La version exacte est affichée en bas de la page (`A · numéro de commit`). L'aide intégrée s'ouvre avec `[ ? ]`, en anglais.
 
 ## Principe
@@ -72,6 +74,7 @@ Sur un téléphone tenu debout, les sections de réglages sont des pages côte �
 
 **réglages**
 - `[ sauver ]`, `[ ouvrir ]`, `[ défauts ]` : enregistrer les réglages dans un fichier `.json`, en recharger un, ou revenir aux valeurs de départ.
+- `langue` : affiche la page et son aide `[ ? ]` en français ou en anglais (`english`). Par défaut, la page suit la langue de l'appareil.
 
 ## Technique
 

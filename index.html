@@ -19,6 +19,7 @@ header,main{max-width:1100px;margin:0 auto}
 header{padding:6px 0;color:var(--ink);white-space:nowrap;display:flex;justify-content:space-between;align-items:center;gap:12px;position:sticky;top:0;z-index:6;background:var(--bg);max-width:none;margin:0 -16px;padding:6px max(16px,calc((100% - 1100px) / 2 + 16px))}
 #doc{max-width:1100px;margin:0 auto;padding-bottom:24px}
 #doc p,#doc li,#doc dd{max-width:68ch}
+#doc [hidden]{display:none}
 #doc h2{margin:22px 0 8px;font-size:13px;font-weight:400;color:var(--ink);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;display:flex;min-width:0}
 #doc h2::before{content:"░░░";letter-spacing:0;margin-right:1ch}
 #doc h2::after{content:"░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░";letter-spacing:0;flex:1;min-width:0;overflow:hidden;order:2;margin-left:1ch;direction:rtl}
@@ -142,15 +143,16 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
 </head>
 <body>
 <header><span><h1>image2saw</h1> <span aria-hidden="true">╝║╝║╝║</span></span><span id="hline" aria-hidden="true"></span><button id="help" class="cmd" aria-expanded="false" aria-controls="doc" aria-label="Help">?</button></header>
-<article id="doc" lang="en" hidden>
+<article id="doc" hidden>
+  <div data-doc="en" lang="en">
   <p>image2saw: pixels to soundscape patterns.</p>
   <p>It turns an image into a seamless sound loop. Every pixel of the selected area is a voice. A soft window travels across the area and makes the pixels under it sing.</p>
   <h2>how to</h2>
   <ol>
-    <li>Load an image with [ charger ], or pick one of the three examples.</li>
+    <li>Load an image with [ load ], or pick one of the three examples.</li>
     <li>Drag on the image to select the area to play. Drag inside the frame to move it, drag a corner to resize it.</li>
-    <li>The three signs in the bottom left corner of the image: [ ▶ ] plays (it becomes [ || ] to pause; the space bar does the same), [ .wav ] exports, [ ● ] films, [ 1:1 ] films in square format.</li>
-    <li>Change the settings. The sound is recomputed after each change, and the bar under the image shows progress. When a loop takes long to compute, a rough preview plays first and the full-quality loop replaces it.</li>
+    <li>The four signs in the bottom left corner of the image: [ ▶ ] plays (it becomes [ || ] to pause; the space bar does the same), [ .wav ] exports, [ ● ] films, [ 1:1 ] films in square format.</li>
+    <li>Change the settings. The sound is recomputed after each change, and a bar shows progress. When a loop takes long to compute, a rough preview plays first and the full-quality loop replaces it.</li>
     <li>[ .wav ] exports the loop as a 16-bit stereo wav file. [ ● ] records one loop of the moving image with its sound; it turns red while recording, and pressing it again cancels. [ 1:1 ] does the same in a 1080 × 1080 square, for the networks that expect it. If the selection is not square, it is first trimmed to a square on its short side, centred; the sound is recomputed for it, then the recording starts by itself.</li>
   </ol>
   <h2>what the image does</h2>
@@ -161,37 +163,93 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
   </dl>
   <h2>settings</h2>
   <dl>
-    <dt>caméra</dt><dd>Plays the live picture of the phone or computer camera instead of a still image: move the camera and the sound follows at once. [ retourner ] switches between the back and front cameras. [ figer ] keeps the current picture and goes back to the normal mode, where loops can be exported. Picking a demo image or loading one also leaves the camera. The live sound is held at the same loudness as the frozen loop. The camera only works when the page is opened in a browser such as Safari or Chrome, not inside Claude.</dd>
+    <dt>camera</dt><dd>Plays the live picture of the phone or computer camera instead of a still image: move the camera and the sound follows at once. [ flip ] switches between the back and front cameras. [ freeze ] keeps the current picture and goes back to the normal mode, where loops can be exported. Picking a demo image or loading one also leaves the camera. The live sound is held at the same loudness as the frozen loop. The camera only works when the page is opened in a browser such as Safari or Chrome, not inside Claude.</dd>
     <dt>zoom</dt><dd>With the camera, zooms in up to 8×. The lens zoom of the device is used when the browser gives access to it; beyond that, or without it, the picture is cropped around its centre.</dd>
-    <dt>images/s</dt><dd>With the camera, how many times per second the sound and the picture are refreshed, from 1 to 30. Low values give a stepped, stroboscopic result.</dd>
-    <dt>résolution</dt><dd>Number of pixels on the long side of the area, from 1 to 64. Every pixel is visited, so more pixels means faster travel (see ms/px under the image) and a longer computation. With the camera it is capped at 32.</dd>
-    <dt>parcours</dt><dd>Path of the window. Step through the five paths with &lt; and &gt;. h-snake and v-snake snake through every pixel once, by rows or by columns. aller-retour goes there and back. spirale winds to the centre and back out. chaos wanders at random from one pixel to a neighbour, still crossing every pixel once before it loops; [ autre ] draws another random path.</dd>
-    <dt>largeur</dt><dd>Width of the window, as a share of the area. Around 50 %, nearly every pixel sings at once.</dd>
-    <dt>résonance</dt><dd>How long a voice keeps ringing after the window has passed.</dd>
+    <dt>frames/s</dt><dd>With the camera, how many times per second the sound and the picture are refreshed, from 1 to 30. Low values give a stepped, stroboscopic result.</dd>
+    <dt>resolution</dt><dd>Number of pixels on the long side of the area, from 1 to 64. Every pixel is visited, so more pixels means faster travel and a longer computation. With the camera it is capped at 32.</dd>
+    <dt>path</dt><dd>Path of the window. Step through the five paths with &lt; and &gt;. h-snake and v-snake snake through every pixel once, by rows or by columns. pong goes there and back. spiral winds to the centre and back out. chaos wanders at random from one pixel to a neighbour, still crossing every pixel once before it loops; [ another ] draws another random path.</dd>
+    <dt>width</dt><dd>Width of the window, as a share of the area. Around 50 %, nearly every pixel sings at once.</dd>
+    <dt>resonance</dt><dd>How long a voice keeps ringing after the window has passed.</dd>
     <dt>influence</dt><dd>How much the image drives width and resonance. Flat areas widen the window, busy areas narrow it, vivid colours ring longer.</dd>
-    <dt>onde</dt><dd>Waveform of every voice: sine, triangle, sawtooth or square.</dd>
-    <dt>grave, aigu</dt><dd>Lowest and highest pitch. The sliders move by semitones from C0 to B6, and the note name is shown next to the value. To set any other frequency, type it in hertz: for example 5 for rumbles and beats.</dd>
-    <dt>échelle</dt><dd>Linear or logarithmic spread of the pitches between those two limits.</dd>
-    <dt>accord</dt><dd>Leaves pitches free, or snaps them to the chromatic or pentatonic scale.</dd>
-    <dt>rythme</dt><dd>Optional bass line, off at 0. The setting is its volume, added on top of the main sound; past the point where the total would clip, everything is turned down together, so high values (up to 200 %) make the bass dominate. A rhythmic pattern is read from the image: one line of pixels is followed, one pixel per sixteenth note; the steps where the picture changes most are struck, and the colour of the pixel picks the note. It is a sub bass tuned from <b>grave</b>, it loops exactly with the main sound and goes into the exports. Its harmonics feed <b>death</b>. While it plays, each pixel that is struck lights up on the image and stays marked until the bar ends. In the animated image, and so in the exported video, each struck pixel also swells for the length of its hit, on top of the ripple (it follows <b>wobble</b>). [ autre rythme ] reads the image another way and gives another pattern. Not played in camera mode.</dd>
-    <dt>death</dt><dd>Output distortion, from 0 (off) to 12. The deep bass stays clean; everything above it is driven through a tube-style saturation, then from 6 upwards through a stage that folds the wave over itself, then a speaker-like filter and a heavy compressor. The higher the value, the thicker and more torn the sound. It comes before the equaliser, and the overall level stays under control. The line turns red and shakes near the top.</dd>
-    <dt>death sur</dt><dd>When <b>rythme</b> plays, doses what the distortion treats. Fully left (0, shown as <b>son</b>): the pixels only, the bass stays clean. In the middle (50, <b>tout</b>): everything, the default. Fully right (100, <b>rythme</b>): the bass only, the pixels stay clean. In between, the part being released slides gradually out of the distortion.</dd>
-    <dt>égaliseur</dt><dd>Seven output faders, one per octave, each from −12 to +12 dB with a mark every 6 dB. The first one sets everything below 30 Hz. The last one sets everything above 2 kHz. The sliders stop at B6, just below, so it mostly shapes the harmonics that make the saw and square waves bright; only a pitch typed by hand can reach higher. The overall level is kept steady and never clips: cutting the lowest bands trades inaudible rumble for more level in the rest. [ plat ] sets all bands back to 0 dB.</dd>
-    <dt>stéréo</dt><dd>Stereo width. The left of the image plays in the left speaker.</dd>
-    <dt>mesure, mesures, tempo</dt><dd>Loop length in bars, so that samples line up on the beat: a slower tempo makes a longer loop, shown in seconds under the image. Choose libre to set a length in seconds with durée, from half a second up to 60 s, the length of an Instagram story; long loops take longer to compute and to export.</dd>
+    <dt>wave</dt><dd>Waveform of every voice: sine, triangle, saw or square.</dd>
+    <dt>low, high</dt><dd>Lowest and highest pitch. The sliders move by semitones from C0 to B6, and the note name is shown next to the value. To set any other frequency, type it in hertz: for example 5 for rumbles and beats.</dd>
+    <dt>scale</dt><dd>Linear or logarithmic (log) spread of the pitches between those two limits.</dd>
+    <dt>tuning</dt><dd>Leaves pitches free, or snaps them to the chromatic or pentatonic scale.</dd>
+    <dt>rhythm</dt><dd>Optional bass line, off at 0. The setting is its volume, added on top of the main sound; past the point where the total would clip, everything is turned down together, so high values (up to 200 %) make the bass dominate. A rhythmic pattern is read from the image: one line of pixels is followed, one pixel per sixteenth note; the steps where the picture changes most are struck, and the colour of the pixel picks the note. It is a sub bass tuned from <b>low</b>, it loops exactly with the main sound and goes into the exports. Its harmonics feed <b>death</b>. While it plays, each pixel that is struck lights up on the image and stays marked until the bar ends. In the moving image, and so in the exported video, each struck pixel also swells for the length of its hit, on top of the ripple (it follows <b>wobble</b>). [ new rhythm ] reads the image another way and gives another pattern. Not played in camera mode.</dd>
+    <dt>death</dt><dd>Output distortion, from 0 (off) to 12. The deep bass stays clean; everything above it is driven through a tube-style saturation, then from 6 upwards through a stage that folds the wave over itself, then a speaker-like filter and a heavy compressor. The higher the value, the thicker and more torn the sound. It comes before the equalizer, and the overall level stays close to the level without it. The line turns red and shakes near the top.</dd>
+    <dt>death on</dt><dd>When <b>rhythm</b> plays, doses what the distortion treats. Fully left (0, shown as <b>sound</b>): the pixels only, the bass stays clean. In the middle (50, <b>all</b>): everything, the default. Fully right (100, <b>rhythm</b>): the bass only, the pixels stay clean. In between, the part being released slides gradually out of the distortion.</dd>
+    <dt>equalizer</dt><dd>Seven output faders, one per octave, each from −12 to +12 dB with a mark every 6 dB. The first one sets everything below 30 Hz. The last one sets everything above 2 kHz. The sliders stop at B6, just below, so it mostly shapes the harmonics that make the saw and square waves bright; only a pitch typed by hand can reach higher. The overall level is kept steady and never clips: cutting the lowest bands trades inaudible rumble for more level in the rest. [ flat ] sets all bands back to 0 dB.</dd>
+    <dt>stereo</dt><dd>Stereo width. The left of the image plays in the left speaker.</dd>
+    <dt>meter, bars, tempo</dt><dd>Loop length in bars, so that samples line up on the beat: a slower tempo makes a longer loop. Choose free to set a length in seconds with <b>length</b>, from half a second up to 60 s, the length of an Instagram story; long loops take longer to compute and to export.</dd>
     <dt>wobble</dt><dd>Strength of the ripple on the image while it plays, up to 200 %. The ripple follows the real loudness and pitch of the sound.</dd>
-    <dt>sauver, ouvrir, défauts</dt><dd>Save the settings to a .json file, load one back, or return to the starting values.</dd>
+    <dt>save, open, defaults</dt><dd>Save the settings to a .json file, load one back, or return to the starting values.</dd>
+    <dt>language</dt><dd>Shows the page in French (français) or in English. By default it follows the language of the device.</dd>
   </dl>
   <h2>good to know</h2>
   <ul>
     <li>Loops are seamless: the end joins the start with no click.</li>
+    <li>The top bar shows the loop length and the size of the selection in pixels.</li>
     <li>Type a value next to a slider to set it exactly. Double-click a name to reset it.</li>
     <li>Beyond the edges, the image is mirrored, so the window is never half empty.</li>
     <li>Video is recorded in real time: keep the page visible until it ends.</li>
     <li>On a phone held upright, the settings are laid out as pages side by side: swipe sideways, or tap a section name under the image.</li>
     <li>On an iPhone or iPad, the sound plays even when the silent switch is on, like a music app. Use the volume buttons.</li>
   </ul>
-  <p class="ver">version A · 700f09d</p>
+  <p class="ver">version A · d51e1eb</p>
+  </div>
+  <div data-doc="fr" lang="fr">
+  <p>image2saw : des pixels aux paysages sonores.</p>
+  <p>La page transforme une image en boucle sonore parfaite. Chaque pixel de la zone choisie est une voix. Une fenêtre douce parcourt la zone et fait chanter les pixels qu'elle recouvre.</p>
+  <h2>mode d'emploi</h2>
+  <ol>
+    <li>Charge une image avec [ charger ], ou choisis un des trois exemples.</li>
+    <li>Glisse sur l'image pour sélectionner la zone à jouer. Glisse à l'intérieur du cadre pour le déplacer, tire un coin pour le redimensionner.</li>
+    <li>Les quatre signes dans le coin bas gauche de l'image : [ ▶ ] lance l'écoute (il devient [ || ] pour mettre en pause ; la barre d'espace fait de même), [ .wav ] exporte, [ ● ] filme, [ 1:1 ] filme au format carré.</li>
+    <li>Change les réglages. Le son est recalculé à chaque changement, et une barre montre l'avancement. Quand le calcul est long, un aperçu est joué d'abord, puis remplacé par le son complet.</li>
+    <li>[ .wav ] exporte la boucle en fichier wav 16 bits stéréo. [ ● ] filme un tour de boucle, l'image qui ondule avec le son ; il passe au rouge pendant l'enregistrement, et un nouvel appui annule. [ 1:1 ] fait de même dans un carré de 1080 × 1080, pour les réseaux qui l'attendent. Si la sélection n'est pas carrée, elle est d'abord ramenée au carré de son petit côté, centré ; le son est recalculé pour elle, puis l'enregistrement démarre tout seul.</li>
+  </ol>
+  <h2>ce que fait l'image</h2>
+  <dl>
+    <dt>teinte</dt><dd>Règle la hauteur : le rouge est grave, le violet est aigu. Dans une image en noir et blanc, c'est la luminosité qui règle la hauteur.</dd>
+    <dt>luminosité</dt><dd>Règle le volume de chaque voix.</dd>
+    <dt>saturation</dt><dd>Règle la durée pendant laquelle chaque voix résonne.</dd>
+  </dl>
+  <h2>réglages</h2>
+  <dl>
+    <dt>caméra</dt><dd>Joue l'image en direct de la caméra du téléphone ou de l'ordinateur à la place d'une image fixe : bouge la caméra et le son suit aussitôt. [ retourner ] passe de la caméra arrière à la caméra avant. [ figer ] garde l'image en cours et revient au mode normal, où les boucles s'exportent. Choisir une image d'exemple ou en charger une quitte aussi la caméra. Le son en direct est tenu au même niveau que la boucle figée. La caméra ne fonctionne que si la page est ouverte dans un navigateur comme Safari ou Chrome, pas à l'intérieur de Claude.</dd>
+    <dt>zoom</dt><dd>Avec la caméra, grossit jusqu'à 8×. Le zoom de l'objectif est utilisé quand le navigateur y donne accès ; au-delà, ou sans lui, l'image est recadrée autour de son centre.</dd>
+    <dt>images/s</dt><dd>Avec la caméra, nombre de fois par seconde où le son et l'image sont rafraîchis, de 1 à 30. Les valeurs basses donnent un résultat saccadé, stroboscopique.</dd>
+    <dt>résolution</dt><dd>Nombre de pixels sur le grand côté de la zone, de 1 à 64. Chaque pixel est visité : plus il y en a, plus le parcours est rapide et le calcul long. Avec la caméra, elle est plafonnée à 32.</dd>
+    <dt>parcours</dt><dd>Trajet de la fenêtre. On passe d'un parcours à l'autre avec &lt; et &gt;. h-snake et v-snake serpentent une fois par chaque pixel, par lignes ou par colonnes. aller-retour va au bout et revient. spirale s'enroule jusqu'au centre et en ressort. chaos erre au hasard d'un pixel à son voisin, en passant quand même une fois par chaque pixel avant de boucler ; [ autre ] tire un autre trajet au hasard.</dd>
+    <dt>largeur</dt><dd>Largeur de la fenêtre, en part de la zone. Vers 50 %, presque tous les pixels chantent en même temps.</dd>
+    <dt>résonance</dt><dd>Durée pendant laquelle une voix continue de sonner après le passage de la fenêtre.</dd>
+    <dt>influence</dt><dd>Part que prend l'image dans la largeur et la résonance. Les zones unies élargissent la fenêtre, les zones chargées la resserrent, les couleurs vives résonnent plus longtemps.</dd>
+    <dt>onde</dt><dd>Forme d'onde de chaque voix : sinus, triangle, scie ou carré.</dd>
+    <dt>grave, aigu</dt><dd>Note la plus basse et la plus haute. Les curseurs avancent par demi-tons de C0 à B6, et le nom de la note s'affiche à côté de la valeur. Pour toute autre fréquence, tape-la en hertz : par exemple 5 pour des grondements et des battements.</dd>
+    <dt>échelle</dt><dd>Répartition linéaire ou logarithmique (log) des hauteurs entre ces deux limites.</dd>
+    <dt>accord</dt><dd>Laisse les hauteurs libres, ou les cale sur la gamme chromatique ou pentatonique.</dd>
+    <dt>rythme</dt><dd>Ligne de basse optionnelle, coupée à 0. Le réglage est son volume, ajouté par-dessus le son principal ; quand le total saturerait, l'ensemble est baissé d'un bloc, si bien qu'aux valeurs hautes (jusqu'à 200 %) la basse domine. Un motif rythmique est lu dans l'image : on suit une ligne de pixels, un pixel par double croche ; les pas où l'image change le plus sont frappés, et la couleur du pixel choisit la note. C'est une basse « sub » accordée d'après <b>grave</b>, qui boucle exactement avec le son principal et part dans les exports. Ses harmoniques nourrissent <b>death</b>. Pendant la lecture, chaque pixel frappé s'allume sur l'image et reste marqué jusqu'à la fin de la mesure. Dans l'image animée, donc dans la vidéo exportée, chaque pixel frappé gonfle aussi le temps de sa frappe, par-dessus l'onde (il suit <b>wobble</b>). [ autre rythme ] lit l'image autrement et donne un autre motif. Elle ne joue pas en mode caméra.</dd>
+    <dt>death</dt><dd>Distorsion de sortie, de 0 (coupée) à 12. Le grave profond reste propre ; tout ce qui est au-dessus passe dans une saturation de type lampe, puis à partir de 6 dans un étage qui replie l'onde sur elle-même, puis dans un filtre façon haut-parleur et un compresseur lourd. Plus la valeur est haute, plus le son est épais et déchiré. Elle agit avant l'égaliseur, et le niveau d'ensemble reste proche du niveau sans elle. La ligne passe au rouge et tremble vers le haut de la course.</dd>
+    <dt>death sur</dt><dd>Quand <b>rythme</b> joue, dose ce que la distorsion traite. Tout à gauche (0, affiché <b>son</b>) : les pixels seuls, la basse reste propre. Au milieu (50, <b>tout</b>) : tout, par défaut. Tout à droite (100, <b>rythme</b>) : la basse seule, les pixels restent propres. Entre deux, la part libérée sort progressivement de la distorsion.</dd>
+    <dt>égaliseur</dt><dd>Sept faders de sortie, un par octave, chacun de −12 à +12 dB avec un repère tous les 6 dB. Le premier règle tout ce qui est sous 30 Hz. Le dernier règle tout ce qui est au-dessus de 2 kHz. Les curseurs de note s'arrêtent à B6, juste en dessous : il façonne donc surtout les harmoniques qui rendent brillantes les ondes scie et carré ; seule une hauteur tapée à la main peut monter plus haut. Le niveau d'ensemble est tenu stable et ne sature jamais : couper les bandes les plus graves échange un grondement inaudible contre du niveau pour le reste. [ plat ] remet toutes les bandes à 0 dB.</dd>
+    <dt>stéréo</dt><dd>Largeur stéréo. La gauche de l'image joue dans le haut-parleur gauche.</dd>
+    <dt>mesure, mesures, tempo</dt><dd>Durée de la boucle en mesures, pour que les échantillons tombent sur le temps : un tempo plus lent donne une boucle plus longue. Choisis libre pour fixer une durée en secondes avec <b>durée</b>, d'une demi-seconde à 60 s, la durée d'une story Instagram ; une longue boucle demande plus de temps de calcul et d'export.</dd>
+    <dt>wobble</dt><dd>Force de l'ondulation de l'image pendant la lecture, jusqu'à 200 %. L'ondulation suit le volume et la hauteur réels du son.</dd>
+    <dt>sauver, ouvrir, défauts</dt><dd>Enregistre les réglages dans un fichier .json, en recharge un, ou revient aux valeurs de départ.</dd>
+    <dt>langue</dt><dd>Affiche la page en français ou en anglais (english). Par défaut, elle suit la langue de l'appareil.</dd>
+  </dl>
+  <h2>bon à savoir</h2>
+  <ul>
+    <li>Les boucles sont parfaites : la fin rejoint le début sans clic.</li>
+    <li>Le bandeau du haut indique la durée de la boucle et la taille de la sélection en pixels.</li>
+    <li>Tape une valeur à côté d'un curseur pour la régler exactement. Double-clique sur un nom pour le remettre à sa valeur de départ.</li>
+    <li>Au-delà des bords, l'image est prolongée en miroir : la fenêtre n'est jamais à moitié vide.</li>
+    <li>La vidéo s'enregistre en temps réel : garde la page affichée jusqu'à la fin.</li>
+    <li>Sur un téléphone tenu debout, les réglages sont des pages côte à côte : glisse de côté, ou touche le nom d'une section sous l'image.</li>
+    <li>Sur iPhone ou iPad, le son joue même avec le bouton silencieux, comme une application de musique. Utilise les boutons de volume.</li>
+  </ul>
+  <p class="ver">version A · d51e1eb</p>
+  </div>
 </article>
 <main>
   <div class="stage">
@@ -283,9 +341,10 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
         <label class="filebtn cmd">ouvrir<input type="file" id="open" accept=".json,application/json"></label>
         <button id="reset" class="cmd">défauts</button>
       </div>
+      <div class="row wide" id="row_lang"><span>langue</span><div class="seg" id="langseg"><button type="button" data-lang="fr" aria-pressed="false">français</button><button type="button" data-lang="en" aria-pressed="false">english</button></div></div>
     </section>
     </div>
-    <p class="ver">pixels to soundscape patterns · A · 700f09d</p>
+    <p class="ver">pixels to soundscape patterns · A · d51e1eb</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>
@@ -896,14 +955,14 @@ function buildControls() {
       if (from !== "range") ri.value = toPos(v);
       if (from !== "num") ni.value = show(v);
       if (d.note) un.textContent = noteName(v) || "Hz";   /* une valeur tapée à la main hors des notes reste en hertz */
-      if (d.dmx) un.textContent = v < 50 ? "son" : v > 50 ? "rythme" : "tout";
+      if (d.dmx) setText(un, v < 50 ? "son" : v > 50 ? "rythme" : "tout");
       paint(); if (!quiet) { if (d.dth) deathChanged(); else if (d.dmx) dmixChanged(); else if (d.fx) eqChanged(); else if (d.rh) rhythmChanged(); else changed(d.live); }
     };
     SETTERS[id] = v => set(Number(v), "any", true);
     ri.addEventListener("input", () => set(fromPos(ri.value), "range"));
     ni.addEventListener("change", () => set(parseFloat(String(ni.value).replace(",", ".")), "any"));
     lab.addEventListener("dblclick", () => set(DEFAULTS[id], "any"));
-    ri.value = toPos(P[id]); ni.value = show(P[id]); if (d.note) un.textContent = noteName(P[id]) || "Hz"; if (d.dmx) un.textContent = "tout"; paint();
+    ri.value = toPos(P[id]); ni.value = show(P[id]); if (d.note) un.textContent = noteName(P[id]) || "Hz"; if (d.dmx) setText(un, "tout"); paint();
   });
   document.querySelectorAll("[data-seg]").forEach(host => {
     const id = host.dataset.seg;
@@ -938,7 +997,7 @@ function pathPoints(w, h) {
 }
 function setPath(v, quiet) {
   const o = SEGS.path.find(x => x[0] === v); if (!o) return;
-  P.path = v; $("pathname").textContent = o[1]; $("reroll").hidden = v !== "chaos";
+  P.path = v; setText($("pathname"), o[1]); $("reroll").hidden = v !== "chaos";
   if (!quiet) changed(false);
 }
 function stepPath(d) { const i = SEGS.path.findIndex(x => x[0] === P.path), n = SEGS.path.length; setPath(SEGS.path[(i + d + n) % n][0]); }
@@ -983,17 +1042,126 @@ function refreshPixels() {
 }
 
 /* ── Rendu audio ── */
-function say(t) { $("msg").textContent = t || ""; }
+const EN = {
+  "charger": "load",
+  "caméra": "camera",
+  "retourner": "flip",
+  "figer": "freeze",
+  "résolution": "resolution",
+  "parcours": "path",
+  "aller-retour": "pong",
+  "spirale": "spiral",
+  "autre": "another",
+  "largeur": "width",
+  "résonance": "resonance",
+  "onde": "wave",
+  "sinus": "sine",
+  "scie": "saw",
+  "carré": "square",
+  "grave": "low",
+  "aigu": "high",
+  "échelle": "scale",
+  "linéaire": "linear",
+  "accord": "tuning",
+  "libre": "free",
+  "chromatique": "chromatic",
+  "pentatonique": "pentatonic",
+  "stéréo": "stereo",
+  "rythme": "rhythm",
+  "autre rythme": "new rhythm",
+  "death sur": "death on",
+  "son": "sound",
+  "tout": "all",
+  "égaliseur": "equalizer",
+  "plat": "flat",
+  "temps": "time",
+  "mesure": "meter",
+  "mesures": "bars",
+  "durée": "length",
+  "image animée": "moving image",
+  "réglages": "settings",
+  "sauver": "save",
+  "ouvrir": "open",
+  "défauts": "defaults",
+  "gaussienne": "gaussian",
+  "images/s": "frames/s",
+  "langue": "language",
+  "© 2026 Pierre Pomiers · licence MIT": "© 2026 Pierre Pomiers · MIT license",
+  "parcours précédent": "previous path",
+  "parcours suivant": "next path",
+  "lecture": "play",
+  "exporter en wav": "export as wav",
+  "enregistrer la vidéo": "record the video",
+  "enregistrer la vidéo au format carré": "record the video in square format",
+  "lecture / pause": "play / pause",
+  "vidéo": "video",
+  "vidéo carrée": "square video",
+  "Image et sélection. Glisser pour sélectionner la zone à jouer.": "Image and selection. Drag to select the area to play.",
+  "Cette image n'a pas pu être lue. Essaie un JPEG ou un PNG.": "This image could not be read. Try a JPEG or a PNG.",
+  "Cette sélection ne produit aucun son : augmente la largeur ou baisse la dynamique.": "This selection makes no sound: increase the width.",
+  "Le calcul n'a pas abouti. Change un réglage pour le relancer.": "The computation failed. Change a setting to start it again.",
+  "Le son n'a pas pu démarrer dans ce navigateur.": "Sound could not start in this browser.",
+  "Le navigateur retient le son. Touche Stop puis Lecture, et vérifie que le téléphone n'est pas en mode silencieux.": "The browser is holding the sound. Press pause then play again.",
+  "L'export n'est pas disponible dans cette vue.": "Export is not available in this view.",
+  "En direct, il n'y a pas de boucle à exporter : fige d'abord l'image avec [ figer ].": "Live, there is no loop to export: freeze the picture first with [ freeze ].",
+  "En direct, il n'y a pas de boucle à filmer : fige d'abord l'image avec [ figer ].": "Live, there is no loop to film: freeze the picture first with [ freeze ].",
+  "Le calcul complet n'est pas terminé : attends la fin de la barre.": "The full computation is not finished: wait for the bar to end.",
+  "Ce navigateur ne sait pas appliquer death à l'export. Remets death à 0 pour exporter.": "This browser cannot apply death on export. Set death to 0 to export.",
+  "Ce navigateur ne sait pas enregistrer de vidéo. Essaie avec Chrome ou Safari à jour.": "This browser cannot record video. Try an up-to-date Chrome or Safari.",
+  "L'enregistrement vidéo n'a pas pu démarrer dans ce navigateur.": "Video recording could not start in this browser.",
+  "Enregistrement annulé.": "Recording cancelled.",
+  "Ce fichier ne contient pas de réglages image2saw.": "This file holds no image2saw settings.",
+  "Réglages chargés.": "Settings loaded.",
+  "La caméra n'a pas pu s'ouvrir. Autorise-la pour cette page, ou ouvre la page dans Safari ou Chrome.": "The camera could not open. Allow it for this page, or open the page in Safari or Chrome.",
+  "Le moteur en direct n'a pas pu démarrer dans ce navigateur.": "The live engine could not start in this browser.",
+  "Le son est en pause : touche l'écran pour le relancer.": "Sound is paused: touch the screen to resume.",
+  "Sélection ramenée au carré : le film démarre dès que le calcul est fini.": "Selection trimmed to a square: recording starts as soon as the computation ends.",
+  "Ce fichier n'a pas pu être lu.": "This file could not be read."
+};
+/* Deux langues. Le français est la langue d'écriture de la page ; tr() donne l'équivalent anglais d'un texte, mot pour
+   mot depuis EN, ou par motif pour les messages qui portent un nom de fichier ou un chiffre. */
+const EN_PAT = [
+  [/^Export terminé : (.+) est dans l'archive (.+)\.$/, "Export done: $1 is in the archive $2."],
+  [/^Export terminé : (.+)$/, "Export done: $1"],
+  [/^L'export a échoué \((.+)\)\. Réessaie dans un instant\.$/, "Export failed ($1). Try again in a moment."],
+  [/^Enregistrement (.+) s\. Garde la page affichée\.$/, "Recording $1 s. Keep the page visible."],
+  [/^caméra arrière · /, "back camera · "], [/^caméra avant · /, "front camera · "], [/^calcul /, "computing "], [/ · aperçu$/, " · preview"], [/ img\/s/, " fps"]
+];
+let LANG = "fr";
+try { LANG = localStorage.getItem("image2saw.lang") || ""; } catch (e) { LANG = ""; }
+if (LANG !== "fr" && LANG !== "en") LANG = /^fr/i.test(navigator.language || "") ? "fr" : "en";
+function tr(t) {
+  if (LANG === "fr" || !t) return t;
+  if (EN[t] !== undefined) return EN[t];
+  let o = t; for (const [re, to] of EN_PAT) o = o.replace(re, to);
+  return o;
+}
+/* Pose un texte français sur un élément et l'affiche dans la langue en cours ; applyLang le retraduira au besoin. */
+function setText(el, fr) { el._fr = fr; const n = [...el.childNodes].find(x => x.nodeType === 3); if (n) n.nodeValue = tr(fr); else el.prepend(tr(fr)); }
+function applyLang() {
+  document.documentElement.lang = LANG;
+  document.querySelectorAll(".row > label, .row.wide > span:first-child, .seg button, .filebtn, button.cmd:not(#help), #tabs button, section h2, .ver.copy, #pathname, #row_dmix .num i").forEach(el => {
+    const n = [...el.childNodes].find(x => x.nodeType === 3); if (!n) return;
+    if (el._fr === undefined) el._fr = n.nodeValue;
+    n.nodeValue = tr(el._fr);
+  });
+  document.querySelectorAll("[aria-label], [title]").forEach(el => { for (const a of ["aria-label", "title"]) { if (!el.hasAttribute(a)) continue; const k = "_fr_" + a; if (el[k] === undefined) el[k] = el.getAttribute(a); el.setAttribute(a, tr(el[k])); } });
+  document.querySelectorAll("#doc [data-doc]").forEach(d => { d.hidden = d.dataset.doc !== LANG; });
+  document.querySelectorAll("#langseg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === LANG)));
+  $("msg").textContent = tr(say.fr || ""); paintLine();
+}
+function setLang(l) { LANG = l; try { localStorage.setItem("image2saw.lang", l); } catch (e) {} applyLang(); }
+function say(t) { say.fr = t || ""; $("msg").textContent = tr(say.fr); }
 /* Ligne d'état sous l'image : les chiffres de la boucle au repos, une barre bien visible pendant le calcul. */
 function paintLine() {
   const el = $("line");
   if (busy) {
     const n = 20, k = Math.round(prog * n), heard = R && R.preview && R.gw === gw && R.gh === gh;
-    el.textContent = "calcul " + "▓".repeat(k) + "░".repeat(n - k) + " " + String(Math.round(prog * 100)).padStart(3) + " %" + (heard ? " · aperçu" : "");
-  } else el.textContent = statTxt;
+    el.textContent = tr("calcul " + "▓".repeat(k) + "░".repeat(n - k) + " " + String(Math.round(prog * 100)).padStart(3) + " %" + (heard ? " · aperçu" : ""));
+  } else el.textContent = tr(statTxt);
   el.classList.toggle("busy", busy);
   const h = $("hline"), m = 8, q = Math.round(prog * m);
-  h.textContent = busy ? "▓".repeat(q) + "░".repeat(m - q) + String(Math.round(prog * 100)).padStart(4) + " %" : statShort;
+  h.textContent = busy ? "▓".repeat(q) + "░".repeat(m - q) + String(Math.round(prog * 100)).padStart(4) + " %" : tr(statShort);
   h.classList.toggle("busy", busy);
 }
 /* Un réglage vient de changer : le calcul en cours ne vaut plus rien, on le dit tout de suite. */
@@ -1579,7 +1747,7 @@ async function startCam(facing) {
     try { const zc = cam.track.getCapabilities && cam.track.getCapabilities().zoom; if (zc && zc.max > zc.min && zc.min > 0) cam.zcap = zc; } catch (e) {}
     node.port.onmessage = e => { if (cam) { cam.rms = e.data.rms; cam.ref = e.data; } };
     playing = cam.on; imgName = "camera"; say("");
-    $("cam").textContent = "figer"; $("flip").hidden = false; $("row_fps").hidden = false; $("row_zoom").hidden = false; setPlayUI(); setTrim();
+    setText($("cam"), "figer"); $("flip").hidden = false; $("row_fps").hidden = false; $("row_zoom").hidden = false; setPlayUI(); setTrim();
     if (meter) { meter.pw = 0; meter.pk = 0; } if (!keep) { trim = Math.min(trim, 0.4); trimNode.gain.setTargetAtTime(trim, actx.currentTime, 0.02); }
     cam.lvT = setInterval(camLevel, 50); camTick(); camTimer();
   } catch (e) { stream.getTracks().forEach(tr => tr.stop()); say("Le moteur en direct n'a pas pu démarrer dans ce navigateur."); }
@@ -1655,7 +1823,7 @@ function camHead() {
 function stopCam(quiet) {
   const c = cam; if (!c) return;
   clearInterval(c.timer); clearInterval(c.lvT); c.stream.getTracks().forEach(tr => tr.stop()); try { c.node.port.postMessage({ cfg: Object.assign({}, c.cfg, { on: false }) }); c.node.disconnect(); } catch (e) {}
-  cam = null; $("cam").textContent = "caméra"; $("flip").hidden = true; $("row_fps").hidden = true; $("row_zoom").hidden = true;
+  cam = null; setText($("cam"), "caméra"); $("flip").hidden = true; $("row_fps").hidden = true; $("row_zoom").hidden = true;
   if (!quiet) changed(false);   /* la dernière image devient l'image de travail : la boucle se calcule, et la lecture reprend dessus */
 }
 
@@ -1691,7 +1859,7 @@ addEventListener("resize", setHH); setHH();
 /* Onglets des sections (téléphone debout) : un toucher y mène, et l'onglet suit le feuilletage. */
 (() => {
   const pages = $("pages"), tabs = $("tabs"), secs = [...pages.children], btns = secs.map((sec, i) => {
-    const b = document.createElement("button"); b.type = "button"; b.textContent = sec.querySelector("h2").textContent;
+    const b = document.createElement("button"); b.type = "button"; b.textContent = sec.querySelector("h2").textContent; b._fr = b.textContent;
     b.addEventListener("click", () => { pages.scrollTo({ left: sec.offsetLeft - pages.offsetLeft - 16, behavior: "smooth" }); scrollTo({ top: 0, behavior: "smooth" }); });
     tabs.append(b); return b;
   });
@@ -1887,6 +2055,7 @@ cv.addEventListener("pointerup", endDrag); cv.addEventListener("pointercancel", 
 /* ── Démarrage ── */
 buildControls();
 $("play").addEventListener("click", togglePlay);
+document.querySelectorAll("#langseg button").forEach(b => b.addEventListener("click", () => setLang(b.dataset.lang)));
 $("export").addEventListener("click", exportWav);
 $("help").addEventListener("click", () => {
   const open = $("doc").hidden; $("doc").hidden = !open; document.querySelector("main").hidden = open;
@@ -1932,6 +2101,7 @@ document.addEventListener("drop", e => { e.preventDefault(); const f = e.dataTra
 document.addEventListener("keydown", e => { if (e.code === "Space" && !/INPUT|BUTTON|TEXTAREA/.test(e.target.tagName)) { e.preventDefault(); togglePlay(); } });
 new ResizeObserver(resize).observe(cv); resize();
 if (window.claude && window.claude.use) window.claude.use("downloads").then(d => { dl = d; }).catch(() => {});
+applyLang();
 loadURL("data:image/jpeg;base64," + DEMOS.manekineko, "manekineko");
 requestAnimationFrame(draw);
 </script>

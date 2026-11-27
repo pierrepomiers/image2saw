@@ -39,7 +39,7 @@ main[hidden],#doc[hidden]{display:none}
 .stage > *{position:relative}
 #bg{position:absolute;left:-12%;top:-12%;width:124%;height:124%;border:0;filter:blur(26px) saturate(1.3) brightness(.5);pointer-events:none;background:#000}
 .stage #line{color:#b4b4b4}
-canvas{display:block;width:100%;justify-self:center;height:min(calc(100vw - 32px),44vh);touch-action:none;cursor:crosshair}
+canvas{display:block;width:100%;height:min(calc(100vw - 32px),44vh);touch-action:none;cursor:crosshair}
 #line{min-height:1.4em;white-space:pre;overflow:hidden;color:var(--dim);font-variant-numeric:tabular-nums}
 #line.busy{color:var(--ink)}
 /* Téléphone debout : la ligne d'état monte dans le bandeau du titre, ce qui libère une ligne sous l'image. */
@@ -47,7 +47,19 @@ canvas{display:block;width:100%;justify-self:center;height:min(calc(100vw - 32px
 #hline{flex:1;min-width:0;text-align:right;white-space:pre;overflow:hidden;color:var(--dim);font-variant-numeric:tabular-nums}
 #hline.busy{color:var(--ink)}
 #msg:empty{display:none}
-.transport{display:flex;gap:4px 16px;flex-wrap:wrap;align-items:center}
+/* Commandes en surimpression, dans le coin bas gauche de l'image : lecture / pause, export wav, vidéo. */
+.frame{position:relative;justify-self:center;width:100%}
+.transport{position:absolute;left:8px;bottom:8px;display:flex;gap:8px}
+.transport button{width:38px;height:38px;padding:0;border:0;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;display:grid;place-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.transport button:hover{background:rgba(0,0,0,.75)}
+.transport button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.transport svg{width:20px;height:20px;fill:currentColor}
+.transport .i-line{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+#play .i-pause,#play[aria-pressed=true] .i-play{display:none}
+#play[aria-pressed=true] .i-pause{display:block}
+#video[aria-pressed=true]{color:#ff2a1f}
+@media (prefers-reduced-motion:no-preference){#video[aria-pressed=true] svg{animation:recblink 1s steps(2,start) infinite}}
+@keyframes recblink{to{opacity:.35}}
 button,.filebtn{font:inherit;color:var(--ink);background:none;border:0;border-radius:0;padding:8px 0;min-height:36px;cursor:pointer;white-space:nowrap}
 .cmd::before{content:"[ ";color:var(--dim)} .cmd::after{content:" ]";color:var(--dim)}
 button:hover,.filebtn:hover{text-decoration:underline}
@@ -138,9 +150,9 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
   <ol>
     <li>Load an image with [ charger ], or pick one of the three examples.</li>
     <li>Drag on the image to select the area to play. Drag inside the frame to move it, drag a corner to resize it.</li>
-    <li>Press [ lecture ] to listen. The space bar does the same.</li>
+    <li>The three round buttons in the bottom left corner of the image: the arrow plays (it becomes a double bar to pause; the space bar does the same), the wave exports, the dot films.</li>
     <li>Change the settings. The sound is recomputed after each change, and the bar under the image shows progress. When a loop takes long to compute, a rough preview plays first and the full-quality loop replaces it.</li>
-    <li>[ wav ] exports the loop as a 16-bit stereo file. [ vidéo ] records one loop of the moving image with its sound.</li>
+    <li>The wave button exports the loop as a 16-bit stereo wav file. The dot records one loop of the moving image with its sound; it turns red while recording, and pressing it again cancels.</li>
   </ol>
   <h2>what the image does</h2>
   <dl>
@@ -180,18 +192,27 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>On a phone held upright, the settings are laid out as pages side by side: swipe sideways, or tap a section name under the image.</li>
     <li>On an iPhone or iPad, the sound plays even when the silent switch is on, like a music app. Use the volume buttons.</li>
   </ul>
-  <p class="ver">version A · 9853fa9</p>
+  <p class="ver">version A · a481911</p>
 </article>
 <main>
   <div class="stage">
     <canvas id="bg" width="48" height="48" aria-hidden="true"></canvas>
-    <canvas id="cv" aria-label="Image et sélection. Glisser pour sélectionner la zone à jouer."></canvas>
-    <div id="line" role="status"></div>
-    <div class="transport">
-      <button id="play" class="cmd" aria-pressed="false">lecture</button>
-      <button id="export" class="cmd">wav</button>
-      <button id="video" class="cmd">vidéo</button>
+    <div class="frame" id="frame">
+      <canvas id="cv" aria-label="Image et sélection. Glisser pour sélectionner la zone à jouer."></canvas>
+      <div class="transport" id="transport">
+        <button id="play" aria-pressed="false" aria-label="lecture" title="lecture / pause">
+          <svg class="i-play" viewBox="0 0 20 20" aria-hidden="true"><path d="M6 3.5v13l11-6.5z"/></svg>
+          <svg class="i-pause" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 3.5h3.6v13H5zM11.4 3.5H15v13h-3.6z"/></svg>
+        </button>
+        <button id="export" aria-label="exporter en wav" title="wav">
+          <svg class="i-line" viewBox="0 0 20 20" aria-hidden="true"><path d="M2 10c2-8.5 4.5-8.5 8 0s6 8.500 8 0"/></svg>
+        </button>
+        <button id="video" aria-pressed="false" aria-label="enregistrer la vidéo" title="vidéo">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="6"/></svg>
+        </button>
+      </div>
     </div>
+    <div id="line" role="status"></div>
     <p id="msg" role="status"></p>
     <nav id="tabs" aria-label="sections"></nav>
   </div>
@@ -271,7 +292,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
       </div>
     </section>
     </div>
-    <p class="ver">pixels to soundscape patterns · A · 9853fa9</p>
+    <p class="ver">pixels to soundscape patterns · A · a481911</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>
@@ -1341,7 +1362,7 @@ function wakeAudio() {
     return true;
   } catch (e) { say("Le son n'a pas pu démarrer dans ce navigateur."); return false; }
 }
-function setPlayUI() { $("play").setAttribute("aria-pressed", String(playing)); $("play").textContent = playing ? "stop" : "lecture"; $("video").textContent = rec ? "annuler" : "vidéo"; }
+function setPlayUI() { $("play").setAttribute("aria-pressed", String(playing)); $("video").setAttribute("aria-pressed", String(!!rec)); }
 function togglePlay() {
   if (rec) { rec.cancelled = true; try { rec.mr.stop(); } catch (e) {} return; }
   if (cam) { cam.on = playing = !cam.on; camCfg(); setPlayUI(); return; }
@@ -1644,11 +1665,12 @@ function geom() {
 /* En portrait, le cadre prend les proportions de l'image : plus de bandes noires autour. */
 const WIDE = matchMedia("(orientation:landscape) and (min-width:560px), (min-width:900px)");
 function fitFrame() {
-  if (WIDE.matches || !src.width) { cv.style.height = cv.style.width = ""; return; }
-  const full = $("play").parentElement.clientWidth, r = src.height / src.width, h = Math.round(Math.max(120, Math.min(document.documentElement.clientHeight * 0.46, full * r)));
+  const fr = $("frame");
+  if (WIDE.matches || !src.width) { cv.style.height = fr.style.width = ""; return; }
+  const full = document.querySelector(".stage").clientWidth - 32, r = src.height / src.width, h = Math.round(Math.max(120, Math.min(document.documentElement.clientHeight * 0.46, full * r)));
   const w = Math.round(Math.min(full, Math.max(120, h / r)));   /* image haute : le cadre se resserre autour d'elle */
   if (cv.style.height !== h + "px") cv.style.height = h + "px";
-  if (cv.style.width !== w + "px") cv.style.width = w + "px";
+  if (fr.style.width !== w + "px") fr.style.width = w + "px";
 }
 addEventListener("resize", fitFrame); addEventListener("load", fitFrame); setTimeout(fitFrame, 400); setTimeout(fitFrame, 1500);   /* certains téléphones annoncent d'abord une mauvaise hauteur d'écran */
 /* Le bandeau du titre reste en haut ; la zone d'écoute se cale juste dessous. */
@@ -1684,6 +1706,9 @@ function draw() {
   /* Fond de la zone d'écoute : l'image ou la caméra, en tout petit, que la page floute. */
   if (bgN++ % 3 === 0) $("bg").getContext("2d").drawImage(src, 0, 0, 48, 48);
   const g = geom(); ctx.clearRect(0, 0, g.W, g.H);
+  /* Les commandes suivent le coin bas gauche de l'image, où qu'elle soit dans le cadre. */
+  const tl = Math.round(g.ox + 8) + "px", tb = Math.round(g.H - g.oy - g.ih + 8) + "px", tp = $("transport");
+  if (tp.style.left !== tl) tp.style.left = tl; if (tp.style.bottom !== tb) tp.style.bottom = tb;
   /* Pas de cadre : l'image posée sur sa version floue, assombrie hors de la sélection. */
   ctx.imageSmoothingEnabled = true; ctx.drawImage(src, g.ox, g.oy, g.iw, g.ih); ctx.fillStyle = "rgba(0,0,0,.5)"; ctx.fillRect(g.ox, g.oy, g.iw, g.ih);
   const rx = g.ox + sel.x * g.iw, ry = g.oy + sel.y * g.ih, rw = sel.w * g.iw, rh = sel.h * g.ih, cw = rw / gw, ch = rh / gh;

@@ -16,7 +16,7 @@
 html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--mono);font-size:13px;line-height:1.4}
 body{padding:0 16px 40px}
 header,main{max-width:1100px;margin:0 auto}
-header{padding:6px 0;color:var(--ink);white-space:nowrap;display:flex;justify-content:space-between;align-items:center;gap:12px}
+header{padding:6px 0;color:var(--ink);white-space:nowrap;display:flex;justify-content:space-between;align-items:center;gap:12px;position:sticky;top:0;z-index:6;background:var(--bg);box-shadow:0 0 0 100vmax var(--bg);clip-path:inset(0 -100vmax)}
 #doc{max-width:1100px;margin:0 auto;padding-bottom:24px}
 #doc p,#doc li,#doc dd{max-width:68ch}
 #doc h2{margin:22px 0 8px;font-size:13px;font-weight:400;color:var(--ink);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;display:flex;min-width:0}
@@ -35,11 +35,11 @@ header h1{display:inline;font-size:13px;font-weight:400;margin:0;color:var(--ink
 main{display:grid;gap:8px}
 main[hidden],#doc[hidden]{display:none}
 [hidden]{display:none!important}
-.stage{position:sticky;top:0;z-index:5;background:#000;margin:0 -16px;padding:12px 16px;display:grid;gap:8px;min-width:0;overflow:hidden;border-bottom:1px solid var(--line)}
+.stage{position:sticky;top:var(--hh,0px);z-index:5;background:#000;margin:0 -16px;padding:12px 16px;display:grid;gap:8px;min-width:0;overflow:hidden;border-bottom:1px solid var(--line)}
 .stage > *{position:relative}
 #bg{position:absolute;left:-12%;top:-12%;width:124%;height:124%;border:0;filter:blur(26px) saturate(1.3) brightness(.5);pointer-events:none;background:#000}
 .stage #line{color:#b4b4b4}
-canvas{display:block;width:100%;justify-self:center;height:min(calc(100vw - 32px),44vh);background:#000;border:1px solid var(--line);touch-action:none;cursor:crosshair}
+canvas{display:block;width:100%;justify-self:center;height:min(calc(100vw - 32px),44vh);touch-action:none;cursor:crosshair}
 #line{min-height:1.4em;white-space:pre;overflow:hidden;color:var(--dim);font-variant-numeric:tabular-nums}
 #line.busy{color:var(--ink)}
 .transport{display:flex;gap:4px 16px;flex-wrap:wrap;align-items:center}
@@ -102,7 +102,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
 @media (orientation:landscape) and (min-width:560px), (min-width:900px){
   header{padding:2px 0}
   main{grid-template-columns:minmax(0,1.15fr) minmax(290px,.85fr);gap:22px;align-items:start}
-  .stage{top:4px;margin:0;border:1px solid var(--line)}
+  .stage{top:calc(var(--hh,0px) + 4px);margin:0;border:1px solid var(--line)}
   canvas{height:max(130px,calc(100vh - 186px));height:max(130px,calc(100dvh - 186px))}
   section:first-child h2{margin-top:0}
 }
@@ -156,9 +156,9 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Type a value next to a slider to set it exactly. Double-click a name to reset it.</li>
     <li>Beyond the edges, the image is mirrored, so the window is never half empty.</li>
     <li>Video is recorded in real time: keep the page visible until it ends.</li>
-    <li>On an iPhone or iPad, the sound plays even when the silent switch is on, like a music app. Use the volume buttons.</li>
+    <li>On an iPhone, the silent switch mutes the sound.</li>
   </ul>
-  <p class="ver">version A · d3f31fa</p>
+  <p class="ver">version A · 9dfb6e7</p>
 </article>
 <main>
   <div class="stage">
@@ -246,7 +246,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
         <button id="reset" class="cmd">défauts</button>
       </div>
     </section>
-    <p class="ver">pixels to soundscape patterns · A · d3f31fa</p>
+    <p class="ver">pixels to soundscape patterns · A · 9dfb6e7</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>
@@ -1281,24 +1281,7 @@ async function setTrim() {
   trim = g;
   if (trimNode) trimNode.gain.setTargetAtTime(trim, actx.currentTime, 0.03);
 }
-/* iPhone / iPad (Safari et Chrome, même moteur) : par défaut le son de la page est coupé par le bouton silencieux.
-   On le déclare comme lecture de musique : API audioSession si elle existe, sinon un court son muet en boucle. */
-let iosKeep = null;
-function iosPlayback() {
-  try { if (navigator.audioSession) { navigator.audioSession.type = "playback"; return; } } catch (e) {}
-  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
-  if (!ios) return;
-  if (!iosKeep) {
-    const n = 800, b = new ArrayBuffer(44 + n), v = new DataView(b), w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
-    w(0, "RIFF"); v.setUint32(4, 36 + n, true); w(8, "WAVEfmt "); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
-    v.setUint32(24, 8000, true); v.setUint32(28, 8000, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true); w(36, "data"); v.setUint32(40, n, true);
-    new Uint8Array(b, 44).fill(128);
-    iosKeep = new Audio(URL.createObjectURL(new Blob([b], { type: "audio/wav" }))); iosKeep.loop = true; iosKeep.setAttribute("playsinline", "");
-  }
-  const p = iosKeep.play(); if (p && p.catch) p.catch(() => {});
-}
 function wakeAudio() {
-  iosPlayback();
   try {
     if (!actx) {
       actx = new (window.AudioContext || window.webkitAudioContext)(); master = actx.createGain(); master.gain.value = 0.9; master.connect(actx.destination);
@@ -1608,7 +1591,7 @@ function playTime() {
   return tp;
 }
 function geom() {
-  const W = cv.clientWidth, H = cv.clientHeight, s = Math.min((W - 12) / src.width, (H - 12) / src.height);
+  const W = cv.clientWidth, H = cv.clientHeight, s = Math.min(W / src.width, H / src.height);
   const iw = src.width * s, ih = src.height * s;
   return { W, H, ox: (W - iw) / 2, oy: (H - ih) / 2, iw, ih };
 }
@@ -1617,11 +1600,14 @@ const WIDE = matchMedia("(orientation:landscape) and (min-width:560px), (min-wid
 function fitFrame() {
   if (WIDE.matches || !src.width) { cv.style.height = cv.style.width = ""; return; }
   const full = $("line").clientWidth, r = src.height / src.width, h = Math.round(Math.max(120, Math.min(innerHeight * 0.52, full * r)));
-  const w = Math.round(Math.min(full, Math.max(120, (h - 12) / r + 12)));   /* image haute : le cadre se resserre autour d'elle */
+  const w = Math.round(Math.min(full, Math.max(120, h / r)));   /* image haute : le cadre se resserre autour d'elle */
   if (cv.style.height !== h + "px") cv.style.height = h + "px";
   if (cv.style.width !== w + "px") cv.style.width = w + "px";
 }
 addEventListener("resize", fitFrame);
+/* Le bandeau du titre reste en haut ; la zone d'écoute se cale juste dessous. */
+const setHH = () => document.documentElement.style.setProperty("--hh", document.querySelector("header").offsetHeight + "px");
+addEventListener("resize", setHH); setHH();
 function resize() {
   const d = Math.min(2, window.devicePixelRatio || 1);
   cv.width = Math.round(cv.clientWidth * d); cv.height = Math.round(cv.clientHeight * d);
@@ -1634,7 +1620,8 @@ function draw() {
   /* Fond de la zone d'écoute : l'image ou la caméra, en tout petit, que la page floute. */
   if (bgN++ % 3 === 0) $("bg").getContext("2d").drawImage(src, 0, 0, 48, 48);
   const g = geom(); ctx.clearRect(0, 0, g.W, g.H);
-  ctx.imageSmoothingEnabled = true; ctx.globalAlpha = 0.5; ctx.drawImage(src, g.ox, g.oy, g.iw, g.ih); ctx.globalAlpha = 1;
+  /* Pas de cadre : l'image posée sur sa version floue, assombrie hors de la sélection. */
+  ctx.imageSmoothingEnabled = true; ctx.drawImage(src, g.ox, g.oy, g.iw, g.ih); ctx.fillStyle = "rgba(0,0,0,.5)"; ctx.fillRect(g.ox, g.oy, g.iw, g.ih);
   const rx = g.ox + sel.x * g.iw, ry = g.oy + sel.y * g.ih, rw = sel.w * g.iw, rh = sel.h * g.ih, cw = rw / gw, ch = rh / gh;
   const amp = P.wobble / 100;
   let live = R && R.gw === gw && R.gh === gh, moving = playing, hx = 0, hy = 0, sg = 1, fkNow = 0;

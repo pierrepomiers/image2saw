@@ -154,7 +154,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Video is recorded in real time: keep the page visible until it ends.</li>
     <li>On an iPhone, the silent switch mutes the sound.</li>
   </ul>
-  <p class="ver">version A · db01f14</p>
+  <p class="ver">version A · 6859dbb</p>
 </article>
 <main>
   <div class="stage">
@@ -239,7 +239,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
         <button id="reset" class="cmd">défauts</button>
       </div>
     </section>
-    <p class="ver">pixels to soundscape patterns · A · db01f14</p>
+    <p class="ver">pixels to soundscape patterns · A · 6859dbb</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>
@@ -1306,6 +1306,8 @@ async function startCam(facing) {
   let stream;
   try { stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: facing, width: { ideal: 320 }, height: { ideal: 240 } } }); }
   catch (e) { say("La caméra n'a pas pu s'ouvrir. Autorise-la pour cette page, ou ouvre la page dans Safari ou Chrome."); return; }
+  /* La demande d'autorisation peut mettre le son en pause (vu sur Android) : on le relance dès qu'elle se referme. */
+  if (actx.state !== "running") actx.resume().catch(() => {});
   try {
     if (!liveLoaded) {
       liveURL = URL.createObjectURL(new Blob([$("engine").textContent + LIVE_SRC], { type: "text/javascript" }));
@@ -1335,8 +1337,16 @@ async function startCam(facing) {
 /* Niveau en direct : on écoute ce qui sort réellement (après death et l'égaliseur) et on le mesure comme une
    boucle figée (même filtre, même cible, même plafond de crête). Le passage direct ↔ figé garde ainsi le même volume. */
 let meter = null;
+let camMute = false;
+function camWake() { if (cam && cam.on && actx && actx.state !== "running") actx.resume().catch(() => {}); }
+addEventListener("pointerdown", camWake, true);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) camWake(); });
 function camLevel() {
   if (!cam || !cam.on || !actx || !trimNode) return;
+  /* Son retenu par le navigateur : on le dit, et un simple toucher le relance. */
+  const mute = actx.state !== "running";
+  if (mute !== camMute) { camMute = mute; say(mute ? "Le son est en pause : touche l'écran pour le relancer." : ""); }
+  if (mute) { camWake(); return; }
   if (!meter) {
     const sp = actx.createChannelSplitter(2), a = [0, 1].map(k => { const n = actx.createAnalyser(); n.fftSize = 2048; sp.connect(n, k); return n; });
     eqNodes[eqNodes.length - 1].connect(sp);

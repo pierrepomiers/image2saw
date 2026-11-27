@@ -156,9 +156,9 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Type a value next to a slider to set it exactly. Double-click a name to reset it.</li>
     <li>Beyond the edges, the image is mirrored, so the window is never half empty.</li>
     <li>Video is recorded in real time: keep the page visible until it ends.</li>
-    <li>On an iPhone, the silent switch mutes the sound.</li>
+    <li>On an iPhone or iPad, the sound plays even when the silent switch is on, like a music app. Use the volume buttons.</li>
   </ul>
-  <p class="ver">version A · a3a9fd0</p>
+  <p class="ver">version A · 5fac1f9</p>
 </article>
 <main>
   <div class="stage">
@@ -246,7 +246,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
         <button id="reset" class="cmd">défauts</button>
       </div>
     </section>
-    <p class="ver">pixels to soundscape patterns · A · a3a9fd0</p>
+    <p class="ver">pixels to soundscape patterns · A · 5fac1f9</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>
@@ -1281,7 +1281,24 @@ async function setTrim() {
   trim = g;
   if (trimNode) trimNode.gain.setTargetAtTime(trim, actx.currentTime, 0.03);
 }
+/* iPhone / iPad (Safari et Chrome, même moteur) : par défaut le son de la page est coupé par le bouton silencieux.
+   On le déclare comme lecture de musique : API audioSession si elle existe, sinon un court son muet en boucle. */
+let iosKeep = null;
+function iosPlayback() {
+  try { if (navigator.audioSession) { navigator.audioSession.type = "playback"; return; } } catch (e) {}
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+  if (!ios) return;
+  if (!iosKeep) {
+    const n = 800, b = new ArrayBuffer(44 + n), v = new DataView(b), w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+    w(0, "RIFF"); v.setUint32(4, 36 + n, true); w(8, "WAVEfmt "); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+    v.setUint32(24, 8000, true); v.setUint32(28, 8000, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true); w(36, "data"); v.setUint32(40, n, true);
+    new Uint8Array(b, 44).fill(128);
+    iosKeep = new Audio(URL.createObjectURL(new Blob([b], { type: "audio/wav" }))); iosKeep.loop = true; iosKeep.setAttribute("playsinline", "");
+  }
+  const p = iosKeep.play(); if (p && p.catch) p.catch(() => {});
+}
 function wakeAudio() {
+  iosPlayback();
   try {
     if (!actx) {
       actx = new (window.AudioContext || window.webkitAudioContext)(); master = actx.createGain(); master.gain.value = 0.9; master.connect(actx.destination);

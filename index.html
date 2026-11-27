@@ -151,7 +151,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Drag on the image to select the area to play. Drag inside the frame to move it, drag a corner to resize it.</li>
     <li>The three signs in the bottom left corner of the image: [ ▶ ] plays (it becomes [ || ] to pause; the space bar does the same), [ .wav ] exports, [ ● ] films, [ 1:1 ] films in square format.</li>
     <li>Change the settings. The sound is recomputed after each change, and the bar under the image shows progress. When a loop takes long to compute, a rough preview plays first and the full-quality loop replaces it.</li>
-    <li>[ .wav ] exports the loop as a 16-bit stereo wav file. [ ● ] records one loop of the moving image with its sound; it turns red while recording, and pressing it again cancels. [ 1:1 ] does the same in a 1080 × 1080 square, for the networks that expect it: the whole selection, centred on a blurred backdrop of the image.</li>
+    <li>[ .wav ] exports the loop as a 16-bit stereo wav file. [ ● ] records one loop of the moving image with its sound; it turns red while recording, and pressing it again cancels. [ 1:1 ] does the same in a 1080 × 1080 square, for the networks that expect it. If the selection is not square, it is first trimmed to a square on its short side, centred; the sound is recomputed for it, then the recording starts by itself.</li>
   </ol>
   <h2>what the image does</h2>
   <dl>
@@ -191,7 +191,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>On a phone held upright, the settings are laid out as pages side by side: swipe sideways, or tap a section name under the image.</li>
     <li>On an iPhone or iPad, the sound plays even when the silent switch is on, like a music app. Use the volume buttons.</li>
   </ul>
-  <p class="ver">version A · 1826420</p>
+  <p class="ver">version A · 65b5c00</p>
 </article>
 <main>
   <div class="stage">
@@ -285,7 +285,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
       </div>
     </section>
     </div>
-    <p class="ver">pixels to soundscape patterns · A · 1826420</p>
+    <p class="ver">pixels to soundscape patterns · A · 65b5c00</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>
@@ -1103,6 +1103,7 @@ function applyResult(res) {
   R = res; R.name = imgName; setTrim();
   if (!res.preview) say(res.peak > 0 ? "" : "Cette sélection ne produit aucun son : augmente la largeur ou baisse la dynamique.");
   if (playing && !rec) startSource(u * R.dur);
+  if (squareNext && !res.preview) { squareNext = false; say(""); exportVideo(true); }
 }
 async function rerender() {
   if (!an || cam) return;
@@ -1880,7 +1881,7 @@ cv.addEventListener("pointermove", e => {
   }
   refreshPixels();
 });
-const endDrag = () => { if (!drag) return; drag = null; if (cam) { camCfg(); return; } markBusy(); clearTimeout(timer); timer = setTimeout(rerender, 120); };
+const endDrag = () => { if (!drag) return; squareNext = false; drag = null; if (cam) { camCfg(); return; } markBusy(); clearTimeout(timer); timer = setTimeout(rerender, 120); };
 cv.addEventListener("pointerup", endDrag); cv.addEventListener("pointercancel", endDrag);
 
 /* ── Démarrage ── */
@@ -1892,7 +1893,19 @@ $("help").addEventListener("click", () => {
   $("help").setAttribute("aria-expanded", String(open)); $("help").textContent = open ? "×" : "?"; window.scrollTo(0, 0);
 });
 $("video").addEventListener("click", () => exportVideo(false));
-$("square").addEventListener("click", () => exportVideo(true));
+/* Carré : pas de bandes. Si la sélection n'est pas carrée, on la ramène d'abord au carré de son petit côté, centré ;
+   le son est recalculé pour cette nouvelle sélection, puis le film démarre tout seul. */
+let squareNext = false;
+$("square").addEventListener("click", () => {
+  if (rec || cam) { exportVideo(true); return; }
+  const aw = sel.w * src.width, ah = sel.h * src.height, side = Math.min(aw, ah);
+  if (Math.abs(aw - ah) <= 1) { exportVideo(true); return; }
+  if (!wakeAudio()) return;
+  const w = side / src.width, h = side / src.height;
+  sel = { x: sel.x + (sel.w - w) / 2, y: sel.y + (sel.h - h) / 2, w, h };
+  squareNext = true; say("Sélection ramenée au carré : le film démarre dès que le calcul est fini.");
+  refreshPixels(); markBusy(); clearTimeout(timer); timer = setTimeout(rerender, 60);
+});
 $("save").addEventListener("click", saveParams);
 $("pathprev").addEventListener("click", () => stepPath(-1));
 $("pathnext").addEventListener("click", () => stepPath(1));

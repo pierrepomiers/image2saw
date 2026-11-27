@@ -88,6 +88,9 @@ section h2 i{font-style:normal;letter-spacing:0;order:3}
 .row.wide{grid-template-columns:11ch minmax(0,1fr)}
 .row > label,.row > span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .row.off{opacity:.3;pointer-events:none}
+/* En direct : ce qui n'a pas de sens sans boucle figée est grisé (la basse du rythme, les exports). */
+body.live #row_rhythm,body.live #row_rnew,body.live #row_dmix{opacity:.3;pointer-events:none}
+body.live #export,body.live #video,body.live #square{opacity:.35}
 .num{display:flex;justify-content:flex-end;align-items:baseline;gap:5px;color:var(--dim)}
 .num input{font:inherit;width:5ch;text-align:right;background:none;color:var(--ink);border:0;border-bottom:1px solid var(--line);border-radius:0;padding:4px 0;font-variant-numeric:tabular-nums;-moz-appearance:textfield}
 .num input::-webkit-outer-spin-button,.num input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
@@ -163,7 +166,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
   </dl>
   <h2>settings</h2>
   <dl>
-    <dt>camera</dt><dd>Plays the live picture of the phone or computer camera instead of a still image: move the camera and the sound follows at once. [ flip ] switches between the back and front cameras. [ freeze ] keeps the current picture and goes back to the normal mode, where loops can be exported. Picking a demo image or loading one also leaves the camera. The live sound is held at the same loudness as the frozen loop. The camera only works when the page is opened in a browser such as Safari or Chrome, not inside Claude.</dd>
+    <dt>camera</dt><dd>Plays the live picture of the phone or computer camera instead of a still image: move the camera and the sound follows at once. [ flip ] switches between the back and front cameras. [ freeze ] keeps the current picture and goes back to the normal mode, where loops can be exported. While the camera runs, what needs a frozen loop is greyed out: <b>rhythm</b>, <b>death on</b> and the export signs. Every other setting works the same. Picking a demo image or loading one also leaves the camera. The live sound is held at the same loudness as the frozen loop. The camera only works when the page is opened in a browser such as Safari or Chrome, not inside Claude.</dd>
     <dt>zoom</dt><dd>With the camera, zooms in up to 8×. The lens zoom of the device is used when the browser gives access to it; beyond that, or without it, the picture is cropped around its centre.</dd>
     <dt>frames/s</dt><dd>With the camera, how many times per second the sound and the picture are refreshed, from 1 to 30. Low values give a stepped, stroboscopic result.</dd>
     <dt>resolution</dt><dd>Number of pixels on the long side of the area, from 1 to 64. Every pixel is visited, so more pixels means faster travel and a longer computation. With the camera it is capped at 32.</dd>
@@ -171,12 +174,12 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <dt>width</dt><dd>Width of the window, as a share of the area. Around 50 %, nearly every pixel sings at once.</dd>
     <dt>resonance</dt><dd>How long a voice keeps ringing after the window has passed.</dd>
     <dt>influence</dt><dd>How much the image drives width and resonance. Flat areas widen the window, busy areas narrow it, vivid colours ring longer.</dd>
-    <dt>relief</dt><dd>Makes the window roll over the image like a marble on a roller coaster, where the height of the ground is the pitch of the pixels. Climbing towards high notes costs it speed, so it lingers on the peaks; going down it speeds up and rushes through the low notes. At 0 it moves at a steady pace; at 100 % it is about six times slower on the highest note than on the lowest. The loop keeps its length and still closes seamlessly. Not applied in camera mode.</dd>
+    <dt>relief</dt><dd>Makes the window roll over the image like a marble on a roller coaster, where the height of the ground is the pitch of the pixels. Climbing towards high notes costs it speed, so it lingers on the peaks; going down it speeds up and rushes through the low notes. At 0 it moves at a steady pace; at 100 % it is about six times slower on the highest note than on the lowest. The loop keeps its length and still closes seamlessly. With the camera, the ground follows the live picture.</dd>
     <dt>wave</dt><dd>Waveform of every voice: sine, triangle, saw or square.</dd>
     <dt>low, high</dt><dd>Lowest and highest pitch. The sliders move by semitones from C0 to B6, and the note name is shown next to the value. To set any other frequency, type it in hertz: for example 5 for rumbles and beats.</dd>
     <dt>scale</dt><dd>Linear or logarithmic (log) spread of the pitches between those two limits.</dd>
     <dt>tuning</dt><dd>Leaves pitches free, or snaps them to the chromatic or pentatonic scale.</dd>
-    <dt>rhythm</dt><dd>Optional bass line, off at 0. The setting is its volume, added on top of the main sound; past the point where the total would clip, everything is turned down together, so high values (up to 200 %) make the bass dominate. A rhythmic pattern is read from the image: one line of pixels is followed, one pixel per sixteenth note; the steps where the picture changes most are struck, and the colour of the pixel picks the note. It is a sub bass tuned from <b>low</b>, it loops exactly with the main sound and goes into the exports. Its harmonics feed <b>death</b>. While it plays, each pixel that is struck lights up on the image and stays marked until the bar ends. In the moving image, and so in the exported video, each struck pixel also swells for the length of its hit, on top of the ripple (it follows <b>wobble</b>). [ new rhythm ] reads the image another way and gives another pattern. Not played in camera mode.</dd>
+    <dt>rhythm</dt><dd>Optional bass line, off at 0. The setting is its volume, added on top of the main sound; past the point where the total would clip, everything is turned down together, so high values (up to 200 %) make the bass dominate. A rhythmic pattern is read from the image: one line of pixels is followed, one pixel per sixteenth note; the steps where the picture changes most are struck, and the colour of the pixel picks the note. It is a sub bass tuned from <b>low</b>, it loops exactly with the main sound and goes into the exports. Its harmonics feed <b>death</b>. While it plays, each pixel that is struck lights up on the image and stays marked until the bar ends. In the moving image, and so in the exported video, each struck pixel also swells for the length of its hit, on top of the ripple (it follows <b>wobble</b>). [ new rhythm ] reads the image another way and gives another pattern. Greyed out in camera mode, where it does not play.</dd>
     <dt>death</dt><dd>Output distortion, from 0 (off) to 12. The deep bass stays clean; everything above it is driven through a tube-style saturation, then from 6 upwards through a stage that folds the wave over itself, then a speaker-like filter and a heavy compressor. The higher the value, the thicker and more torn the sound. It comes before the equalizer, and the overall level stays close to the level without it. The line turns red and shakes near the top.</dd>
     <dt>death on</dt><dd>When <b>rhythm</b> plays, doses what the distortion treats. Fully left (0, shown as <b>sound</b>): the pixels only, the bass stays clean. In the middle (50, <b>all</b>): everything, the default. Fully right (100, <b>rhythm</b>): the bass only, the pixels stay clean. In between, the part being released slides gradually out of the distortion.</dd>
     <dt>equalizer</dt><dd>Seven output faders, one per octave, each from −12 to +12 dB with a mark every 6 dB. The first one sets everything below 30 Hz. The last one sets everything above 2 kHz. The sliders stop at B6, just below, so it mostly shapes the harmonics that make the saw and square waves bright; only a pitch typed by hand can reach higher. The overall level is kept steady and never clips: cutting the lowest bands trades inaudible rumble for more level in the rest. [ flat ] sets all bands back to 0 dB.</dd>
@@ -196,7 +199,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>On a phone held upright, the settings are laid out as pages side by side: swipe sideways, or tap a section name under the image (source, function, sound, EQ, time, anim, settings).</li>
     <li>On an iPhone or iPad, the sound plays even when the silent switch is on, like a music app. Use the volume buttons.</li>
   </ul>
-  <p class="ver">version A · 29700b7</p>
+  <p class="ver">version A · eb708f5</p>
   </div>
   <div data-doc="fr" lang="fr">
   <p>image2saw : des pixels aux paysages sonores.</p>
@@ -217,7 +220,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
   </dl>
   <h2>réglages</h2>
   <dl>
-    <dt>caméra</dt><dd>Joue l'image en direct de la caméra du téléphone ou de l'ordinateur à la place d'une image fixe : bouge la caméra et le son suit aussitôt. [ retourner ] passe de la caméra arrière à la caméra avant. [ figer ] garde l'image en cours et revient au mode normal, où les boucles s'exportent. Choisir une image d'exemple ou en charger une quitte aussi la caméra. Le son en direct est tenu au même niveau que la boucle figée. La caméra ne fonctionne que si la page est ouverte dans un navigateur comme Safari ou Chrome, pas à l'intérieur de Claude.</dd>
+    <dt>caméra</dt><dd>Joue l'image en direct de la caméra du téléphone ou de l'ordinateur à la place d'une image fixe : bouge la caméra et le son suit aussitôt. [ retourner ] passe de la caméra arrière à la caméra avant. [ figer ] garde l'image en cours et revient au mode normal, où les boucles s'exportent. Tant que la caméra tourne, ce qui demande une boucle figée est grisé : <b>rythme</b>, <b>death sur</b> et les signes d'export. Tous les autres réglages agissent de la même façon. Choisir une image d'exemple ou en charger une quitte aussi la caméra. Le son en direct est tenu au même niveau que la boucle figée. La caméra ne fonctionne que si la page est ouverte dans un navigateur comme Safari ou Chrome, pas à l'intérieur de Claude.</dd>
     <dt>zoom</dt><dd>Avec la caméra, grossit jusqu'à 8×. Le zoom de l'objectif est utilisé quand le navigateur y donne accès ; au-delà, ou sans lui, l'image est recadrée autour de son centre.</dd>
     <dt>images/s</dt><dd>Avec la caméra, nombre de fois par seconde où le son et l'image sont rafraîchis, de 1 à 30. Les valeurs basses donnent un résultat saccadé, stroboscopique.</dd>
     <dt>résolution</dt><dd>Nombre de pixels sur le grand côté de la zone, de 1 à 64. Chaque pixel est visité : plus il y en a, plus le parcours est rapide et le calcul long. Avec la caméra, elle est plafonnée à 32.</dd>
@@ -225,12 +228,12 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <dt>largeur</dt><dd>Largeur de la fenêtre, en part de la zone. Vers 50 %, presque tous les pixels chantent en même temps.</dd>
     <dt>résonance</dt><dd>Durée pendant laquelle une voix continue de sonner après le passage de la fenêtre.</dd>
     <dt>influence</dt><dd>Part que prend l'image dans la largeur et la résonance. Les zones unies élargissent la fenêtre, les zones chargées la resserrent, les couleurs vives résonnent plus longtemps.</dd>
-    <dt>relief</dt><dd>Fait rouler la fenêtre sur l'image comme une bille sur des montagnes russes, où la hauteur du terrain est la hauteur de note des pixels. Monter vers les notes aiguës lui coûte de la vitesse : elle s'attarde sur les points hauts ; en descente elle accélère et file dans les notes graves. À 0 elle avance à pas régulier ; à 100 % elle est environ six fois plus lente sur la note la plus haute que sur la plus basse. La boucle garde sa durée et se referme toujours sans clic. Sans effet en mode caméra.</dd>
+    <dt>relief</dt><dd>Fait rouler la fenêtre sur l'image comme une bille sur des montagnes russes, où la hauteur du terrain est la hauteur de note des pixels. Monter vers les notes aiguës lui coûte de la vitesse : elle s'attarde sur les points hauts ; en descente elle accélère et file dans les notes graves. À 0 elle avance à pas régulier ; à 100 % elle est environ six fois plus lente sur la note la plus haute que sur la plus basse. La boucle garde sa durée et se referme toujours sans clic. Avec la caméra, le terrain suit l'image en direct.</dd>
     <dt>onde</dt><dd>Forme d'onde de chaque voix : sinus, triangle, scie ou carré.</dd>
     <dt>grave, aigu</dt><dd>Note la plus basse et la plus haute. Les curseurs avancent par demi-tons de C0 à B6, et le nom de la note s'affiche à côté de la valeur. Pour toute autre fréquence, tape-la en hertz : par exemple 5 pour des grondements et des battements.</dd>
     <dt>échelle</dt><dd>Répartition linéaire ou logarithmique (log) des hauteurs entre ces deux limites.</dd>
     <dt>accord</dt><dd>Laisse les hauteurs libres, ou les cale sur la gamme chromatique ou pentatonique.</dd>
-    <dt>rythme</dt><dd>Ligne de basse optionnelle, coupée à 0. Le réglage est son volume, ajouté par-dessus le son principal ; quand le total saturerait, l'ensemble est baissé d'un bloc, si bien qu'aux valeurs hautes (jusqu'à 200 %) la basse domine. Un motif rythmique est lu dans l'image : on suit une ligne de pixels, un pixel par double croche ; les pas où l'image change le plus sont frappés, et la couleur du pixel choisit la note. C'est une basse « sub » accordée d'après <b>grave</b>, qui boucle exactement avec le son principal et part dans les exports. Ses harmoniques nourrissent <b>death</b>. Pendant la lecture, chaque pixel frappé s'allume sur l'image et reste marqué jusqu'à la fin de la mesure. Dans l'image animée, donc dans la vidéo exportée, chaque pixel frappé gonfle aussi le temps de sa frappe, par-dessus l'onde (il suit <b>wobble</b>). [ autre rythme ] lit l'image autrement et donne un autre motif. Elle ne joue pas en mode caméra.</dd>
+    <dt>rythme</dt><dd>Ligne de basse optionnelle, coupée à 0. Le réglage est son volume, ajouté par-dessus le son principal ; quand le total saturerait, l'ensemble est baissé d'un bloc, si bien qu'aux valeurs hautes (jusqu'à 200 %) la basse domine. Un motif rythmique est lu dans l'image : on suit une ligne de pixels, un pixel par double croche ; les pas où l'image change le plus sont frappés, et la couleur du pixel choisit la note. C'est une basse « sub » accordée d'après <b>grave</b>, qui boucle exactement avec le son principal et part dans les exports. Ses harmoniques nourrissent <b>death</b>. Pendant la lecture, chaque pixel frappé s'allume sur l'image et reste marqué jusqu'à la fin de la mesure. Dans l'image animée, donc dans la vidéo exportée, chaque pixel frappé gonfle aussi le temps de sa frappe, par-dessus l'onde (il suit <b>wobble</b>). [ autre rythme ] lit l'image autrement et donne un autre motif. Grisé en mode caméra, où elle ne joue pas.</dd>
     <dt>death</dt><dd>Distorsion de sortie, de 0 (coupée) à 12. Le grave profond reste propre ; tout ce qui est au-dessus passe dans une saturation de type lampe, puis à partir de 6 dans un étage qui replie l'onde sur elle-même, puis dans un filtre façon haut-parleur et un compresseur lourd. Plus la valeur est haute, plus le son est épais et déchiré. Elle agit avant l'égaliseur, et le niveau d'ensemble reste proche du niveau sans elle. La ligne passe au rouge et tremble vers le haut de la course.</dd>
     <dt>death sur</dt><dd>Quand <b>rythme</b> joue, dose ce que la distorsion traite. Tout à gauche (0, affiché <b>son</b>) : les pixels seuls, la basse reste propre. Au milieu (50, <b>tout</b>) : tout, par défaut. Tout à droite (100, <b>rythme</b>) : la basse seule, les pixels restent propres. Entre deux, la part libérée sort progressivement de la distorsion.</dd>
     <dt>égaliseur</dt><dd>Sept faders de sortie, un par octave, chacun de −12 à +12 dB avec un repère tous les 6 dB. Le premier règle tout ce qui est sous 30 Hz. Le dernier règle tout ce qui est au-dessus de 2 kHz. Les curseurs de note s'arrêtent à B6, juste en dessous : il façonne donc surtout les harmoniques qui rendent brillantes les ondes scie et carré ; seule une hauteur tapée à la main peut monter plus haut. Le niveau d'ensemble est tenu stable et ne sature jamais : couper les bandes les plus graves échange un grondement inaudible contre du niveau pour le reste. [ plat ] remet toutes les bandes à 0 dB.</dd>
@@ -250,7 +253,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Sur un téléphone tenu debout, les réglages sont des pages côte à côte : glisse de côté, ou touche le nom d'une section sous l'image (source, fonction, son, EQ, temps, animation, réglages).</li>
     <li>Sur iPhone ou iPad, le son joue même avec le bouton silencieux, comme une application de musique. Utilise les boutons de volume.</li>
   </ul>
-  <p class="ver">version A · 29700b7</p>
+  <p class="ver">version A · eb708f5</p>
   </div>
 </article>
 <main>
@@ -347,7 +350,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
       <div class="row wide" id="row_lang"><span>langue</span><div class="seg" id="langseg"><button type="button" data-lang="fr" aria-pressed="false">français</button><button type="button" data-lang="en" aria-pressed="false">english</button></div></div>
     </section>
     </div>
-    <p class="ver">pixels to soundscape patterns · A · 29700b7</p>
+    <p class="ver">pixels to soundscape patterns · A · eb708f5</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>
@@ -1775,7 +1778,7 @@ async function startCam(facing) {
     try { const zc = cam.track.getCapabilities && cam.track.getCapabilities().zoom; if (zc && zc.max > zc.min && zc.min > 0) cam.zcap = zc; } catch (e) {}
     node.port.onmessage = e => { if (cam) { cam.rms = e.data.rms; cam.ref = e.data; } };
     playing = cam.on; imgName = "camera"; say("");
-    setText($("cam"), "figer"); $("flip").hidden = false; $("row_fps").hidden = false; $("row_zoom").hidden = false; setPlayUI(); setTrim();
+    setText($("cam"), "figer"); $("flip").hidden = false; $("row_fps").hidden = false; $("row_zoom").hidden = false; document.body.classList.add("live"); setPlayUI(); setTrim();
     if (meter) { meter.pw = 0; meter.pk = 0; } if (!keep) { trim = Math.min(trim, 0.4); trimNode.gain.setTargetAtTime(trim, actx.currentTime, 0.02); }
     cam.lvT = setInterval(camLevel, 50); camTick(); camTimer();
   } catch (e) { stream.getTracks().forEach(tr => tr.stop()); say("Le moteur en direct n'a pas pu démarrer dans ce navigateur."); }
@@ -1817,6 +1820,14 @@ function camTick() {
   z /= hz; const cw = v.videoWidth / z, ch = v.videoHeight / z;
   src.getContext("2d").drawImage(v, (v.videoWidth - cw) / 2, (v.videoHeight - ch) / 2, cw, ch, 0, 0, w, h);
   refreshPixels();
+  /* Relief en direct : le terrain change à chaque image. On glisse de l'ancien vers le nouveau en quelques images,
+     pour que la fenêtre ne saute pas d'un endroit à l'autre. */
+  const wkey = gw + "x" + gh + P.path + P.seed;
+  if (P.relief > 0 && pathPts && pathPts.length) {
+    const w = reliefWarp(an, pathPts, 2048, P.relief / 100);
+    if (c.warp && c.wkey === wkey) for (let k = 0; k < 2048; k++) c.warp[k] += 0.3 * (w[k] - c.warp[k]); else c.warp = w;
+    c.wkey = wkey; camCfg();
+  } else if (c.warp) { c.warp = null; camCfg(); }
   if (c.dims !== gw + "x" + gh) camCfg();
   const n = gw * gh, lo = Math.max(0.05, Math.min(P.fmin, P.fmax)), hi = Math.max(lo + 0.01, Math.max(P.fmin, P.fmax)), infl = P.infl / 100, p = { scale: P.scale, tune: P.tune };
   const freq = new Float32Array(n), vol = new Float32Array(n), tau = new Float32Array(n), con = Float32Array.from(an.con), lf0 = Math.log(lo), lf1 = Math.log(hi);
@@ -1830,7 +1841,7 @@ function camTick() {
 /* Réglages du moteur en direct : grille, trajet de la tête, fenêtre, forme d'onde. */
 function camCfg() {
   const c = cam; if (!c || !gw) return;
-  const { hx, hy } = samplePath(pathPts, 2048);
+  const { hx, hy } = samplePath(pathPts, 2048, c.warp && c.warp.length === 2048 ? c.warp : null);
   c.dims = gw + "x" + gh;
   c.cfg = { gw, gh, hx, hy, dur: getDur(), sigma: P.sigma / 100 * Math.max(gw, gh), infl: P.infl / 100, shape: FIXED.shape, stereo: P.stereo / 100, wv: { saw: 0, square: 1, triangle: 2, sine: 3 }[P.wave], on: c.on };
   c.node.port.postMessage({ cfg: c.cfg });
@@ -1851,7 +1862,7 @@ function camHead() {
 function stopCam(quiet) {
   const c = cam; if (!c) return;
   clearInterval(c.timer); clearInterval(c.lvT); c.stream.getTracks().forEach(tr => tr.stop()); try { c.node.port.postMessage({ cfg: Object.assign({}, c.cfg, { on: false }) }); c.node.disconnect(); } catch (e) {}
-  cam = null; setText($("cam"), "caméra"); $("flip").hidden = true; $("row_fps").hidden = true; $("row_zoom").hidden = true;
+  cam = null; setText($("cam"), "caméra"); $("flip").hidden = true; $("row_fps").hidden = true; $("row_zoom").hidden = true; document.body.classList.remove("live");
   if (!quiet) changed(false);   /* la dernière image devient l'image de travail : la boucle se calcule, et la lecture reprend dessus */
 }
 

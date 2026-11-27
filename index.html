@@ -71,9 +71,9 @@ button:focus-visible,.filebtn:focus-within,input:focus-visible{outline:1px solid
 .panel{display:grid;min-width:0;align-content:start}
 section{display:grid}
 /* Téléphone debout : les sections se feuillettent de gauche à droite, une seule à l'écran à la fois. */
-#tabs{display:flex;gap:14px;overflow-x:auto;margin:0 -16px -6px;padding:0 16px 3px;scrollbar-width:none;white-space:nowrap}
+#tabs{display:flex;gap:6px;justify-content:space-between;font-size:12px;overflow-x:auto;margin:0 -16px -6px;padding:0 16px 3px;scrollbar-width:none;white-space:nowrap}
 #tabs::-webkit-scrollbar,.pages::-webkit-scrollbar{display:none}
-#tabs button{font:inherit;background:none;border:0;padding:6px 0;color:#909090;text-transform:uppercase;letter-spacing:.08em;cursor:pointer}
+#tabs button{font:inherit;background:none;border:0;padding:6px 0;color:#909090;text-transform:uppercase;letter-spacing:.02em;cursor:pointer}
 #tabs button[aria-current=true]{color:var(--ink);box-shadow:0 1px 0 var(--ink)}
 .pages{display:flex;gap:36px;align-items:start;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 -16px;padding:0 16px;scroll-padding:0 16px;scrollbar-width:none;overscroll-behavior-x:contain;overflow-y:hidden}
 .pages > section{flex:0 0 100%;min-width:0;scroll-snap-align:start;position:relative}
@@ -192,10 +192,10 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Type a value next to a slider to set it exactly. Double-click a name to reset it.</li>
     <li>Beyond the edges, the image is mirrored, so the window is never half empty.</li>
     <li>Video is recorded in real time: keep the page visible until it ends.</li>
-    <li>On a phone held upright, the settings are laid out as pages side by side: swipe sideways, or tap a section name under the image.</li>
+    <li>On a phone held upright, the settings are laid out as pages side by side: swipe sideways, or tap a section name under the image (source, function, sound, EQ, time, anim, settings).</li>
     <li>On an iPhone or iPad, the sound plays even when the silent switch is on, like a music app. Use the volume buttons.</li>
   </ul>
-  <p class="ver">version A · 7c8e9c1</p>
+  <p class="ver">version A · cb7fa4b</p>
   </div>
   <div data-doc="fr" lang="fr">
   <p>image2saw : des pixels aux paysages sonores.</p>
@@ -245,10 +245,10 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Tape une valeur à côté d'un curseur pour la régler exactement. Double-clique sur un nom pour le remettre à sa valeur de départ.</li>
     <li>Au-delà des bords, l'image est prolongée en miroir : la fenêtre n'est jamais à moitié vide.</li>
     <li>La vidéo s'enregistre en temps réel : garde la page affichée jusqu'à la fin.</li>
-    <li>Sur un téléphone tenu debout, les réglages sont des pages côte à côte : glisse de côté, ou touche le nom d'une section sous l'image.</li>
+    <li>Sur un téléphone tenu debout, les réglages sont des pages côte à côte : glisse de côté, ou touche le nom d'une section sous l'image (source, fonction, son, EQ, temps, animation, réglages).</li>
     <li>Sur iPhone ou iPad, le son joue même avec le bouton silencieux, comme une application de musique. Utilise les boutons de volume.</li>
   </ul>
-  <p class="ver">version A · 7c8e9c1</p>
+  <p class="ver">version A · cb7fa4b</p>
   </div>
 </article>
 <main>
@@ -271,7 +271,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
   <div class="panel" id="panel">
     <div class="pages" id="pages">
     <section>
-      <h2>image</h2>
+      <h2>source</h2>
       <div class="seg">
         <button data-demo="manekineko">manekineko</button>
         <button data-demo="sunset">sunset</button>
@@ -287,7 +287,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
       <div class="row wide"><span>parcours</span><div class="seg"><button id="pathprev" aria-label="parcours précédent">&lt;</button><span id="pathname"></span><button id="pathnext" aria-label="parcours suivant">&gt;</button><button id="reroll" class="cmd" hidden>autre</button></div></div>
     </section>
     <section>
-      <h2>gaussienne</h2>
+      <h2>fonction</h2>
       <div data-s="sigma"></div>
       <div data-s="ring"></div>
       <div data-s="infl"></div>
@@ -306,7 +306,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
       <div data-s="dmix"></div>
     </section>
     <section>
-      <h2>égaliseur</h2>
+      <h2>EQ</h2>
       <div class="faders">
         <div class="fader scale" aria-hidden="true">
           <span class="u">dB</span>
@@ -331,7 +331,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
       <div data-s="freeDur"></div>
     </section>
     <section>
-      <h2>image animée</h2>
+      <h2>animation</h2>
       <div data-s="wobble"></div>
     </section>
     <section>
@@ -344,7 +344,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
       <div class="row wide" id="row_lang"><span>langue</span><div class="seg" id="langseg"><button type="button" data-lang="fr" aria-pressed="false">français</button><button type="button" data-lang="en" aria-pressed="false">english</button></div></div>
     </section>
     </div>
-    <p class="ver">pixels to soundscape patterns · A · 7c8e9c1</p>
+    <p class="ver">pixels to soundscape patterns · A · cb7fa4b</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>
@@ -1078,12 +1078,12 @@ const EN = {
   "mesure": "time sig.",
   "mesures": "bars",
   "durée": "length",
-  "image animée": "moving image",
+  "animation": "anim",
   "réglages": "settings",
   "sauver": "save",
   "ouvrir": "open",
   "défauts": "defaults",
-  "gaussienne": "gaussian",
+  "fonction": "function",
   "images/s": "frames/s",
   "langue": "language",
   "© 2026 Pierre Pomiers · licence MIT": "© 2026 Pierre Pomiers · MIT license",

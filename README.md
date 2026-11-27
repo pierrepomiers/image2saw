@@ -30,7 +30,7 @@ La version exacte est affichée en bas de la page (`A · numéro de commit`). L'
 
 Sur un téléphone tenu debout, les sections de réglages sont des pages côte à côte : on les feuillette en glissant de côté, ou en touchant leur nom sous l'image.
 
-**image**
+**source**
 - `[ caméra ]` : joue en direct l'image de la caméra du téléphone ou de l'ordinateur à la place d'une image fixe. On bouge la caméra, le son suit aussitôt. `[ retourner ]` passe de la caméra arrière à la caméra avant. `[ figer ]` garde l'image du moment et revient au mode normal, où les boucles s'exportent. Choisir une image d'exemple ou en charger une quitte aussi la caméra. Le son en direct est tenu au même niveau que la boucle figée. La caméra ne fonctionne que si la page est ouverte dans un navigateur (Safari, Chrome), pas à l'intérieur de Claude.
 - `zoom` : avec la caméra, grossit jusqu'à 8×. Le zoom de l'objectif est utilisé quand le navigateur y donne accès ; au-delà, ou sans lui, l'image est recadrée autour de son centre.
 - `images/s` : avec la caméra, nombre de rafraîchissements du son et de l'image par seconde, de 1 à 30. Une valeur basse donne un résultat saccadé, stroboscopique.
@@ -41,7 +41,7 @@ Sur un téléphone tenu debout, les sections de réglages sont des pages côte �
   - `spirale` : vers le centre, puis retour.
   - `chaos` : chemin tiré au hasard, de voisin en voisin, qui passe quand même une fois par chaque pixel avant de boucler. `[ autre ]` tire un autre chemin.
 
-**gaussienne**
+**fonction**
 - `largeur` : taille de la fenêtre, en proportion de la zone. Vers 50 %, presque tous les pixels chantent en même temps.
 - `résonance` : temps pendant lequel une voix sonne encore après le passage de la fenêtre.
 - `influence` : poids de l'image sur la largeur et la résonance. Zone unie : fenêtre plus large. Zone chargée : plus étroite. Couleur vive : résonance plus longue.
@@ -59,7 +59,7 @@ Sur un téléphone tenu debout, les sections de réglages sont des pages côte �
 - `death sur` : quand `rythme` joue, dose ce que la distorsion traite. Tout à gauche (0, affiché `son`) : les pixels seuls, la basse reste propre. Au milieu (50, `tout`) : tout, par défaut. Tout à droite (100, `rythme`) : la basse seule, les pixels restent propres. Entre deux, la part libérée sort progressivement de la distorsion.
 - Elle agit avant l'égaliseur, et le niveau d'ensemble reste maîtrisé. La ligne rougit et tremble en approchant de 12.
 
-**égaliseur**
+**EQ** (égaliseur)
 - Sept curseurs verticaux, un par octave, de −12 à +12 dB avec une graduation tous les 6 dB : sous 30 Hz, puis 60, 120, 250, 500 Hz et 1 kHz, enfin tout ce qui est au-dessus de 2 kHz.
 - Avec les curseurs, les notes s'arrêtent à B6, un peu moins de 2 kHz ; seule une valeur tapée à la main peut monter plus haut. Le dernier curseur règle donc surtout les harmoniques, qui donnent leur brillance à la scie et au carré ; il est presque sans effet sur le sinus.
 - Le niveau d'ensemble est maintenu et ne sature jamais. `[ plat ]` remet tout à 0 dB.
@@ -69,7 +69,7 @@ Sur un téléphone tenu debout, les sections de réglages sont des pages côte �
 - `mesure`, `mesures`, `tempo` : durée de la boucle en mesures (3/4, 4/4, 5/4, 6/8, 7/8). Un tempo plus lent donne une boucle plus longue.
 - `durée` : durée en secondes, quand la mesure est sur `libre`. D'une demi-seconde à 60 s, la durée d'une story Instagram ; une longue boucle demande plus de temps de calcul et d'export.
 
-**image animée**
+**animation**
 - `wobble` : force de l'ondulation de l'image pendant la lecture, jusqu'à 200 %. Elle suit le volume et la hauteur réels du son.
 
 **réglages**

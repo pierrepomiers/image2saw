@@ -141,6 +141,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <dt>accord</dt><dd>Leaves pitches free, or snaps them to the chromatic or pentatonic scale.</dd>
     <dt>rythme</dt><dd>Optional bass line, off at 0. The setting is its volume, added on top of the main sound; past the point where the total would clip, everything is turned down together, so high values (up to 200 %) make the bass dominate. A rhythmic pattern is read from the image: one line of pixels is followed, one pixel per sixteenth note; the steps where the picture changes most are struck, and the colour of the pixel picks the note. It is a sub bass tuned from <b>grave</b>, it loops exactly with the main sound and goes into the exports. Its harmonics feed <b>death</b>. [ autre rythme ] reads the image another way and gives another pattern. Not played in camera mode.</dd>
     <dt>death</dt><dd>Output distortion, from 0 (off) to 12. The deep bass stays clean; everything above it is driven through a tube-style saturation, then from 6 upwards through a stage that folds the wave over itself, then a speaker-like filter and a heavy compressor. The higher the value, the thicker and more torn the sound. It comes before the equaliser, and the overall level stays under control. The line turns red and shakes near the top.</dd>
+    <dt>death sur</dt><dd>When <b>rythme</b> plays, chooses what the distortion treats: <b>son</b> (the pixels only, the bass stays clean), <b>rythme</b> (the bass only, the pixels stay clean) or <b>les deux</b> (everything together, the default).</dd>
     <dt>égaliseur</dt><dd>Seven output faders, one per octave, each from −12 to +12 dB with a mark every 6 dB. The first one sets everything below 30 Hz. The last one sets everything above 2 kHz. The sliders stop at B6, just below, so it mostly shapes the harmonics that make the saw and square waves bright; only a pitch typed by hand can reach higher. The overall level is kept steady and never clips: cutting the lowest bands trades inaudible rumble for more level in the rest. [ plat ] sets all bands back to 0 dB.</dd>
     <dt>stéréo</dt><dd>Stereo width. The left of the image plays in the left speaker.</dd>
     <dt>mesure, mesures, tempo</dt><dd>Loop length in bars, so that samples line up on the beat: a slower tempo makes a longer loop, shown in seconds under the image. Choose libre to set a length in seconds with durée.</dd>
@@ -155,7 +156,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Video is recorded in real time: keep the page visible until it ends.</li>
     <li>On an iPhone, the silent switch mutes the sound.</li>
   </ul>
-  <p class="ver">version A · cb0219a</p>
+  <p class="ver">version A · f47ff9a</p>
 </article>
 <main>
   <div class="stage">
@@ -204,6 +205,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
       <div data-s="rhythm"></div>
       <div class="row wide" id="row_rnew"><span></span><div class="seg"><button id="rnew" class="cmd">autre rythme</button></div></div>
       <div data-s="death"></div>
+      <div class="row wide" id="row_dtarget"><span>death sur</span><div class="seg" data-seg="dtarget"></div></div>
     </section>
     <section>
       <h2>égaliseur</h2>
@@ -242,7 +244,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
         <button id="reset" class="cmd">défauts</button>
       </div>
     </section>
-    <p class="ver">pixels to soundscape patterns · A · cb0219a</p>
+    <p class="ver">pixels to soundscape patterns · A · f47ff9a</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>
@@ -771,7 +773,7 @@ const FIXED = { shape: 2.5, disc: 1, dyn: 0.6 };
 
 const P = { grid: 16, path: "cycleH", sigma: 15, ring: 0.25, infl: 60,
   wave: "sine", fmin: noteHz(0), fmax: noteHz(59), scale: "lin", tune: "libre", stereo: 80,
-  sig: "4/4", bpm: 120, bars: "4", freeDur: 8, wobble: 50, seed: 1, death: 0, fps: 12, zoom: 1, rhythm: 0, rseed: 1,
+  sig: "4/4", bpm: 120, bars: "4", freeDur: 8, wobble: 50, seed: 1, death: 0, fps: 12, zoom: 1, rhythm: 0, rseed: 1, dtarget: "both",
   eq0: 0, eq1: 0, eq2: 0, eq3: 0, eq4: 0, eq5: 0, eq6: 0 };
 if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) P.wobble = 0;
 
@@ -801,6 +803,7 @@ const SLIDERS = {
 const SEGS = {
   path:  [["cycleH", "h-snake"], ["cycleV", "v-snake"], ["pong", "aller-retour"], ["spirale", "spirale"], ["chaos", "chaos"]],
   wave:  [["sine", "sinus"], ["triangle", "triangle"], ["saw", "scie"], ["square", "carré"]],
+  dtarget: [["son", "son"], ["rythme", "rythme"], ["both", "les deux"]],
   scale: [["lin", "linéaire"], ["log", "log"]],
   tune:  [["libre", "libre"], ["chromatique", "chromatique"], ["penta", "pentatonique"]],
   sig:   [["3/4", "3/4"], ["4/4", "4/4"], ["5/4", "5/4"], ["6/8", "6/8"], ["7/8", "7/8"], ["libre", "libre"]],
@@ -866,7 +869,7 @@ function buildControls() {
     for (const [val, text] of SEGS[id]) {
       const b = document.createElement("button"); b.type = "button"; b.textContent = text; b.dataset.v = val;
       b.setAttribute("aria-pressed", String(P[id] === val));
-      b.addEventListener("click", () => { P[id] = val; host.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", String(x === b))); changed(false); });
+      b.addEventListener("click", () => { P[id] = val; host.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", String(x === b))); if (id === "dtarget") deathChanged(); else changed(false); });
       host.append(b);
     }
   });
@@ -875,7 +878,7 @@ const DEFAULTS = Object.assign({}, P);
 
 function changed(liveOnly) {
   const free = P.sig === "libre";
-  $("row_bpm").classList.toggle("off", free); $("row_bars").classList.toggle("off", free); $("row_freeDur").classList.toggle("off", !free); $("row_rnew").classList.toggle("off", !(P.rhythm > 0));
+  $("row_bpm").classList.toggle("off", free); $("row_bars").classList.toggle("off", free); $("row_freeDur").classList.toggle("off", !free); $("row_rnew").classList.toggle("off", !(P.rhythm > 0)); $("row_dtarget").classList.toggle("off", !(P.death > 0 && P.rhythm > 0));
   if (cam) camTimer();
   if (liveOnly) return;
   if (cam) { refreshPixels(); camCfg(); return; }   /* en direct, rien à recalculer : le moteur reçoit les nouveaux réglages */
@@ -1019,22 +1022,27 @@ function rhythmSteps() {
 }
 function mixRhythm(res) {
   if (!res.dryL) { res.dryL = res.L; res.dryR = res.R; res.dryEnv = res.env; }
-  res.L = res.dryL; res.R = res.dryR; res.env = res.dryEnv; res.steps = null;
+  res.L = res.dryL; res.R = res.dryR; res.env = res.dryEnv; res.steps = null; res.mainL = res.mainR = res.bass = null;
   const lvl = P.rhythm / 100, a = res.an || an; if (!(lvl > 0) || !a || !(res.peak > 0)) return;
   const { n, reps } = rhythmSteps(), pat = rhythmPattern(a, P.rseed, n), sr = res.sr || SR, Ls = res.dryL.length;
   let root = Math.max(1, P.fmin); while (root < 38) root *= 2; while (root >= 76) root /= 2;   /* fondamentale ramenée entre 38 et 76 Hz */
   const b = bassRender(Ls, sr, pat, reps, root), amp = 0.75 * lvl, L = new Float32Array(Ls), R2 = new Float32Array(Ls);
   let peak = 0;
   for (let j = 0; j < Ls; j++) { const x = b[j] * amp, l = res.dryL[j] + x, r = res.dryR[j] + x; L[j] = l; R2[j] = r; const m = Math.max(Math.abs(l), Math.abs(r)); if (m > peak) peak = m; }
-  if (peak > 0.89) { const g = 0.89 / peak; for (let j = 0; j < Ls; j++) { L[j] *= g; R2[j] *= g; } }
   /* L'image respire aussi avec la basse. */
   const K = res.K, env = new Float32Array(K), hop = Ls / K;
   for (let k = 0; k < K; k++) { let m = 0; const j1 = Math.min(Ls, Math.round((k + 1) * hop)); for (let j = Math.round(k * hop); j < j1; j += 8) { const v = Math.abs(b[j]); if (v > m) m = v; } env[k] = Math.min(1.5, res.dryEnv[k] + 0.9 * Math.min(1, lvl) * m); }
+  const g = peak > 0.89 ? 0.89 / peak : 1;
+  if (g < 1) for (let j = 0; j < Ls; j++) { L[j] *= g; R2[j] *= g; }
+  /* Les deux parts sont gardées séparément, au même niveau que dans le mélange : death peut n'en traiter qu'une. */
+  const mL = new Float32Array(Ls), mR = new Float32Array(Ls), ga = g * amp;
+  for (let j = 0; j < Ls; j++) { mL[j] = res.dryL[j] * g; mR[j] = res.dryR[j] * g; b[j] *= ga; }
+  res.mainL = mL; res.mainR = mR; res.bass = b;
   res.L = L; res.R = R2; res.env = env; res.steps = { n, reps, vel: pat.vel };
 }
 let rhTimer = 0;
 function rhythmChanged() {
-  $("row_rnew").classList.toggle("off", !(P.rhythm > 0));
+  $("row_rnew").classList.toggle("off", !(P.rhythm > 0)); $("row_dtarget").classList.toggle("off", !(P.death > 0 && P.rhythm > 0));
   if (cam || !R) return;
   clearTimeout(rhTimer); rhTimer = setTimeout(() => {
     if (cam || !R) return;
@@ -1092,19 +1100,36 @@ function makeBuffer(ctx, res) {
   }
   return buf;
 }
+/* « death sur » : quand le rythme joue et que death ne doit traiter que le son ou que le rythme, la boucle part en
+   deux flux synchrones : l'un traverse death, l'autre le contourne et le rejoint à l'égaliseur. */
+function routeKey(res) { return P.death > 0 && res && res.bass && P.dtarget !== "both" ? P.dtarget : ""; }
+function fxParts(res) {
+  const k = routeKey(res), sr = res.sr, main = { L: res.mainL, R: res.mainR, sr }, bass = { L: res.bass, R: res.bass, sr };
+  return k === "son" ? { wet: main, dry: bass } : k === "rythme" ? { wet: bass, dry: main } : { wet: res, dry: null };
+}
 function startSource(offset, opt) {
-  const buf = makeBuffer(actx, R);
-  const s = actx.createBufferSource(), g = actx.createGain(), now = actx.currentTime;
-  s.buffer = buf; s.loop = !(opt && opt.once); s.connect(g); g.connect(fx.input);
-  g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(1, now + 0.04);
-  s.start(now, Math.max(0, Math.min(offset, buf.duration - 0.001)));
+  const parts = fxParts(R), now = actx.currentTime, once = !!(opt && opt.once), list = [];
+  const mk = (part, to) => {
+    const buf = makeBuffer(actx, part), s = actx.createBufferSource(), g = actx.createGain();
+    s.buffer = buf; s.loop = !once; s.connect(g); g.connect(to);
+    g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(1, now + 0.04);
+    s.start(now, Math.max(0, Math.min(offset, buf.duration - 0.001)));
+    list.push({ s, g }); return s;
+  };
+  const s = mk(parts.wet, fx.input); if (parts.dry) mk(parts.dry, eqNodes[0]);
   stopSource(0.04);
-  cur = { s, g }; startAt = now - offset; clkInit = false;
+  cur = { s, list, key: routeKey(R) }; startAt = now - offset; clkInit = false;
 }
 function stopSource(fade) {
   if (!cur) return;
-  const { s, g } = cur, now = actx.currentTime; cur = null;
-  try { g.gain.cancelScheduledValues(now); g.gain.setValueAtTime(g.gain.value, now); g.gain.linearRampToValueAtTime(0, now + fade); s.stop(now + fade + 0.02); } catch (e) {}
+  const now = actx.currentTime, list = cur.list; cur = null;
+  for (const { s, g } of list) try { g.gain.cancelScheduledValues(now); g.gain.setValueAtTime(g.gain.value, now); g.gain.linearRampToValueAtTime(0, now + fade); s.stop(now + fade + 0.02); } catch (e) {}
+}
+/* Le routage a changé pendant l'écoute (death passé de 0 à plus, autre cible) : on relance au même endroit. */
+function reroute() {
+  $("row_dtarget").classList.toggle("off", !(P.death > 0 && P.rhythm > 0));
+  if (cam || rec || !playing || !cur || !R || cur.key === routeKey(R)) return;
+  startSource((((playTime() % R.dur) + R.dur) % R.dur));
 }
 /* ── Sortie : death (distorsion), puis égaliseur, puis mise à niveau ── */
 let eqNodes = [], fx = null, trimNode = null, trim = 1, eqTimer = 0, fxJob = 0;
@@ -1164,8 +1189,10 @@ function buildFx(ctx) {
 async function renderFx(res) {
   const OC = window.OfflineAudioContext || window.webkitOfflineAudioContext; if (!OC) return null;
   const n = Math.round(res.dur * SR), oc = new OC(2, 2 * n, SR), s = oc.createBufferSource(), f = buildFx(oc), eq = buildEq(oc);
-  s.buffer = makeBuffer(oc, res); s.loop = true; f.set(P.death);
+  const parts = fxParts(res);
+  s.buffer = makeBuffer(oc, parts.wet); s.loop = true; f.set(P.death);
   s.connect(f.input); f.output.connect(eq[0]); eq[eq.length - 1].connect(oc.destination); s.start();
+  if (parts.dry) { const d = oc.createBufferSource(); d.buffer = makeBuffer(oc, parts.dry); d.loop = true; d.connect(eq[0]); d.start(); }
   const out = await new Promise((ok, no) => { oc.oncomplete = e => ok(e.renderedBuffer); const p = oc.startRendering(); if (p && p.then) p.then(ok, no); });
   return { L: out.getChannelData(0).slice(n, 2 * n), R: out.getChannelData(1).slice(n, 2 * n) };
 }
@@ -1181,7 +1208,7 @@ function paintDeath() {
   row.querySelectorAll("label, .num").forEach(el => { el.style.setProperty("--amp", amp); el.classList.toggle("shake", v >= 9); });
 }
 function deathChanged() {
-  paintDeath();
+  paintDeath(); reroute();
   if (actx) {
     fx.set(P.death, actx.currentTime);
     /* En attendant le niveau exact, on baisse tout de suite : une saturation à plein niveau surprendrait. */

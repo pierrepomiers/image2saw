@@ -75,7 +75,7 @@ section{display:grid}
 #tabs::-webkit-scrollbar,.pages::-webkit-scrollbar{display:none}
 #tabs button{font:inherit;background:none;border:0;padding:6px 0;color:#909090;text-transform:uppercase;letter-spacing:.08em;cursor:pointer}
 #tabs button[aria-current=true]{color:var(--ink);box-shadow:0 1px 0 var(--ink)}
-.pages{display:flex;gap:36px;align-items:start;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 -16px;padding:0 16px;scroll-padding:0 16px;scrollbar-width:none;overscroll-behavior-x:contain}
+.pages{display:flex;gap:36px;align-items:start;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 -16px;padding:0 16px;scroll-padding:0 16px;scrollbar-width:none;overscroll-behavior-x:contain;overflow-y:hidden}
 .pages > section{flex:0 0 100%;min-width:0;scroll-snap-align:start;position:relative}
 .pages > section h2{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);margin:0}   /* les onglets font office de titres */
 .pages{padding-top:6px}
@@ -135,7 +135,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
   #tabs{display:none}
   .stage #line{display:block}
   #hline{display:none}
-  .pages{display:grid;overflow:visible;margin:0;padding:0;gap:0}
+  .pages{display:grid;overflow:visible;margin:0;padding:0;gap:0;height:auto!important}
   .pages > section h2{position:static;width:auto;height:auto;overflow:visible;clip-path:none;margin:26px 0 6px}
   .pages > section:first-child h2{margin-top:0}
 }
@@ -192,7 +192,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>On a phone held upright, the settings are laid out as pages side by side: swipe sideways, or tap a section name under the image.</li>
     <li>On an iPhone or iPad, the sound plays even when the silent switch is on, like a music app. Use the volume buttons.</li>
   </ul>
-  <p class="ver">version A · 437b672</p>
+  <p class="ver">version A · 1057b5f</p>
 </article>
 <main>
   <div class="stage">
@@ -292,7 +292,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
       </div>
     </section>
     </div>
-    <p class="ver">pixels to soundscape patterns · A · 437b672</p>
+    <p class="ver">pixels to soundscape patterns · A · 1057b5f</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>
@@ -839,7 +839,7 @@ const SLIDERS = {
   dmix:    { label: "death sur", min: 0, max: 100, step: 1, unit: "", dmx: true },
   death:   { label: "death", min: 0, max: 12, step: 1, unit: "/12", dth: true },
   bpm:     { label: "tempo", min: 40, max: 240, step: 1, unit: "bpm" },
-  freeDur: { label: "durée", min: 0.5, max: 60, step: 0.1, unit: "s", log: true },
+  freeDur: { label: "durée", min: 0.5, max: 60, step: 0.5, unit: "s" },
   wobble:  { label: "wobble", min: 0, max: 200, step: 1, unit: "%", live: true },
   eq0:     { label: "<30", min: -12, max: 12, step: 1, unit: "dB", fx: true },
   eq1:     { label: "60", min: -12, max: 12, step: 1, unit: "dB", fx: true },
@@ -1708,7 +1708,16 @@ addEventListener("resize", setHH); setHH();
     btns.forEach((b, i) => b.setAttribute("aria-current", String(i === k)));
     const b = btns[k]; tabs.scrollTo({ left: b.offsetLeft - tabs.offsetLeft - 16, behavior: "smooth" });
   };
-  pages.addEventListener("scroll", mark, { passive: true }); mark();
+  /* La page n'est jamais plus haute que la section affichée : rien à faire défiler sous une section courte.
+     Le pied de page loge dans la dernière section, au lieu d'allonger toutes les autres. */
+  const foot = [...document.querySelectorAll("#panel > p.ver")], panel = $("panel");
+  const fit = () => {
+    if (WIDE.matches) { pages.style.height = ""; foot.forEach(p => panel.append(p)); return; }
+    foot.forEach(p => secs[secs.length - 1].append(p));
+    pages.style.height = secs[Math.max(0, now)].offsetHeight + 14 + "px";
+  };
+  pages.addEventListener("scroll", () => { const k = now; mark(); if (k !== now) fit(); }, { passive: true }); mark(); fit();
+  addEventListener("resize", fit); if (window.ResizeObserver) { const ro = new ResizeObserver(fit); secs.forEach(x => ro.observe(x)); }
 })();
 function resize() {
   const d = Math.min(2, window.devicePixelRatio || 1);

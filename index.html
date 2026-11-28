@@ -180,7 +180,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <dt>scale</dt><dd>Linear or logarithmic (log) spread of the pitches between those two limits.</dd>
     <dt>tuning</dt><dd>Leaves pitches free, or snaps them to the chromatic or pentatonic scale.</dd>
     <dt>rhythm</dt><dd>Optional bass line, off at 0. The setting is its volume, added on top of the main sound; past the point where the total would clip, everything is turned down together, so at high values the bass comes forward. A rhythmic pattern is read from the image: one line of pixels is followed, one pixel per sixteenth note; the steps where the picture changes most are struck, and the colour of the pixel picks the note, compared with the other pixels of that line, so that even an image of a single hue gives a small melody. It is a sub bass tuned from <b>low</b>, it loops exactly with the main sound and goes into the exports. <b>doom</b> makes it heavier. While it plays, each pixel that is struck lights up on the image and stays marked until the bar ends. In the moving image, and so in the exported video, each struck pixel also swells for the length of its hit, on top of the ripple (it follows <b>wobble</b>). [ new rhythm ] reads the image another way and gives another pattern. Greyed out in camera mode, where it does not play.</dd>
-    <dt>doom</dt><dd>From 0 (off) to 12, turns the bass of the rhythm into a very low, very heavy roar, in the spirit of riddim dubstep basses. On each hit: a dull thud, a saturated crash that falls back into a rough layer, and the low note that cuts out for an instant, then swells back while sliding down and holds until the next hit, which gives a pumping effect. The notes are brought right down, between 31 and 62 Hz, and pulled together: the bass moves by a fourth at most. The higher it goes, the louder the crash and the more crushed the low end, and the fewer hits there are: only the strongest remain, down to two in three. It works at the source, on the bass alone; <b>death</b> stays for the sound of the pixels.</dd>
+    <dt>doom</dt><dd>From ø (off) to 666, turns the bass of the rhythm into a very low, very heavy roar, in the spirit of riddim dubstep basses. On each hit: a dull thud, a saturated crash that falls back into a rough layer, and the low note that cuts out for an instant, then swells back while sliding down and holds until the next hit, which gives a pumping effect. The notes are brought right down, between 31 and 62 Hz, and pulled together: the bass moves by a fourth at most. A heavy compressor lets the impact through, then squashes everything, which slowly comes back up. The higher it goes, the more violent the impact and the more crushed the low end, and the barer the pattern: only the strongest hits remain, down to one in four at the very top. It works at the source, on the bass alone; <b>death</b> stays for the sound of the pixels.</dd>
     <dt>death</dt><dd>Distortion of the sound of the pixels, from 0 (off) to 12. The rhythm has its own, <b>doom</b>. The deep bass stays clean; everything above it is driven through a tube-style saturation, then from 6 upwards through a stage that folds the wave over itself, then a speaker-like filter and a heavy compressor. The higher the value, the thicker and more torn the sound. It comes before the equalizer, and the overall level stays close to the level without it. The line turns red and shakes near the top.</dd>
     <dt>equalizer</dt><dd>Seven output faders, one per octave, each from −12 to +12 dB with a mark every 6 dB. The first one sets everything below 30 Hz. The last one sets everything above 2 kHz. The sliders stop at B6, just below, so it mostly shapes the harmonics that make the saw and square waves bright; only a pitch typed by hand can reach higher. The overall level is kept steady and never clips: cutting the lowest bands trades inaudible rumble for more level in the rest. [ flat ] sets all bands back to 0 dB.</dd>
     <dt>stereo</dt><dd>Stereo width. The left of the image plays in the left speaker.</dd>
@@ -199,7 +199,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>On a phone held upright, the settings are laid out as pages side by side: swipe sideways, or tap a section name under the image (source, function, sound, drum, EQ, time, anim, settings).</li>
     <li>On an iPhone or iPad, the sound plays even when the silent switch is on, like a music app. Use the volume buttons.</li>
   </ul>
-  <p class="ver">version A · b547c0a</p>
+  <p class="ver">version A · 96b4a8a</p>
   </div>
   <div data-doc="fr" lang="fr">
   <p>image2saw : des pixels aux paysages sonores.</p>
@@ -235,7 +235,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <dt>échelle</dt><dd>Répartition linéaire ou logarithmique (log) des hauteurs entre ces deux limites.</dd>
     <dt>accord</dt><dd>Laisse les hauteurs libres, ou les cale sur la gamme chromatique ou pentatonique.</dd>
     <dt>rythme</dt><dd>Ligne de basse optionnelle, coupée à 0. Le réglage est son volume, ajouté par-dessus le son principal ; quand le total saturerait, l'ensemble est baissé d'un bloc, si bien qu'aux valeurs hautes la basse passe devant. Un motif rythmique est lu dans l'image : on suit une ligne de pixels, un pixel par double croche ; les pas où l'image change le plus sont frappés, et la couleur du pixel choisit la note, comparée aux autres pixels de cette ligne : même une image d'une seule teinte donne une petite mélodie. C'est une basse « sub » accordée d'après <b>grave</b>, qui boucle exactement avec le son principal et part dans les exports. <b>doom</b> l'alourdit. Pendant la lecture, chaque pixel frappé s'allume sur l'image et reste marqué jusqu'à la fin de la mesure. Dans l'image animée, donc dans la vidéo exportée, chaque pixel frappé gonfle aussi le temps de sa frappe, par-dessus l'onde (il suit <b>wobble</b>). [ autre rythme ] lit l'image autrement et donne un autre motif. Grisé en mode caméra, où elle ne joue pas.</dd>
-    <dt>doom</dt><dd>De 0 (coupé) à 12, fait de la basse du rythme un grondement très grave et très lourd, façon basse de dubstep riddim. À chaque frappe : un choc sourd, un fracas saturé qui retombe en nappe râpeuse, et le grave qui se coupe un instant puis revient en enflant, en glissant vers le bas, et tient jusqu'à la frappe suivante, ce qui donne un effet de pompe. Les notes sont ramenées tout en bas, entre 31 et 62 Hz, et resserrées : la basse ne bouge plus que d'une quarte au plus. Plus il monte, plus le fracas est fort et le grave écrasé, et moins il y a de frappes : seules les plus fortes restent, jusqu'à deux sur trois. Il agit à la source, sur la basse seule ; <b>death</b> reste pour le son des pixels.</dd>
+    <dt>doom</dt><dd>De ø (coupé) à 666, fait de la basse du rythme un grondement très grave et très lourd, façon basse de dubstep riddim. À chaque frappe : un choc sourd, un fracas saturé qui retombe en nappe râpeuse, et le grave qui se coupe un instant puis revient en enflant, en glissant vers le bas, et tient jusqu'à la frappe suivante, ce qui donne un effet de pompe. Les notes sont ramenées tout en bas, entre 31 et 62 Hz, et resserrées : la basse ne bouge plus que d'une quarte au plus. Un gros compresseur laisse passer l'impact puis écrase tout, qui remonte ensuite lentement. Plus il monte, plus l'impact est violent et le grave écrasé, et plus le motif est dépouillé : seules les frappes les plus fortes restent, jusqu'à une sur quatre tout en haut. Il agit à la source, sur la basse seule ; <b>death</b> reste pour le son des pixels.</dd>
     <dt>death</dt><dd>Distorsion du son des pixels, de 0 (coupée) à 12. Le rythme a la sienne, <b>doom</b>. Le grave profond reste propre ; tout ce qui est au-dessus passe dans une saturation de type lampe, puis à partir de 6 dans un étage qui replie l'onde sur elle-même, puis dans un filtre façon haut-parleur et un compresseur lourd. Plus la valeur est haute, plus le son est épais et déchiré. Elle agit avant l'égaliseur, et le niveau d'ensemble reste proche du niveau sans elle. La ligne passe au rouge et tremble vers le haut de la course.</dd>
     <dt>égaliseur</dt><dd>Sept faders de sortie, un par octave, chacun de −12 à +12 dB avec un repère tous les 6 dB. Le premier règle tout ce qui est sous 30 Hz. Le dernier règle tout ce qui est au-dessus de 2 kHz. Les curseurs de note s'arrêtent à B6, juste en dessous : il façonne donc surtout les harmoniques qui rendent brillantes les ondes scie et carré ; seule une hauteur tapée à la main peut monter plus haut. Le niveau d'ensemble est tenu stable et ne sature jamais : couper les bandes les plus graves échange un grondement inaudible contre du niveau pour le reste. [ plat ] remet toutes les bandes à 0 dB.</dd>
     <dt>stéréo</dt><dd>Largeur stéréo. La gauche de l'image joue dans le haut-parleur gauche.</dd>
@@ -254,7 +254,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Sur un téléphone tenu debout, les réglages sont des pages côte à côte : glisse de côté, ou touche le nom d'une section sous l'image (source, fonction, son, drum, EQ, temps, animation, réglages).</li>
     <li>Sur iPhone ou iPad, le son joue même avec le bouton silencieux, comme une application de musique. Utilise les boutons de volume.</li>
   </ul>
-  <p class="ver">version A · b547c0a</p>
+  <p class="ver">version A · 96b4a8a</p>
   </div>
 </article>
 <main>
@@ -355,7 +355,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
       <div class="row wide" id="row_lang"><span>langue</span><div class="seg" id="langseg"><button type="button" data-lang="fr" aria-pressed="false">français</button><button type="button" data-lang="en" aria-pressed="false">english</button></div></div>
     </section>
     </div>
-    <p class="ver">pixels to soundscape patterns · A · b547c0a</p>
+    <p class="ver">pixels to soundscape patterns · A · 96b4a8a</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>
@@ -808,11 +808,11 @@ function rhythmPattern(an, seed, n) {
 /* Rend le motif en basse « sub » sur toute la boucle : sinus un peu saturé (ses harmoniques nourrissent death),
    léger coup d'attaque, extinction naturelle. Les notes qui débordent reviennent au début : la boucle reste parfaite. */
 /* doom alourdit aussi le jeu : plus il monte, moins il y a de frappes. On ne garde que les plus fortes (et toujours
-   le premier temps), jusqu'à deux frappes sur trois : de la place pour que chaque coup pèse. */
+   le premier temps), jusqu'à une frappe sur quatre : de la place pour que chaque coup pèse. */
 function doomThin(pat, doom) {
   const d = Math.min(1, Math.max(0, doom || 0)), n = pat.vel.length, vel = Float32Array.from(pat.vel); if (!(d > 0)) return pat;
   const hits = []; for (let k = 1; k < n; k++) if (vel[k]) hits.push(k);
-  const keep = Math.max(0, Math.round((hits.length + 1) * (1 - 0.35 * d)) - 1), chosen = [0];
+  const keep = Math.max(0, Math.round((hits.length + 1) * (1 - 0.75 * d * d)) - 1), chosen = [0];
   /* On garde les frappes fortes, mais aussi bien réparties dans la mesure : pas trois coups serrés puis le vide. */
   for (let r = 0; r < keep; r++) {
     let best = -1, bs = -1;
@@ -850,7 +850,7 @@ function bassRender(Ls, sr, pat, reps, root, doom, seed) {
     let fs = root * Math.pow(2, Math.round(pat.deg[k] * 0.4) / 12); while (fs >= 62) fs /= 2; while (fs < 31) fs *= 2;
     const len = Math.max(256, Math.round(Math.min(gap * stepLen, 3 * sr)));
     const relD = Math.max(8, Math.round(0.03 * sr)), duck = 0.035 * sr, kSw = Math.exp(-1 / (Math.min(0.22, Math.max(0.05, 0.22 * len / sr)) * sr)), kP = Math.exp(-1 / (0.22 * sr));
-    const kT = Math.exp(-1 / (0.03 * sr)), kTp = Math.exp(-1 / (0.02 * sr)), kG = Math.exp(-1 / ((0.09 + 0.05 * d) * sr));
+    const kT = Math.exp(-1 / ((0.03 + 0.03 * d) * sr)), kTp = Math.exp(-1 / (0.02 * sr)), kG = Math.exp(-1 / ((0.09 + 0.05 * d) * sr));
     const aH = Math.exp(-TAU * 650 / sr), gFloor = 0.22 + 0.1 * d, gAmt = (0.3 + 0.7 * d) * 1.7, subDrive = 1.6 + 2 * d;
     let ph = 0, pt = 0, sw = 1, pit = 0.3, th = v, tp = 2.2, gr = 1, nz = 0, hx1 = 0, hy1 = 0, pos = start % Ls;
     for (let j = 0; j < len; j++) {
@@ -866,9 +866,19 @@ function bassRender(Ls, sr, pat, reps, root, doom, seed) {
       nz += aN * (white() - nz);
       const raw = Math.tanh(6 * (0.5 * Math.sin(ph) + 2.2 * nz));
       const hp = aH * (hy1 + raw - hx1); hx1 = raw; hy1 = hp;
-      const g = gFloor + (1 - gFloor) * gr; gr *= kG;
-      const x = v * (0.95 * sub + gAmt * g * hp) + 1.8 * thump;
-      out[pos] += edge * Math.tanh(1.1 * x); if (++pos === Ls) pos = 0;
+      const g = gFloor + (1 + 1.5 * d - gFloor) * gr; gr *= kG;
+      const x = v * (0.95 * sub + gAmt * g * hp) + (1.8 + 2.2 * d) * thump;
+      out[pos] += edge * (d > 0.3 ? x : Math.tanh(1.1 * x)); if (++pos === Ls) pos = 0;
+    }
+  }
+  if (d > 0) {
+    /* Gros compresseur : l'impact passe (attaque lente), puis tout est écrasé et remonte — la pompe. Il prend son élan
+       sur la fin de la boucle, qui reste sans couture. Puis un écrêtage doux tient les crêtes. */
+    const thr = 0.5 - 0.3 * d, ratio = 3 + 9 * d, kA = 1 - Math.exp(-1 / (0.012 * sr)), kR = 1 - Math.exp(-1 / ((0.12 + 0.1 * d) * sr)), mk = 1 + 1.2 * d;
+    let env = 0;
+    for (let pass = 0; pass < 2; pass++) for (let j = pass ? 0 : Math.max(0, Ls - sr); j < Ls; j++) {
+      const a = Math.abs(out[j]); env += (a > env ? kA : kR) * (a - env);
+      if (pass) { const g = env > thr ? Math.pow(thr / env, 1 - 1 / ratio) : 1; out[j] = Math.tanh(mk * g * out[j]); }
     }
   }
   const rmsOf1 = x => { let a = 0; for (let j = 0; j < x.length; j++) a += x[j] * x[j]; return Math.sqrt(a / x.length); };
@@ -1031,7 +1041,7 @@ const SLIDERS = {
   fmax:    { label: "aigu", min: 0.5, max: 4000, step: 0.01, unit: "Hz", note: true },
   stereo:  { label: "stéréo", min: 0, max: 100, step: 1, unit: "%" },
   rhythm:  { label: "rythme", min: 0, max: 100, step: 1, unit: "%", rh: true },
-  doom:    { label: "doom", min: 0, max: 12, step: 1, unit: "/12", rh: true },
+  doom:    { label: "doom", min: 0, max: 666, step: 1, unit: "/666", rh: true, zero: "ø" },
   death:   { label: "death", min: 0, max: 12, step: 1, unit: "/12", dth: true },
   bpm:     { label: "tempo", min: 40, max: 240, step: 1, unit: "bpm" },
   freeDur: { label: "durée", min: 0.5, max: 60, step: 0.5, unit: "s" },
@@ -1078,7 +1088,7 @@ function buildControls() {
     const lab = document.createElement("label"); lab.htmlFor = "n_" + id; lab.textContent = d.label;
     const num = document.createElement("span"); num.className = "num";
     const ni = document.createElement("input"); ni.type = "number"; ni.id = "n_" + id; if (d.min >= 0) ni.inputMode = "decimal"; ni.min = d.min; ni.max = d.max; ni.step = d.note ? "any" : d.step;
-    const un = document.createElement("i"); un.textContent = d.unit; num.append(ni); if (!d.fx) num.append(un);
+    const un = document.createElement("i"); un.textContent = d.unit; if (d.zero) ni.placeholder = d.zero; num.append(ni); if (!d.fx) num.append(un);
     const ri = document.createElement("input"); ri.type = "range"; ri.id = "s_" + id; ri.setAttribute("aria-label", d.label + (d.fx ? " Hz" : ""));
     if (d.note) { ri.min = 0; ri.max = NOTE_MAX; ri.step = 1; }   /* le curseur avance par demi-tons */
     else if (d.log) { ri.min = 0; ri.max = 1000; ri.step = 1; } else { ri.min = d.min; ri.max = d.max; ri.step = d.step; }
@@ -1096,7 +1106,7 @@ function buildControls() {
       v = Math.min(d.max, Math.max(d.min, v)); if (!isFinite(v)) v = d.min;
       P[id] = d.step >= 1 ? Math.round(v) : v;
       if (from !== "range") ri.value = toPos(v);
-      if (from !== "num") ni.value = show(v);
+      if (from !== "num") ni.value = d.zero && !P[id] ? "" : show(v);
       if (d.note) un.textContent = noteName(v) || "Hz";   /* une valeur tapée à la main hors des notes reste en hertz */
       paint(); if (!quiet) { if (d.dth) deathChanged(); else if (d.fx) eqChanged(); else if (d.rh) rhythmChanged(); else changed(d.live); }
     };
@@ -1104,7 +1114,7 @@ function buildControls() {
     ri.addEventListener("input", () => set(fromPos(ri.value), "range"));
     ni.addEventListener("change", () => set(parseFloat(String(ni.value).replace(",", ".")), "any"));
     lab.addEventListener("dblclick", () => set(DEFAULTS[id], "any"));
-    ri.value = toPos(P[id]); ni.value = show(P[id]); if (d.note) un.textContent = noteName(P[id]) || "Hz"; paint();
+    ri.value = toPos(P[id]); ni.value = d.zero && !P[id] ? "" : show(P[id]); if (d.note) un.textContent = noteName(P[id]) || "Hz"; paint();
   });
   document.querySelectorAll("[data-seg]").forEach(host => {
     const id = host.dataset.seg;
@@ -1382,9 +1392,9 @@ function mixRhythm(res) {
   if (!res.dryL) { res.dryL = res.L; res.dryR = res.R; res.dryEnv = res.env; }
   res.L = res.dryL; res.R = res.dryR; res.env = res.dryEnv; res.steps = null; res.mg = 1; res.bass = null;
   const lvl = P.rhythm / 100, a = res.an || an; if (!(lvl > 0) || !a || !(res.peak > 0)) return;
-  const { n, reps } = rhythmSteps(), full = rhythmPattern(a, P.rseed, n), pat = doomThin(full, P.doom / 12), sr = res.sr || SR, Ls = res.dryL.length; pat.full = full;
+  const { n, reps } = rhythmSteps(), full = rhythmPattern(a, P.rseed, n), pat = doomThin(full, P.doom / 666), sr = res.sr || SR, Ls = res.dryL.length; pat.full = full;
   let root = Math.max(1, P.fmin); while (root < 38) root *= 2; while (root >= 76) root /= 2;   /* fondamentale ramenée entre 38 et 76 Hz */
-  const b = bassRender(Ls, sr, pat, reps, root, P.doom / 12, P.rseed), amp = 0.75 * lvl, L = new Float32Array(Ls), R2 = new Float32Array(Ls);
+  const b = bassRender(Ls, sr, pat, reps, root, P.doom / 666, P.rseed), amp = 0.75 * lvl, L = new Float32Array(Ls), R2 = new Float32Array(Ls);
   let peak = 0;
   for (let j = 0; j < Ls; j++) { const x = b[j] * amp, l = res.dryL[j] + x, r = res.dryR[j] + x; L[j] = l; R2[j] = r; const m = Math.max(Math.abs(l), Math.abs(r)); if (m > peak) peak = m; }
   /* L'image respire aussi avec la basse. */
@@ -1594,7 +1604,7 @@ function eqChanged() {
 /* Couleur et tremblement de la ligne death. */
 function paintDeath() {
   for (const id of ["death", "doom"]) {
-    const v = P[id], k = Math.min(1, Math.max(0, (v - 6) / 6)), row = $("row_" + id), amp = v >= 9 ? (0.4 * (v - 8)).toFixed(1) + "px" : "0px";
+    const v = id === "doom" ? P[id] * 12 / 666 : P[id], k = Math.min(1, Math.max(0, (v - 6) / 6)), row = $("row_" + id), amp = v >= 9 ? (0.4 * (v - 8)).toFixed(1) + "px" : "0px";
     row.style.setProperty("--ink", "rgb(" + Math.round(232 + 23 * k) + "," + Math.round(232 - 200 * k) + "," + Math.round(232 - 208 * k) + ")");
     row.querySelectorAll("label, .num").forEach(el => { el.style.setProperty("--amp", amp); el.classList.toggle("shake", v >= 9); });
   }

@@ -202,7 +202,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>On a phone held upright, the settings are laid out as pages side by side: swipe sideways, or tap a section name under the image (source, function, sound, drum, EQ, time, anim, settings).</li>
     <li>On an iPhone or iPad, the sound plays even when the silent switch is on, like a music app. Use the volume buttons.</li>
   </ul>
-  <p class="ver">version A · 551f1c8</p>
+  <p class="ver">version A · 4a31da5</p>
   </div>
   <div data-doc="fr" lang="fr">
   <p>image2saw : des pixels aux paysages sonores.</p>
@@ -258,7 +258,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Sur un téléphone tenu debout, les réglages sont des pages côte à côte : glisse de côté, ou touche le nom d'une section sous l'image (source, fonction, son, drum, EQ, temps, animation, réglages).</li>
     <li>Sur iPhone ou iPad, le son joue même avec le bouton silencieux, comme une application de musique. Utilise les boutons de volume.</li>
   </ul>
-  <p class="ver">version A · 551f1c8</p>
+  <p class="ver">version A · 4a31da5</p>
   </div>
 </article>
 <main>
@@ -360,7 +360,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
       <div class="row wide" id="row_lang"><span>langue</span><div class="seg" id="langseg"><button type="button" data-lang="fr" aria-pressed="false">français</button><button type="button" data-lang="en" aria-pressed="false">english</button></div></div>
     </section>
     </div>
-    <p class="ver">pixels to soundscape patterns · A · 551f1c8</p>
+    <p class="ver">pixels to soundscape patterns · A · 4a31da5</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>
@@ -1562,7 +1562,9 @@ function fxOn(res) { return P.death > 0; }   /* doom est fait à la source, dans
 function rmsOf(L, R) { let a = 0; for (let j = 0; j < L.length; j++) a += L[j] * L[j] + R[j] * R[j]; return Math.sqrt(a / (2 * L.length)); }
 function fxGain(res, e) {
   const v1 = levelGain(e.L, e.R, SR), v0 = levelGain(res.L, res.R, res.sr || SR), r0 = rmsOf(res.L, res.R), r1 = rmsOf(e.L, e.R);
-  let g = v1.g;
+  /* Le plafond de volume est celui du mélange sans effet, pas la cible du son seul : avec la basse, doom ou butcher,
+     le mélange est déjà au-dessus de cette cible, et le ramener dessous ferait chuter le son dès qu'on touche death. */
+  let g = v1.peak > 0 ? Math.min(0.89 / v1.peak, v1.loud > 1e-9 ? Math.max(LOUD, v0.loud) / v1.loud : 1e9) : 1;
   if (r1 > 1e-9 && r0 > 1e-9) g = Math.min(g, 1.12 * r0 / r1);
   if (v1.loud > 1e-9 && v0.loud > 1e-9) g = Math.min(g, 1.26 * v0.loud / v1.loud);
   return g;
@@ -1691,13 +1693,20 @@ function paintDeath() {
     row.querySelectorAll("label, .num").forEach(el => { el.style.setProperty("--amp", amp); el.classList.toggle("shake", v >= 9); });
   }
 }
+let deathWas = 0;
 function deathChanged() {
   paintDeath(); reroute();
   if (actx) {
     fx.set(P.death, actx.currentTime);
-    /* En attendant le niveau exact, on baisse tout de suite : une saturation à plein niveau surprendrait. */
-    if (fxOn(R)) trimNode.gain.setTargetAtTime(Math.min(trim, 0.45), actx.currentTime, 0.02);
+    /* En attendant le niveau exact, on ne baisse que ce que death traite, et seulement quand il s'enclenche : une
+       saturation à plein niveau surprendrait. Ensuite le niveau déjà mesuré reste en place jusqu'à la mesure suivante,
+       sans trou dans le son à chaque retouche. */
+    if (fxOn(R) && !(deathWas > 0)) {
+      if (routeKey(R) && stemM) stemM.gain.setTargetAtTime(Math.min(stemG.m, 0.55), actx.currentTime, 0.02);
+      else trimNode.gain.setTargetAtTime(Math.min(trim, 0.6), actx.currentTime, 0.02);
+    }
   }
+  deathWas = P.death;
   clearTimeout(eqTimer); eqTimer = setTimeout(setTrim, 180);
 }
 /* Équilibre entre le son et le rythme. Chaque distorsion change le niveau du flux qu'elle traite ; sans correction,
@@ -1727,7 +1736,7 @@ async function setTrim() {
     if (fxAgain) { fxAgain = false; return setTrim(); }
     if (my !== fxJob || res !== R) return;
     g = e ? fxGain(e.ref, e) : 0.45;
-  } else { stemG = { m: 1, b: 1 }; if (!eqFlat()) { const e = eqApply(res.L, res.R, res.sr || SR, eqGains()); g = levelGain(e.L, e.R, res.sr || SR).g; } }
+  } else { stemG = { m: 1, b: 1 }; if (!eqFlat()) { const e = eqApply(res.L, res.R, res.sr || SR, eqGains()), v1 = levelGain(e.L, e.R, res.sr || SR), v0 = levelGain(res.L, res.R, res.sr || SR); g = v1.peak > 0 ? Math.min(0.89 / v1.peak, v1.loud > 1e-9 ? Math.max(LOUD, v0.loud) / v1.loud : 1e9) : 1; } }
   trim = g; applyStems();
   if (trimNode) trimNode.gain.setTargetAtTime(trim, actx.currentTime, 0.03);
 }

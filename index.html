@@ -185,7 +185,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <dt>equalizer</dt><dd>Seven output faders, one per octave, each from −12 to +12 dB with a mark every 6 dB. The first one sets everything below 30 Hz. The last one sets everything above 2 kHz. The sliders stop at B6, just below, so it mostly shapes the harmonics that make the saw and square waves bright; only a pitch typed by hand can reach higher. The overall level is kept steady and never clips: cutting the lowest bands trades inaudible rumble for more level in the rest. [ flat ] sets all bands back to 0 dB.</dd>
     <dt>stereo</dt><dd>Stereo width. The left of the image plays in the left speaker.</dd>
     <dt>time sig., bars, tempo</dt><dd><b>time sig.</b> is the time signature (3/4, 4/4…) and <b>bars</b> the number of bars. Together with the tempo they set the loop length, so that samples line up on the beat: a slower tempo makes a longer loop. Choose free to set a length in seconds with <b>length</b>, from half a second up to 60 s, the length of an Instagram story; long loops take longer to compute and to export.</dd>
-    <dt>wobble</dt><dd>Strength of the ripple on the image while it plays, up to 200 %. The ripple follows the real loudness and pitch of the sound.</dd>
+    <dt>wobble</dt><dd>Ripple of the image while it plays, from 0 to 100 %. Raising it mostly widens the area that ripples around the window; the strength grows only a little. The ripple follows the real loudness and pitch of the sound.</dd>
     <dt>save, open, defaults</dt><dd>Save the settings to a .json file, load one back, or return to the starting values.</dd>
     <dt>language</dt><dd>Shows the page in French (français) or in English. By default it follows the language of the device.</dd>
   </dl>
@@ -199,7 +199,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>On a phone held upright, the settings are laid out as pages side by side: swipe sideways, or tap a section name under the image (source, function, sound, drum, EQ, time, anim, settings).</li>
     <li>On an iPhone or iPad, the sound plays even when the silent switch is on, like a music app. Use the volume buttons.</li>
   </ul>
-  <p class="ver">version A · 89a0975</p>
+  <p class="ver">version A · b44a95c</p>
   </div>
   <div data-doc="fr" lang="fr">
   <p>image2saw : des pixels aux paysages sonores.</p>
@@ -240,7 +240,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <dt>égaliseur</dt><dd>Sept faders de sortie, un par octave, chacun de −12 à +12 dB avec un repère tous les 6 dB. Le premier règle tout ce qui est sous 30 Hz. Le dernier règle tout ce qui est au-dessus de 2 kHz. Les curseurs de note s'arrêtent à B6, juste en dessous : il façonne donc surtout les harmoniques qui rendent brillantes les ondes scie et carré ; seule une hauteur tapée à la main peut monter plus haut. Le niveau d'ensemble est tenu stable et ne sature jamais : couper les bandes les plus graves échange un grondement inaudible contre du niveau pour le reste. [ plat ] remet toutes les bandes à 0 dB.</dd>
     <dt>stéréo</dt><dd>Largeur stéréo. La gauche de l'image joue dans le haut-parleur gauche.</dd>
     <dt>mesure, mesures, tempo</dt><dd>Durée de la boucle en mesures, pour que les échantillons tombent sur le temps : un tempo plus lent donne une boucle plus longue. Choisis libre pour fixer une durée en secondes avec <b>durée</b>, d'une demi-seconde à 60 s, la durée d'une story Instagram ; une longue boucle demande plus de temps de calcul et d'export.</dd>
-    <dt>wobble</dt><dd>Force de l'ondulation de l'image pendant la lecture, jusqu'à 200 %. L'ondulation suit le volume et la hauteur réels du son.</dd>
+    <dt>wobble</dt><dd>Ondulation de l'image pendant la lecture, de 0 à 100 %. En montant, c'est surtout la zone qui ondule autour de la fenêtre qui s'élargit ; la force augmente peu. L'ondulation suit le volume et la hauteur réels du son.</dd>
     <dt>sauver, ouvrir, défauts</dt><dd>Enregistre les réglages dans un fichier .json, en recharge un, ou revient aux valeurs de départ.</dd>
     <dt>langue</dt><dd>Affiche la page en français ou en anglais (english). Par défaut, elle suit la langue de l'appareil.</dd>
   </dl>
@@ -254,7 +254,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Sur un téléphone tenu debout, les réglages sont des pages côte à côte : glisse de côté, ou touche le nom d'une section sous l'image (source, fonction, son, drum, EQ, temps, animation, réglages).</li>
     <li>Sur iPhone ou iPad, le son joue même avec le bouton silencieux, comme une application de musique. Utilise les boutons de volume.</li>
   </ul>
-  <p class="ver">version A · 89a0975</p>
+  <p class="ver">version A · b44a95c</p>
   </div>
 </article>
 <main>
@@ -355,7 +355,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
       <div class="row wide" id="row_lang"><span>langue</span><div class="seg" id="langseg"><button type="button" data-lang="fr" aria-pressed="false">français</button><button type="button" data-lang="en" aria-pressed="false">english</button></div></div>
     </section>
     </div>
-    <p class="ver">pixels to soundscape patterns · A · 89a0975</p>
+    <p class="ver">pixels to soundscape patterns · A · b44a95c</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>
@@ -1048,7 +1048,7 @@ const SLIDERS = {
   death:   { label: "death", min: 0, max: 12, step: 1, unit: "/12", dth: true },
   bpm:     { label: "tempo", min: 40, max: 240, step: 1, unit: "bpm" },
   freeDur: { label: "durée", min: 0.5, max: 60, step: 0.5, unit: "s" },
-  wobble:  { label: "wobble", min: 0, max: 200, step: 1, unit: "%", live: true },
+  wobble:  { label: "wobble", min: 0, max: 100, step: 1, unit: "%", live: true },
   eq0:     { label: "<30", min: -12, max: 12, step: 1, unit: "dB", fx: true },
   eq1:     { label: "60", min: -12, max: 12, step: 1, unit: "dB", fx: true },
   eq2:     { label: "120", min: -12, max: 12, step: 1, unit: "dB", fx: true },
@@ -2070,7 +2070,7 @@ function draw() {
   /* Pas de cadre : l'image posée sur sa version floue, assombrie hors de la sélection. */
   ctx.imageSmoothingEnabled = true; ctx.drawImage(src, g.ox, g.oy, g.iw, g.ih); ctx.fillStyle = "rgba(0,0,0,.5)"; ctx.fillRect(g.ox, g.oy, g.iw, g.ih);
   const rx = g.ox + sel.x * g.iw, ry = g.oy + sel.y * g.ih, rw = sel.w * g.iw, rh = sel.h * g.ih, cw = rw / gw, ch = rh / gh;
-  const amp = P.wobble / 100;
+  const amp = Math.min(1, P.wobble / 100);
   let live = R && R.gw === gw && R.gh === gh, moving = playing, hx = 0, hy = 0, sg = 1, fkNow = 0;
   RS = R;
   if (cam) {
@@ -2151,13 +2151,15 @@ function punches(fk, amp) {
 }
 function ripple(hx, hy, sg, amp, rw, rh, fk, side) {
   const kd0 = Math.min(RS.K - 1, Math.floor(fk)), wkU = RS.dir.ux[kd0], wkV = RS.dir.uy[kd0], wkOn = RS.disc < 0.999, wo = [0, 0, 0];
-  wakeShape(sg, RS.disc, RS.dir.st[kd0], wo); const wkF = 1 / (2 * wo[0] * wo[0]), wkB = 1 / (2 * wo[1] * wo[1]), wkL = 1 / (2 * wo[2] * wo[2]);
+  /* wobble élargit surtout la zone qui ondule autour de la fenêtre ; l'amplitude, elle, monte peu. */
+  const sp = 1 + 2 * Math.min(1, amp), sp2 = sp * sp;
+  wakeShape(sg, RS.disc, RS.dir.st[kd0], wo); const wkF = 1 / (2 * wo[0] * wo[0] * sp2), wkB = 1 / (2 * wo[1] * wo[1] * sp2), wkL = 1 / (2 * wo[2] * wo[2] * sp2);
   const sc = side / Math.max(rw, rh), ww = Math.max(8, Math.round(rw * sc)), wh = Math.max(8, Math.round(rh * sc));
   if (!wimg || wimg.width !== ww || wimg.height !== wh) { wcan.width = ww; wcan.height = wh; wimg = wcan.getContext("2d").createImageData(ww, wh); WXc = new Float32Array(ww); WYc = new Float32Array(wh); }
-  const out = wimg.data, px = an.rgba, inv = 1 / (2 * sg * sg), shp = FIXED.shape;
+  const out = wimg.data, px = an.rgba, inv = 1 / (2 * sg * sg * sp2), shp = FIXED.shape;
   const K = RS.K, k0 = Math.min(K - 1, Math.floor(fk)), fr = fk - k0, env = RS.env;
   const lam = Math.max(0.35, sg * 0.35 * (1.4 - 0.8 * RS.pn[k0])), ph0 = RS.phs[k0] + (RS.phs[k0 + 1] - RS.phs[k0]) * fr, kd = 0.1 / sg / RS.hopSec;
-  const A = amp * Math.min(2.5, Math.max(0.7, 0.22 * sg)), c2 = lam * lam, kx = gw / ww, ky = gh / wh;
+  const A = 1.3 * Math.pow(amp, 0.6) * Math.min(2.5, Math.max(0.7, 0.22 * sg)), c2 = lam * lam, kx = gw / ww, ky = gh / wh;
   for (let x = 0; x < ww; x++) WXc[x] = mirrorW(hx, (x + 0.5) * kx, gw, inv);
   for (let y = 0; y < wh; y++) WYc[y] = mirrorW(hy, (y + 0.5) * ky, gh, inv);
   let o = 0; const nP = PUNCH.length;

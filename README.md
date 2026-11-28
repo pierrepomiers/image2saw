@@ -74,7 +74,7 @@ Sur un téléphone tenu debout, les sections de réglages sont des pages côte �
 - `durée` : durée en secondes, quand la mesure est sur `libre`. D'une demi-seconde à 60 s, la durée d'une story Instagram ; une longue boucle demande plus de temps de calcul et d'export.
 
 **animation**
-- `wobble` : force de l'ondulation de l'image pendant la lecture, jusqu'à 200 %. Elle suit le volume et la hauteur réels du son.
+- `wobble` : ondulation de l'image pendant la lecture, de 0 à 100 %. En montant, c'est surtout la zone qui ondule autour de la fenêtre qui s'élargit ; la force augmente peu. Elle suit le volume et la hauteur réels du son.
 
 **réglages**
 - `[ sauver ]`, `[ ouvrir ]`, `[ défauts ]` : enregistrer les réglages dans un fichier `.json`, en recharger un, ou revenir aux valeurs de départ.

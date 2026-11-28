@@ -199,7 +199,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>On a phone held upright, the settings are laid out as pages side by side: swipe sideways, or tap a section name under the image (source, function, sound, drum, EQ, time, anim, settings).</li>
     <li>On an iPhone or iPad, the sound plays even when the silent switch is on, like a music app. Use the volume buttons.</li>
   </ul>
-  <p class="ver">version A · 7c7456c</p>
+  <p class="ver">version A · 783da42</p>
   </div>
   <div data-doc="fr" lang="fr">
   <p>image2saw : des pixels aux paysages sonores.</p>
@@ -254,7 +254,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Sur un téléphone tenu debout, les réglages sont des pages côte à côte : glisse de côté, ou touche le nom d'une section sous l'image (source, fonction, son, drum, EQ, temps, animation, réglages).</li>
     <li>Sur iPhone ou iPad, le son joue même avec le bouton silencieux, comme une application de musique. Utilise les boutons de volume.</li>
   </ul>
-  <p class="ver">version A · 7c7456c</p>
+  <p class="ver">version A · 783da42</p>
   </div>
 </article>
 <main>
@@ -355,7 +355,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
       <div class="row wide" id="row_lang"><span>langue</span><div class="seg" id="langseg"><button type="button" data-lang="fr" aria-pressed="false">français</button><button type="button" data-lang="en" aria-pressed="false">english</button></div></div>
     </section>
     </div>
-    <p class="ver">pixels to soundscape patterns · A · 7c7456c</p>
+    <p class="ver">pixels to soundscape patterns · A · 783da42</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>
@@ -829,7 +829,7 @@ function bassRender(Ls, sr, pat, reps, root, doom, seed) {
   const d = Math.min(1, Math.max(0, doom || 0)), n = pat.vel.length, total = n * reps, stepLen = Ls / total, TAU = 6.283185307179586;
   const out = new Float32Array(Ls);
   let rs = ((seed || 1) * 2246822519) >>> 0; const white = () => { rs = (Math.imul(rs, 1664525) + 1013904223) >>> 0; return rs / 2147483648 - 1; };
-  const drive = 3 + 11 * d, mixG = 0.85 * Math.min(1, 1.7 * d), aN = 1 - Math.exp(-TAU * 2600 / sr);
+  const drive = 3 + 11 * d, mixG = 0.85 * Math.min(1, 1.7 * d), aN = 1 - Math.exp(-TAU * 800 / sr);
   for (let q = 0; q < total; q++) {
     const k = q % n, v = pat.vel[k]; if (!v) continue;
     let gap = 1; while (gap < n && !pat.vel[(k + gap) % n]) gap++;
@@ -863,7 +863,7 @@ function bassRender(Ls, sr, pat, reps, root, doom, seed) {
       const thump = Math.sin(pt) * th * (j < att ? j / att : 1); th *= kT;
       /* le fracas : grave écrasé et bruit mêlés, fort à l'impact puis en nappe râpeuse */
       nz += aN * (white() - nz);
-      const raw = Math.tanh(9 * (0.6 * Math.sin(ph) + 0.5 * Math.sin(2.01 * ph + 2.4 * nz) + 1.2 * nz));
+      const raw = Math.tanh(7 * (0.7 * Math.sin(ph) + 0.5 * Math.sin(2.01 * ph + 3 * nz) + 1.3 * nz));
       const hp = aH * (hy1 + raw - hx1); hx1 = raw; hy1 = hp;
       const g = gFloor + (1 - gFloor) * gr; gr *= kG;
       const x = v * (0.95 * sub + gAmt * g * hp) + 0.9 * thump;
@@ -873,7 +873,7 @@ function bassRender(Ls, sr, pat, reps, root, doom, seed) {
   const rmsOf1 = x => { let a = 0; for (let j = 0; j < x.length; j++) a += x[j] * x[j]; return Math.sqrt(a / x.length); };
   if (d > 0) {
     /* Un filtre doux retire le crissement tout en haut ; il tourne en rond sur la boucle, qui reste sans couture. */
-    const a = 1 - Math.exp(-TAU * 9000 / sr); let y1 = 0, y2 = 0;
+    const a = 1 - Math.exp(-TAU * 3200 / sr); let y1 = 0, y2 = 0;
     for (let pass = 0; pass < 2; pass++) for (let j = pass ? 0 : Math.max(0, Ls - 8192); j < Ls; j++) { y1 += a * (out[j] - y1); y2 += a * (y1 - y2); if (pass) out[j] = y2; }
   }
   /* Même poids que la basse sèche jouant toutes ses frappes (un peu plus à fond de course) : la balance réglée par « rythme » tient. */

@@ -126,7 +126,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
 .filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
 /* Paysage (téléphone couché, tablette, ordinateur) : image à gauche, réglages à droite. */
 /* Death : la ligne rougit à partir de 7, et son texte tremble de plus en plus fort de 9 à 12. */
-#row_death,#row_doom{color:var(--ink)}
+#row_death,#row_doom,#row_butcher{color:var(--ink)}
 .shake{animation:shake .09s steps(1) infinite}
 @keyframes shake{0%{transform:translate(calc(var(--amp) * -1),var(--amp))}33%{transform:translate(var(--amp),calc(var(--amp) * -.6))}66%{transform:translate(calc(var(--amp) * -.4),calc(var(--amp) * -1))}}
 @media (prefers-reduced-motion:reduce){.shake{animation:none}}
@@ -202,7 +202,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>On a phone held upright, the settings are laid out as pages side by side: swipe sideways, or tap a section name under the image (source, function, sound, drum, EQ, time, anim, settings).</li>
     <li>On an iPhone or iPad, the sound plays even when the silent switch is on, like a music app. Use the volume buttons.</li>
   </ul>
-  <p class="ver">version A · 6e3772c</p>
+  <p class="ver">version A · 836a71e</p>
   </div>
   <div data-doc="fr" lang="fr">
   <p>image2saw : des pixels aux paysages sonores.</p>
@@ -258,7 +258,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Sur un téléphone tenu debout, les réglages sont des pages côte à côte : glisse de côté, ou touche le nom d'une section sous l'image (source, fonction, son, drum, EQ, temps, animation, réglages).</li>
     <li>Sur iPhone ou iPad, le son joue même avec le bouton silencieux, comme une application de musique. Utilise les boutons de volume.</li>
   </ul>
-  <p class="ver">version A · 6e3772c</p>
+  <p class="ver">version A · 836a71e</p>
   </div>
 </article>
 <main>
@@ -360,7 +360,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
       <div class="row wide" id="row_lang"><span>langue</span><div class="seg" id="langseg"><button type="button" data-lang="fr" aria-pressed="false">français</button><button type="button" data-lang="en" aria-pressed="false">english</button></div></div>
     </section>
     </div>
-    <p class="ver">pixels to soundscape patterns · A · 6e3772c</p>
+    <p class="ver">pixels to soundscape patterns · A · 836a71e</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>
@@ -1125,7 +1125,7 @@ function buildControls() {
     const set = (v, from, quiet) => {
       v = Math.min(d.max, Math.max(d.min, v)); if (!isFinite(v)) v = d.min;
       P[id] = d.step >= 1 ? Math.round(v) : v;
-      if (d.word) { lab.textContent = wordLevel(d.word, P[id]); const kr = Math.max(0, (P[id] - d.max / 2) / (d.max / 2)); lab.style.color = kr > 0 ? "rgb(" + Math.round(232 + 23 * kr) + "," + Math.round(232 - 190 * kr) + "," + Math.round(232 - 206 * kr) + ")" : "";   /* rougit avec les capitales */ }
+      if (d.word) { lab.textContent = wordLevel(d.word, P[id]);  }
       if (from !== "range") ri.value = toPos(v);
       if (from !== "num") ni.value = d.zero && !P[id] ? "" : show(v);
       if (d.note) un.textContent = noteName(v) || "Hz";   /* une valeur tapée à la main hors des notes reste en hertz */
@@ -1696,8 +1696,8 @@ function eqChanged() {
 }
 /* Couleur et tremblement de la ligne death. */
 function paintDeath() {
-  for (const id of ["death", "doom"]) {
-    const v = id === "doom" ? P[id] * 12 / 666 : P[id], k = Math.min(1, Math.max(0, (v - 6) / 6)), row = $("row_" + id), amp = v >= 9 ? (0.4 * (v - 8)).toFixed(1) + "px" : "0px";
+  for (const id of ["death", "doom", "butcher"]) {
+    const v = id === "doom" ? P[id] * 12 / 666 : id === "butcher" ? P[id] * 12 / 14 : P[id], k = Math.min(1, Math.max(0, (v - 6) / 6)), row = $("row_" + id), amp = v >= 9 ? (0.4 * (v - 8)).toFixed(1) + "px" : "0px";
     row.style.setProperty("--ink", "rgb(" + Math.round(232 + 23 * k) + "," + Math.round(232 - 200 * k) + "," + Math.round(232 - 208 * k) + ")");
     row.querySelectorAll("label, .num").forEach(el => { el.style.setProperty("--amp", amp); el.classList.toggle("shake", v >= 9); });
   }

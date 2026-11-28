@@ -45,8 +45,7 @@ Sur un téléphone tenu debout, les sections de réglages sont des pages côte �
 - `largeur` : taille de la fenêtre, en proportion de la zone. Vers 50 %, presque tous les pixels chantent en même temps.
 - `résonance` : temps pendant lequel une voix sonne encore après le passage de la fenêtre.
 - `influence` : poids de l'image sur la largeur et la résonance. Zone unie : fenêtre plus large. Zone chargée : plus étroite. Couleur vive : résonance plus longue.
-- `relief` : casse le défilement régulier. La fenêtre roule sur l'image comme une bille sur des montagnes russes, où la hauteur du terrain est la hauteur de note des pixels : monter vers les notes aiguës lui coûte de la vitesse, en descente elle accélère. Deux choses suivent sa vitesse. La fenêtre respire : lente sur un point haut, elle se resserre sur quelques pixels et des notes isolées ressortent ; lancée, elle s'ouvre en nappe. Les notes glissent : elles montent quand la bille accélère et redescendent quand elle ralentit. À 0 elle avance à pas régulier ; à 100 % elle est cent fois plus lente sur la note la plus haute que sur la plus basse. La boucle garde sa durée et se referme sans clic. Avec la caméra, le terrain suit l'image en direct.
-- `silence` : part de la boucle, de 0 à 90 %, pendant laquelle la fenêtre ne touche plus rien : cela tombe sur les notes les plus graves de son trajet, là où la bille du `relief` va le plus vite. Seules les résonances restent : c'est `résonance` qui décide si ces trous sont nets ou habités. Agit avec ou sans relief.
+- `silence` : part de la boucle, de 0 à 90 %, pendant laquelle la fenêtre ne touche plus rien : cela tombe sur les notes les plus graves de son trajet. Seules les résonances restent : c'est `résonance` qui décide si ces trous sont nets ou habités.
 
 **son**
 - `onde` : sinus, triangle, scie ou carré. La pointe de la scie est légèrement arrondie, pour garder son mordant sans les aigus stridents.
@@ -75,6 +74,7 @@ Sur un téléphone tenu debout, les sections de réglages sont des pages côte �
 
 **animation**
 - `wobble` : ondulation de l'image pendant la lecture, de 0 à 100 %. En montant, c'est surtout la zone qui ondule autour de la fenêtre qui s'élargit ; la force augmente peu. Elle suit le volume et la hauteur réels du son.
+- `pixels` : fondu entre la version en pixels et l'image d'origine dans la sélection : à 100 % on ne voit que les pixels, à 0 % que l'image d'origine, et entre les deux un mélange. L'ondulation et les frappes du rythme déforment les deux ensemble. Purement visuel : le son ne change pas. Il part aussi dans la vidéo exportée.
 
 **réglages**
 - `[ sauver ]`, `[ ouvrir ]`, `[ défauts ]` : enregistrer les réglages dans un fichier `.json`, en recharger un, ou revenir aux valeurs de départ.

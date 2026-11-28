@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Image2Saw A</title>
 <meta name="description" content="image2saw: pixels to soundscape patterns. Turn an image into a seamless sound loop.">
 <style>
@@ -13,7 +13,7 @@
   --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
 }
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--mono);font-size:13px;line-height:1.4}
+html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%;margin:0;background:var(--bg);color:var(--ink);font-family:var(--mono);font-size:13px;line-height:1.4}
 body{padding:0 16px 40px}
 header,main{max-width:1100px;margin:0 auto}
 header{padding:6px 0;color:var(--ink);white-space:nowrap;display:flex;justify-content:space-between;align-items:center;gap:12px;position:sticky;top:0;z-index:6;background:var(--bg);max-width:none;margin:0 -16px;padding:6px max(16px,calc((100% - 1100px) / 2 + 16px))}
@@ -173,8 +173,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <dt>width</dt><dd>Width of the window, as a share of the area. Around 50 %, nearly every pixel sings at once.</dd>
     <dt>resonance</dt><dd>How long a voice keeps ringing after the window has passed.</dd>
     <dt>influence</dt><dd>How much the image drives width and resonance. Flat areas widen the window, busy areas narrow it, vivid colours ring longer.</dd>
-    <dt>relief</dt><dd>Breaks the steady flow. The window rolls over the image like a marble on a roller coaster, where the height of the ground is the pitch of the pixels: climbing towards high notes costs it speed, going down it speeds up. Two things follow its speed. The window breathes: slow on a peak, it tightens onto a few pixels and single notes stand out; launched, it opens into a wash. The notes bend: they rise as the marble speeds up and sink as it slows. At 0 it moves at a steady pace; at 100 % it is a hundred times slower on the highest note than on the lowest. The loop keeps its length and still closes seamlessly. With the camera, the ground follows the live picture.</dd>
-    <dt>silence</dt><dd>Share of the loop, from 0 to 90 %, during which the window touches nothing: it happens over the lowest notes of its path, where the marble of <b>relief</b> runs fastest. Only the resonances remain, so <b>resonance</b> decides whether these gaps are clean or haunted. Works with or without relief.</dd>
+    <dt>silence</dt><dd>Share of the loop, from 0 to 90 %, during which the window touches nothing: it happens over the lowest notes of its path. Only the resonances remain, so <b>resonance</b> decides whether these gaps are clean or haunted.</dd>
     <dt>wave</dt><dd>Waveform of every voice: sine, triangle, saw or square. The tip of the saw is slightly rounded, to keep its bite without the shrill highs.</dd>
     <dt>low, high</dt><dd>Lowest and highest pitch. The sliders move by semitones from C0 to B6, and the note name is shown next to the value. To set any other frequency, type it in hertz: for example 5 for rumbles and beats.</dd>
     <dt>scale</dt><dd>Linear or logarithmic (log) spread of the pitches between those two limits.</dd>
@@ -186,6 +185,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <dt>stereo</dt><dd>Stereo width. The left of the image plays in the left speaker.</dd>
     <dt>time sig., bars, tempo</dt><dd><b>time sig.</b> is the time signature (3/4, 4/4…) and <b>bars</b> the number of bars. Together with the tempo they set the loop length, so that samples line up on the beat: a slower tempo makes a longer loop. Choose free to set a length in seconds with <b>length</b>, from half a second up to 60 s, the length of an Instagram story; long loops take longer to compute and to export.</dd>
     <dt>wobble</dt><dd>Ripple of the image while it plays, from 0 to 100 %. Raising it mostly widens the area that ripples around the window; the strength grows only a little. The ripple follows the real loudness and pitch of the sound.</dd>
+    <dt>pixels</dt><dd>Blend between the pixel version and the original image inside the selection: at 100 % only the pixels show, at 0 % only the original image, with a crossfade in between. The ripple and the hits of the rhythm bend both together. Purely visual: the sound does not change. It also goes into the exported video.</dd>
     <dt>save, open, defaults</dt><dd>Save the settings to a .json file, load one back, or return to the starting values.</dd>
     <dt>language</dt><dd>Shows the page in French (français) or in English. By default it follows the language of the device.</dd>
   </dl>
@@ -199,7 +199,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>On a phone held upright, the settings are laid out as pages side by side: swipe sideways, or tap a section name under the image (source, function, sound, drum, EQ, time, anim, settings).</li>
     <li>On an iPhone or iPad, the sound plays even when the silent switch is on, like a music app. Use the volume buttons.</li>
   </ul>
-  <p class="ver">version A · 07d3096</p>
+  <p class="ver">version A · 5ac899b</p>
   </div>
   <div data-doc="fr" lang="fr">
   <p>image2saw : des pixels aux paysages sonores.</p>
@@ -228,8 +228,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <dt>largeur</dt><dd>Largeur de la fenêtre, en part de la zone. Vers 50 %, presque tous les pixels chantent en même temps.</dd>
     <dt>résonance</dt><dd>Durée pendant laquelle une voix continue de sonner après le passage de la fenêtre.</dd>
     <dt>influence</dt><dd>Part que prend l'image dans la largeur et la résonance. Les zones unies élargissent la fenêtre, les zones chargées la resserrent, les couleurs vives résonnent plus longtemps.</dd>
-    <dt>relief</dt><dd>Casse le défilement régulier. La fenêtre roule sur l'image comme une bille sur des montagnes russes, où la hauteur du terrain est la hauteur de note des pixels : monter vers les notes aiguës lui coûte de la vitesse, en descente elle accélère. Deux choses suivent sa vitesse. La fenêtre respire : lente sur un point haut, elle se resserre sur quelques pixels et des notes isolées ressortent ; lancée, elle s'ouvre en nappe. Les notes glissent : elles montent quand la bille accélère et redescendent quand elle ralentit. À 0 elle avance à pas régulier ; à 100 % elle est cent fois plus lente sur la note la plus haute que sur la plus basse. La boucle garde sa durée et se referme toujours sans clic. Avec la caméra, le terrain suit l'image en direct.</dd>
-    <dt>silence</dt><dd>Part de la boucle, de 0 à 90 %, pendant laquelle la fenêtre ne touche plus rien : cela tombe sur les notes les plus graves de son trajet, là où la bille du <b>relief</b> va le plus vite. Seules les résonances restent : c'est <b>résonance</b> qui décide si ces trous sont nets ou habités. Agit avec ou sans relief.</dd>
+    <dt>silence</dt><dd>Part de la boucle, de 0 à 90 %, pendant laquelle la fenêtre ne touche plus rien : cela tombe sur les notes les plus graves de son trajet. Seules les résonances restent : c'est <b>résonance</b> qui décide si ces trous sont nets ou habités.</dd>
     <dt>onde</dt><dd>Forme d'onde de chaque voix : sinus, triangle, scie ou carré. La pointe de la scie est légèrement arrondie, pour garder son mordant sans les aigus stridents.</dd>
     <dt>grave, aigu</dt><dd>Note la plus basse et la plus haute. Les curseurs avancent par demi-tons de C0 à B6, et le nom de la note s'affiche à côté de la valeur. Pour toute autre fréquence, tape-la en hertz : par exemple 5 pour des grondements et des battements.</dd>
     <dt>échelle</dt><dd>Répartition linéaire ou logarithmique (log) des hauteurs entre ces deux limites.</dd>
@@ -241,6 +240,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <dt>stéréo</dt><dd>Largeur stéréo. La gauche de l'image joue dans le haut-parleur gauche.</dd>
     <dt>mesure, mesures, tempo</dt><dd>Durée de la boucle en mesures, pour que les échantillons tombent sur le temps : un tempo plus lent donne une boucle plus longue. Choisis libre pour fixer une durée en secondes avec <b>durée</b>, d'une demi-seconde à 60 s, la durée d'une story Instagram ; une longue boucle demande plus de temps de calcul et d'export.</dd>
     <dt>wobble</dt><dd>Ondulation de l'image pendant la lecture, de 0 à 100 %. En montant, c'est surtout la zone qui ondule autour de la fenêtre qui s'élargit ; la force augmente peu. L'ondulation suit le volume et la hauteur réels du son.</dd>
+    <dt>pixels</dt><dd>Fondu entre la version en pixels et l'image d'origine dans la sélection : à 100 % on ne voit que les pixels, à 0 % que l'image d'origine, et entre les deux un mélange. L'ondulation et les frappes du rythme déforment les deux ensemble. Purement visuel : le son ne change pas. Il part aussi dans la vidéo exportée.</dd>
     <dt>sauver, ouvrir, défauts</dt><dd>Enregistre les réglages dans un fichier .json, en recharge un, ou revient aux valeurs de départ.</dd>
     <dt>langue</dt><dd>Affiche la page en français ou en anglais (english). Par défaut, elle suit la langue de l'appareil.</dd>
   </dl>
@@ -254,7 +254,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <li>Sur un téléphone tenu debout, les réglages sont des pages côte à côte : glisse de côté, ou touche le nom d'une section sous l'image (source, fonction, son, drum, EQ, temps, animation, réglages).</li>
     <li>Sur iPhone ou iPad, le son joue même avec le bouton silencieux, comme une application de musique. Utilise les boutons de volume.</li>
   </ul>
-  <p class="ver">version A · 07d3096</p>
+  <p class="ver">version A · 5ac899b</p>
   </div>
 </article>
 <main>
@@ -297,7 +297,6 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
       <div data-s="sigma"></div>
       <div data-s="ring"></div>
       <div data-s="infl"></div>
-      <div data-s="relief"></div>
       <div data-s="silence"></div>
     </section>
     <section>
@@ -344,6 +343,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
     <section>
       <h2>animation</h2>
       <div data-s="wobble"></div>
+      <div data-s="pix"></div>
     </section>
     <section>
       <h2>réglages</h2>
@@ -355,7 +355,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:19px;background:var(--ink);
       <div class="row wide" id="row_lang"><span>langue</span><div class="seg" id="langseg"><button type="button" data-lang="fr" aria-pressed="false">français</button><button type="button" data-lang="en" aria-pressed="false">english</button></div></div>
     </section>
     </div>
-    <p class="ver">pixels to soundscape patterns · A · 07d3096</p>
+    <p class="ver">pixels to soundscape patterns · A · 5ac899b</p>
     <p class="ver copy">© 2026 Pierre Pomiers · licence MIT</p>
   </div>
 </main>
@@ -1027,7 +1027,7 @@ const FIXED = { shape: 2.5, disc: 1, dyn: 0.6 };
 
 const P = { relief: 0, silence: 0, grid: 16, path: "cycleH", sigma: 15, ring: 0.25, infl: 60,
   wave: "sine", fmin: noteHz(0), fmax: noteHz(59), scale: "lin", tune: "libre", stereo: 80,
-  sig: "4/4", bpm: 120, bars: "4", freeDur: 8, wobble: 50, seed: 1, death: 0, fps: 12, zoom: 1, rhythm: 0, rseed: 1, doom: 0,
+  sig: "4/4", bpm: 120, bars: "4", freeDur: 8, wobble: 50, pix: 100, seed: 1, death: 0, fps: 12, zoom: 1, rhythm: 0, rseed: 1, doom: 0,
   eq0: 0, eq1: 0, eq2: 0, eq3: 0, eq4: 0, eq5: 0, eq6: 0 };
 if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) P.wobble = 0;
 
@@ -1038,7 +1038,6 @@ const SLIDERS = {
   sigma:   { label: "largeur", min: 2, max: 100, step: 1, unit: "%", log: true },
   ring:    { label: "résonance", min: 0, max: 2, step: 0.01, unit: "s" },
   infl:    { label: "influence", min: 0, max: 100, step: 1, unit: "%" },
-  relief:  { label: "relief", min: 0, max: 100, step: 1, unit: "%" },
   silence: { label: "silence", min: 0, max: 90, step: 1, unit: "%" },
   fmin:    { label: "grave", min: 0.5, max: 4000, step: 0.01, unit: "Hz", note: true },
   fmax:    { label: "aigu", min: 0.5, max: 4000, step: 0.01, unit: "Hz", note: true },
@@ -1049,6 +1048,7 @@ const SLIDERS = {
   bpm:     { label: "tempo", min: 40, max: 240, step: 1, unit: "bpm" },
   freeDur: { label: "durée", min: 0.5, max: 60, step: 0.5, unit: "s" },
   wobble:  { label: "wobble", min: 0, max: 100, step: 1, unit: "%", live: true },
+  pix:     { label: "pixels", min: 0, max: 100, step: 1, unit: "%", live: true },
   eq0:     { label: "<30", min: -12, max: 12, step: 1, unit: "dB", fx: true },
   eq1:     { label: "60", min: -12, max: 12, step: 1, unit: "dB", fx: true },
   eq2:     { label: "120", min: -12, max: 12, step: 1, unit: "dB", fx: true },
@@ -2052,12 +2052,28 @@ addEventListener("resize", setHH); setHH();
   mark(); fit();
   addEventListener("resize", fit); if (window.ResizeObserver) { const ro = new ResizeObserver(fit); secs.forEach(x => ro.observe(x)); }
 })();
+/* Sur téléphone : pas de zoom à deux doigts ni au double appui, la page garde sa taille. */
+for (const ev of ["gesturestart", "gesturechange", "gestureend"]) document.addEventListener(ev, e => e.preventDefault(), { passive: false });
+document.addEventListener("touchmove", e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
 function resize() {
   const d = Math.min(2, window.devicePixelRatio || 1);
   cv.width = Math.round(cv.clientWidth * d); cv.height = Math.round(cv.clientHeight * d);
   ctx.setTransform(d, 0, 0, d, 0, 0);
 }
 let bgN = 0;
+/* Réglage « pixels » : à 100 % la sélection est montrée en pixels, à 0 % c'est l'image d'origine ; entre les deux, un fondu.
+   HI garde une copie fine de la sélection, que l'ondulation déforme en même temps que les pixels. */
+const hcan = document.createElement("canvas"); let HI = null, hiAn = null;
+function hiSel() {
+  const cx = sel.x * src.width, cy = sel.y * src.height, cw = Math.max(1, sel.w * src.width), ch = Math.max(1, sel.h * src.height);
+  if (cam || hiAn !== an || !HI) {
+    const k = 256 / Math.max(cw, ch), w = Math.max(8, Math.round(cw * k)), h = Math.max(8, Math.round(ch * k));
+    if (hcan.width !== w || hcan.height !== h) { hcan.width = w; hcan.height = h; }
+    const c = hcan.getContext("2d", { willReadFrequently: true }); c.imageSmoothingEnabled = true; c.drawImage(src, cx, cy, cw, ch, 0, 0, w, h);
+    HI = c.getImageData(0, 0, w, h); hiAn = an;
+  }
+  return HI;
+}
 function draw() {
   requestAnimationFrame(draw);
   if (!src.width || !an) return;
@@ -2087,16 +2103,23 @@ function draw() {
   if (wavy) {
     punches(fkNow, amp);
     ripple(hx, hy, sg, amp, rw, rh, fkNow, rec ? 480 : Math.min(256, Math.round(Math.max(rw, rh) * Math.min(2, window.devicePixelRatio || 1))));
-    ctx.imageSmoothingEnabled = true; ctx.drawImage(wcan, rx, ry, rw, rh);
-  } else { ctx.imageSmoothingEnabled = false; ctx.drawImage(off, rx, ry, rw, rh); }
+  }
+  /* La sélection : ondulée (le fondu est déjà fait dedans), ou fixe en pixels avec l'image d'origine fondue par-dessus. */
+  const bl = Math.min(1, Math.max(0, P.pix / 100));
+  const drawSel = (c, x, y, w, h) => {
+    if (wavy) { c.imageSmoothingEnabled = true; c.drawImage(wcan, x, y, w, h); return; }
+    c.imageSmoothingEnabled = false; c.drawImage(off, x, y, w, h);
+    if (bl < 1) { c.globalAlpha = 1 - bl; c.imageSmoothingEnabled = true; c.drawImage(src, sel.x * src.width, sel.y * src.height, Math.max(1, sel.w * src.width), Math.max(1, sel.h * src.height), x, y, w, h); c.globalAlpha = 1; }
+  };
+  drawSel(ctx, rx, ry, rw, rh);
   if (rec) {
     /* Image filmée : la sélection seule, plein cadre. */
     if (rec.square) {
       /* Carré : la sélection entière, centrée, sur le même fond flou que la page (l'image en tout petit, étirée). */
       const S = xcan.width, f = rec.fit, dw = f >= 1 ? S : S * f, dh = f >= 1 ? S / f : S;
       xctx.imageSmoothingEnabled = true; xctx.drawImage($("bg"), 0, 0, S, S); xctx.fillStyle = "rgba(0,0,0,.45)"; xctx.fillRect(0, 0, S, S);
-      xctx.imageSmoothingEnabled = wavy; xctx.drawImage(wavy ? wcan : off, (S - dw) / 2, (S - dh) / 2, dw, dh);
-    } else { xctx.imageSmoothingEnabled = wavy; xctx.drawImage(wavy ? wcan : off, 0, 0, xcan.width, xcan.height); }
+      drawSel(xctx, (S - dw) / 2, (S - dh) / 2, dw, dh);
+    } else drawSel(xctx, 0, 0, xcan.width, xcan.height);
     if (rec.n++ % 12 === 0 && live && actx) say("Enregistrement " + Math.min(R.dur, Math.max(0, playTime())).toFixed(1) + " / " + R.dur.toFixed(1) + " s. Garde la page affichée.");
   }
   if (pathPts.length) {
@@ -2162,7 +2185,7 @@ function ripple(hx, hy, sg, amp, rw, rh, fk, side) {
   const A = 1.3 * Math.pow(amp, 0.6) * Math.min(2.5, Math.max(0.7, 0.22 * sg)), c2 = lam * lam, kx = gw / ww, ky = gh / wh;
   for (let x = 0; x < ww; x++) WXc[x] = mirrorW(hx, (x + 0.5) * kx, gw, inv);
   for (let y = 0; y < wh; y++) WYc[y] = mirrorW(hy, (y + 0.5) * ky, gh, inv);
-  let o = 0; const nP = PUNCH.length;
+  let o = 0; const nP = PUNCH.length, bl = Math.min(1, Math.max(0, P.pix / 100)), hi = bl < 1 ? hiSel() : null, hd = hi ? hi.data : null, hw = hi ? hi.width : 0, hh = hi ? hi.height : 0, hkx = hw / gw, hky = hh / gh, bi = 1 - bl;
   for (let y = 0; y < wh; y++) {
     const gy = (y + 0.5) * ky, dy = gy - hy, wy = WYc[y];
     for (let x = 0; x < ww; x++, o += 4) {
@@ -2184,7 +2207,11 @@ function ripple(hx, hy, sg, amp, rw, rh, fk, side) {
       }
       let ix = sx | 0, iy = sy | 0; if (ix < 0) ix = 0; else if (ix >= gw) ix = gw - 1; if (iy < 0) iy = 0; else if (iy >= gh) iy = gh - 1;
       const i = 4 * (iy * gw + ix);
-      out[o] = px[i]; out[o + 1] = px[i + 1]; out[o + 2] = px[i + 2]; out[o + 3] = 255;
+      if (hd) {
+        let jx = (sx * hkx) | 0, jy = (sy * hky) | 0; if (jx < 0) jx = 0; else if (jx >= hw) jx = hw - 1; if (jy < 0) jy = 0; else if (jy >= hh) jy = hh - 1;
+        const j = 4 * (jy * hw + jx);
+        out[o] = bl * px[i] + bi * hd[j]; out[o + 1] = bl * px[i + 1] + bi * hd[j + 1]; out[o + 2] = bl * px[i + 2] + bi * hd[j + 2]; out[o + 3] = 255;
+      } else { out[o] = px[i]; out[o + 1] = px[i + 1]; out[o + 2] = px[i + 2]; out[o + 3] = 255; }
     }
   }
   wcan.getContext("2d").putImageData(wimg, 0, 0);
